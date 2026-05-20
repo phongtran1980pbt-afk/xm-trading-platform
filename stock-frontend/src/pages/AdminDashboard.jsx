@@ -100,7 +100,8 @@ export default function AdminDashboard() {
 
     async function fetchLogs() {
       try {
-        const res = await fetch('http://localhost:5001/api/admin/audit-logs');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        const res = await fetch(`${apiUrl}/api/admin/audit-logs`);
         const data = await res.json();
         setAuditLogs(data);
 
