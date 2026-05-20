@@ -6,12 +6,17 @@ function Header() {
   return (
     <header className="header">
       <div className="logo-container">
-        <Link to="/" className="logo" style={{ textDecoration: 'none' }}>
-          <span className="logo-x">X</span><span className="logo-m">M</span>
+        <Link to="/" className="kucoin-logo" style={{ textDecoration: 'none' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.5 4L4 7.5V16.5L7.5 20H10.5L7 16.5V7.5L10.5 4H7.5Z" fill="#24DB9B" />
+            <path d="M16.5 4L20 7.5V16.5L16.5 20H13.5L17 16.5V7.5L13.5 4H16.5Z" fill="#24DB9B" />
+            <path d="M12 10L14 12L12 14L10 12L12 10Z" fill="#24DB9B" />
+          </svg>
+          <span className="kucoin-text">KUCOIN</span>
         </Link>
       </div>
       <div className="header-right">
-        <a href="#" className="nav-link">XM Trang web</a>
+        <Link to="/kucoin-web" className="nav-link">KuCoin Trang web</Link>
         <LanguageSelector />
       </div>
     </header>

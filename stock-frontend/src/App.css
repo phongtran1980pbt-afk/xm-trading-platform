@@ -1556,27 +1556,20 @@
   color: #555;
 }
 
-/* ==========================================
-   CHAT BUBBLE
-   ========================================== */
-.chat-bubble {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background-color: #1976d2;
+/* Removed conflicting global .chat-bubble class */
+
+.kucoin-logo {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  cursor: pointer;
-  z-index: 100;
-  transition: transform 0.2s;
+  gap: 8px;
+  text-decoration: none;
 }
 
-.chat-bubble:hover {
-  transform: scale(1.1);
+.kucoin-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: #24DB9B;
+  letter-spacing: 0.5px;
 }
 

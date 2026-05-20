@@ -1,15 +1,15 @@
-import sql from 'mssql';
+import sql from 'mssql/msnodesqlv8.js';
 
 // ==========================================
 // CẤU HÌNH KẾT NỐI SQL SERVER (SSMS)
 // ==========================================
 const dbConfig = {
-    user: 'sa',             // 1. Tên đăng nhập (Thường là sa)
-    password: 'your_password', // 2. THAY BẰNG MẬT KHẨU SQL CỦA BẠN
-    server: 'localhost',    // 3. Để nguyên localhost
-    database: 'StockTradingDB', // 4. Tên database (Đã tạo trong init_db.sql)
+    server: 'localhost',    
+    database: 'StockTradingDB',
+    driver: 'ODBC Driver 17 for SQL Server',
     options: {
-        encrypt: true, 
+        trustedConnection: true,
+        encrypt: false, 
         trustServerCertificate: true
     },
     connectionTimeout: 10000 
@@ -20,9 +20,24 @@ const connectDB = async () => {
     try {
         const pool = await sql.connect(dbConfig);
         console.log('✅ [SQL Server] Đã kết nối thành công tới database StockTradingDB');
+        
+        // Auto-create AuditLogs table if it doesn't exist
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='AuditLogs' and xtype='U')
+            BEGIN
+                CREATE TABLE AuditLogs (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    Action NVARCHAR(255) NOT NULL,
+                    Details NVARCHAR(MAX),
+                    CreatedAt DATETIME DEFAULT GETDATE()
+                )
+                PRINT '✅ [SQL Server] Đã tạo bảng AuditLogs'
+            END
+        `);
+        
         return pool;
     } catch (err) {
-        console.error('❌ [SQL Server] KHÔNG THỂ KẾT NỐI. Server sẽ chạy ở chế độ dự phòng (Không lưu vào SQL).');
+        console.error('❌ [SQL Server] LỖI KẾT NỐI CHI TIẾT:', err.message);
         return null; // Trả về null thay vì báo lỗi chết server
     }
 };

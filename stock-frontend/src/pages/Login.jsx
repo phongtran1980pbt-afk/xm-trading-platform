@@ -1,114 +1,153 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import LanguageSelector from '../components/LanguageSelector';
+import './Login.css'; // Mới tạo file CSS riêng cho Login
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [identifier, setIdentifier] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleSubmit = async (e) => {
+  const [step, setStep] = React.useState(1);
+  const [password, setPassword] = React.useState('');
+
+  const handleNextStep = (e) => {
     e.preventDefault();
-    if (!email || !password) return;
-    
+    if (identifier) setStep(2);
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5001/api/auth/login', { email, password });
+      const response = await axios.post('http://localhost:5001/api/auth/login', {
+        email: identifier,
+        password: password
+      });
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        alert('Đăng nhập thành công!');
-        navigate('/'); // Chuyển về trang chủ sau khi login
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        if (response.data.user.isAdmin) {
+          navigate('/admin');
+        } else {
+          navigate('/'); // Redirect to homepage
+        }
       }
     } catch (error) {
-      console.error('Lỗi đăng nhập:', error);
-      alert(error.response?.data?.message || 'Email hoặc mật khẩu không đúng!');
+      alert(error.response?.data?.message || 'Lỗi kết nối máy chủ!');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="auth-page login-page">
-      <header className="auth-header">
-         <div className="header-left">
-           {/* Logo ẩn ở trang login theo hình mẫu hoặc nhỏ gọn */}
-         </div>
-         <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div className="support-icon-circle">
-               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+    <div className="k-login-wrapper">
+      {/* Left Panel */}
+      <div className="k-login-left">
+        <Link to="/" className="k-login-brand">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.5 4L4 7.5V16.5L7.5 20H10.5L7 16.5V7.5L10.5 4H7.5Z" fill="#24DB9B" />
+            <path d="M16.5 4L20 7.5V16.5L16.5 20H13.5L17 16.5V7.5L13.5 4H16.5Z" fill="#24DB9B" />
+            <path d="M12 10L14 12L12 14L10 12L12 10Z" fill="#24DB9B" />
+          </svg>
+          <span>KUCOIN</span>
+        </Link>
+        
+        <div className="k-login-left-content">
+          <h1>Tiên tin tưởng. Hậu giao dịch.</h1>
+          <p>Cứ 4 người nắm giữ tiền điện tử trên thế giới thì 1 người đang sử dụng KuCoin</p>
+        </div>
+
+        <div className="k-shield-container">
+          <div className="k-shield">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm-1 14H8.5v-8H11v8zm3.5 0h-2.5v-8h2.5v8z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel */}
+      <div className="k-login-right">
+        <div className="k-login-header">
+          <button className="k-login-util-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+          
+          <button className="k-login-util-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+          </button>
+
+          <button className="k-login-util-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div className="k-login-form-wrapper">
+          <div className="k-login-form-container">
+            <h2>Đăng nhập</h2>
+            
+            <div className="k-login-tabs">
+              <div className="k-login-tab">Email/Số điện thoại</div>
             </div>
-            <LanguageSelector />
-         </div>
-      </header>
 
-      <main className="auth-main login-main">
-         <div className="auth-card login-card">
-            <div className="login-logo-center">
-               <span className="logo-x">X</span><span className="logo-m">M</span>
-            </div>
-
-            <h1 className="auth-title center-text">Đăng nhập</h1>
-            <p className="auth-subtitle center-text">Bạn mới tham gia XM? <Link to="/register" className="auth-link">Mở tài khoản</Link></p>
-
-            <form className="auth-form" onSubmit={handleSubmit}>
-               <div className="form-group">
-                 <input 
-                    type="email" 
-                    placeholder="Email" 
-                    className="form-input" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+            <form onSubmit={step === 1 ? handleNextStep : handleLogin}>
+              {step === 1 ? (
+                <div className="k-input-group">
+                  <input 
+                    type="text" 
+                    placeholder="Email/Số điện thoại (không có mã quốc gia)" 
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     required
-                 />
-               </div>
+                  />
+                </div>
+              ) : (
+                <div className="k-input-group">
+                  <input 
+                    type="password" 
+                    placeholder="Nhập mật khẩu" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
 
-               <div className="form-group" style={{ position: 'relative' }}>
-                 <div className="password-wrapper">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="Mật khẩu" 
-                      className="form-input" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <span className="eye-icon" onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? (
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                          <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>
-                      )}
-                    </span>
-                 </div>
-               </div>
-
-               <p className="forgot-password-link"><a href="#">Quên mật khẩu?</a></p>
-
-               <button 
-                 type="submit" 
-                 className={`submit-btn active`} 
-                 disabled={isLoading}
-               >
-                 {isLoading ? 'Đang kiểm tra...' : 'Đăng nhập'}
-               </button>
+              <button type="submit" className="k-btn-primary" disabled={isLoading}>
+                {isLoading ? 'Đang tải...' : (step === 1 ? 'Tiếp theo' : 'Đăng nhập')}
+              </button>
             </form>
-         </div>
-      </main>
 
-      <footer className="auth-footer">
-         <div className="auth-risk">
-            Cảnh báo Rủi ro: Có rủi ro vốn. Các sản phẩm có đòn bẩy có thể không phù hợp với tất cả mọi người. Hãy đọc kỹ <a href="#">Thông báo Rủi ro</a> của chúng tôi.
-         </div>
-      </footer>
+            <div className="k-login-divider">
+              <span>Hoặc tiếp tục với</span>
+            </div>
+
+            <button className="k-btn-passkey">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Đăng nhập bằng khóa mật khẩu
+            </button>
+
+            <div className="k-login-footer">
+              Bạn chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

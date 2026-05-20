@@ -1,0 +1,292 @@
+.k-login-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: #111419;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #ffffff;
+}
+
+.k-login-left {
+  flex: 1.1;
+  background-color: #030508;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  background-image: 
+    radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.4) 1px, transparent 0),
+    radial-gradient(1px 1px at 40% 60%, rgba(255, 255, 255, 0.4) 1px, transparent 0),
+    radial-gradient(2px 2px at 80% 30%, rgba(255, 255, 255, 0.2) 1px, transparent 0),
+    radial-gradient(1.5px 1.5px at 70% 80%, rgba(255, 255, 255, 0.3) 1px, transparent 0);
+  background-size: 200px 200px;
+}
+
+.k-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  z-index: 10;
+}
+
+.k-login-brand svg {
+  width: 28px;
+  height: 28px;
+}
+
+.k-login-brand span {
+  font-size: 22px;
+  font-weight: 850;
+  color: #24DB9B;
+  letter-spacing: 0.5px;
+}
+
+.k-login-left-content {
+  margin-top: 60px;
+  max-width: 480px;
+  z-index: 10;
+}
+
+.k-login-left-content h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.k-login-left-content p {
+  font-size: 15px;
+  color: #a0a0a0;
+  line-height: 1.5;
+}
+
+.k-shield-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Simulated 3D Shield */
+.k-shield {
+  width: 200px;
+  height: 240px;
+  background: linear-gradient(145deg, #2a313c, #111419);
+  clip-path: polygon(50% 0, 100% 15%, 100% 70%, 50% 100%, 0 70%, 0 15%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    inset 0 0 20px rgba(255,255,255,0.1),
+    0 10px 30px rgba(0,0,0,0.8);
+  position: relative;
+}
+
+.k-shield::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  background: linear-gradient(135deg, #1b2028, #111419);
+  clip-path: polygon(50% 0, 100% 15%, 100% 70%, 50% 100%, 0 70%, 0 15%);
+  z-index: 1;
+}
+
+.k-shield svg {
+  z-index: 2;
+  width: 80px;
+  height: 80px;
+  fill: #3e4b5e;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.k-login-right {
+  flex: 1;
+  background-color: #111419;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.k-login-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 24px 40px;
+  gap: 16px;
+}
+
+.k-login-util-btn {
+  background-color: #252a32;
+  border: none;
+  color: #eaecf0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.k-login-util-btn:hover {
+  background-color: #353b45;
+}
+
+.k-login-util-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.k-login-form-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.k-login-form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.k-login-form-container h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: #ffffff;
+}
+
+.k-login-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 24px;
+}
+
+.k-login-tab {
+  padding: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  position: relative;
+  cursor: pointer;
+  margin-right: 24px;
+}
+
+.k-login-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #24DB9B;
+}
+
+.k-input-group {
+  margin-bottom: 24px;
+}
+
+.k-input-group input {
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.k-input-group input:focus {
+  border-color: #24DB9B;
+}
+
+.k-input-group input::placeholder {
+  color: #5e6673;
+}
+
+.k-btn-primary {
+  width: 100%;
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 100px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-bottom: 24px;
+}
+
+.k-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.k-login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+  color: #5e6673;
+  font-size: 12px;
+}
+
+.k-login-divider::before,
+.k-login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.k-login-divider span {
+  padding: 0 12px;
+}
+
+.k-btn-passkey {
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 100px;
+  padding: 12px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 40px;
+}
+
+.k-btn-passkey:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.k-login-footer {
+  text-align: left;
+  font-size: 13px;
+  color: #9aa4b2;
+}
+
+.k-login-footer a {
+  color: #ffffff;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .k-login-wrapper {
+    flex-direction: column;
+  }
+  .k-login-left {
+    display: none;
+  }
+}

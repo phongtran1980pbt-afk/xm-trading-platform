@@ -3,6 +3,9 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import authRoutes from './routes/authRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import priceRoutes from './routes/priceRoutes.js';
 import { items } from './config/db.js';
 
 const app = express();
@@ -30,6 +33,9 @@ app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Sử dụng Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/prices', priceRoutes);
 
 // Items Route (Tạm thời để đây cho nhanh)
 app.get('/api/items', (req, res) => res.json(items));

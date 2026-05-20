@@ -1,0 +1,311 @@
+/* ═══════════ ADMIN CHAT PANEL (Floating) ═══════════ */
+
+/* Nút mở panel admin */
+.admin-panel-fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F6465D, #c0392b);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  box-shadow: 0 4px 24px rgba(246,70,93,0.45);
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-direction: column;
+  gap: 2px;
+}
+.admin-panel-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 32px rgba(246,70,93,0.6);
+}
+.admin-panel-fab .fab-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+.admin-panel-fab .fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: #fff;
+  color: #F6465D;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2px solid #F6465D;
+  animation: popIn 0.3s ease;
+}
+@keyframes popIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* Panel chính */
+.admin-float-panel {
+  position: fixed;
+  bottom: 100px;
+  right: 28px;
+  width: 800px;
+  height: 560px;
+  background: #11141a;
+  border: 1px solid #1e2329;
+  border-radius: 16px;
+  display: flex;
+  overflow: hidden;
+  z-index: 9998;
+  box-shadow: 0 12px 60px rgba(0,0,0,0.7);
+  animation: slideUp 0.25s ease;
+  max-width: calc(100vw - 40px);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Sidebar (danh sách khách) ── */
+.afp-sidebar {
+  width: 240px;
+  border-right: 1px solid #1e2329;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: #0e1117;
+}
+.afp-sidebar-header {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid #1e2329;
+}
+.afp-sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #eaecef;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.afp-admin-tag {
+  background: #F6465D;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+.afp-subtitle {
+  font-size: 11px;
+  color: #5e6673;
+}
+
+.afp-sessions {
+  flex: 1;
+  overflow-y: auto;
+}
+.afp-sessions::-webkit-scrollbar { width: 3px; }
+.afp-sessions::-webkit-scrollbar-thumb { background: #2b3139; border-radius: 2px; }
+
+.afp-empty {
+  padding: 24px 14px;
+  text-align: center;
+  color: #5e6673;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.afp-session-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #1a1e27;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.afp-session-item:hover { background: #1a1e27; }
+.afp-session-item.active { background: #1e2329; border-left: 3px solid #F6465D; }
+.afp-session-item.unread .afp-sname { font-weight: 700; color: #fff; }
+
+.afp-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4169e1, #7b5ea7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.afp-sinfo { flex: 1; min-width: 0; }
+.afp-srow { display: flex; justify-content: space-between; align-items: center; }
+.afp-sname { font-size: 12px; color: #eaecef; }
+.afp-stime { font-size: 10px; color: #5e6673; }
+.afp-spreview { font-size: 11px; color: #848e9c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.afp-unread-badge {
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: #F6465D;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── Khu vực chat ── */
+.afp-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.afp-no-convo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #5e6673;
+}
+.afp-no-convo svg { opacity: 0.25; }
+.afp-no-convo h4 { font-size: 15px; color: #848e9c; font-weight: 500; }
+.afp-no-convo p { font-size: 12px; }
+
+.afp-chat-header {
+  height: 52px;
+  background: #0e1117;
+  border-bottom: 1px solid #1e2329;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.afp-chat-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #4169e1, #7b5ea7);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: #fff;
+}
+.afp-chat-name { font-weight: 600; font-size: 13px; color: #eaecef; }
+.afp-online { font-size: 10px; color: #00FFA3; display: flex; align-items: center; gap: 3px; }
+.afp-online::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%; background: #00FFA3; display: inline-block;
+  animation: blink 2s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.afp-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.afp-messages::-webkit-scrollbar { width: 4px; }
+.afp-messages::-webkit-scrollbar-thumb { background: #2b3139; border-radius: 2px; }
+
+.afp-bubble-wrap { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+.afp-bubble-wrap.customer { align-items: flex-start; }
+.afp-bubble-wrap.admin    { align-items: flex-end; }
+
+.afp-bubble {
+  max-width: 75%; padding: 9px 13px;
+  border-radius: 14px; font-size: 13px;
+  line-height: 1.5; word-break: break-word;
+}
+.afp-bubble.customer { background: #1e2329; color: #eaecef; border-bottom-left-radius: 4px; }
+.afp-bubble.admin    { background: #F6465D; color: #fff; border-bottom-right-radius: 4px; }
+.afp-label { font-size: 10px; color: #848e9c; padding: 0 4px; }
+.afp-time  { font-size: 10px; color: #5e6673; padding: 0 4px; }
+
+.afp-templates {
+  padding: 6px 12px;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  border-top: 1px solid #1e2329;
+  background: #0e1117;
+}
+.afp-tmpl-btn {
+  padding: 4px 9px;
+  border-radius: 10px;
+  border: 1px solid #1e2329;
+  background: transparent;
+  color: #F6465D;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.afp-tmpl-btn:hover { background: rgba(246,70,93,0.1); border-color: #F6465D; }
+
+.afp-input-area {
+  padding: 10px 12px;
+  border-top: 1px solid #1e2329;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: #0e1117;
+  flex-shrink: 0;
+}
+.afp-input {
+  flex: 1;
+  background: #1e2329;
+  border: 1px solid #2b3139;
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: #eaecef;
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  min-height: 36px;
+  max-height: 90px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.afp-input:focus { border-color: #F6465D; }
+.afp-input::placeholder { color: #5e6673; }
+.afp-send-btn {
+  padding: 8px 16px;
+  background: #F6465D;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.afp-send-btn:hover { opacity: 0.85; }
+.afp-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
