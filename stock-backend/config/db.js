@@ -1,16 +1,20 @@
-import sql from 'mssql/msnodesqlv8.js';
+import sql from 'mssql';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // ==========================================
-// CẤU HÌNH KẾT NỐI SQL SERVER (SSMS)
+// CẤU HÌNH KẾT NỐI SQL SERVER
+// Lưu ý: Trên Render (Linux), bạn PHẢI dùng SQL Server Authentication
+// (Có User và Password) chứ không dùng được Windows Authentication.
 // ==========================================
 const dbConfig = {
-    server: 'localhost',    
-    database: 'StockTradingDB',
-    driver: 'ODBC Driver 17 for SQL Server',
+    user: process.env.DB_USER || 'sa',
+    password: process.env.DB_PASSWORD || 'your_password',
+    server: process.env.DB_SERVER || 'localhost',
+    database: process.env.DB_NAME || 'StockTradingDB',
     options: {
-        trustedConnection: true,
-        encrypt: false, 
-        trustServerCertificate: true
+        encrypt: process.env.DB_ENCRYPT === 'true', // Bật true nếu dùng Azure SQL
+        trustServerCertificate: true // Bật true khi test local hoặc tự cấp chứng chỉ
     },
     connectionTimeout: 10000 
 };
