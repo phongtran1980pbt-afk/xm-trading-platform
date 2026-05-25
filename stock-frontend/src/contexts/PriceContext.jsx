@@ -215,6 +215,7 @@ export function PriceProvider({ children }) {
   const lastMicroRef = useRef(Math.floor(Date.now() / 1000 / MICRO_BUCKET_SEC));
   const lastMacroRef = useRef(Math.floor(Date.now() / 1000 / MACRO_BUCKET_SEC));
   const coinOffsetsRef = useRef({});
+  const lastWsUpdateRef = useRef({});
 
   // Initialize and synchronise Binance live prices
   useEffect(() => {
@@ -234,6 +235,7 @@ export function PriceProvider({ children }) {
             const priceVal = parseFloat(item.lastPrice);
               const changePercent = parseFloat(item.priceChangePercent);
             if (!isNaN(priceVal)) {
+              lastWsUpdateRef.current[coinKey] = Date.now();
               const offset = coinOffsetsRef.current[coinKey] || 0;
               const adjustedPrice = priceVal * (1 + offset);
               updates[coinKey] = {
@@ -282,6 +284,7 @@ export function PriceProvider({ children }) {
               const price = parseFloat(item.c);
               const open = parseFloat(item.o);
               if (!isNaN(price) && !isNaN(open) && open > 0) {
+                lastWsUpdateRef.current[coinKey] = Date.now();
                 const offset = coinOffsetsRef.current[coinKey] || 0;
                 const adjustedPrice = price * (1 + offset);
                 const change = ((adjustedPrice - open) / open) * 100;
@@ -365,15 +368,17 @@ export function PriceProvider({ children }) {
           });
 
           Object.entries(serverPrices).forEach(([key, val]) => {
-            // Only update custom coins from backend
-            if (next[key] && !next[key].isReal) {
+            const lastWsUpdate = lastWsUpdateRef.current[key] || 0;
+            const useBackendFallback = next[key]?.isReal && (Date.now() - lastWsUpdate > 6000);
+
+            if (next[key] && (!next[key].isReal || useBackendFallback)) {
               const oldPrice = next[key].price;
               next[key] = {
                 price: val.price,
                 prev: oldPrice,
                 change: val.change,
                 isUp: val.price >= oldPrice,
-                isReal: false,
+                isReal: !useBackendFallback,
                 backendSynced: true
               };
               LATEST_REAL_PRICES[key] = next[key];
