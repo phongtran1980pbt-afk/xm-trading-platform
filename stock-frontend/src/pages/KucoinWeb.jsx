@@ -626,22 +626,30 @@ function KucoinWeb() {
 
           <div className="k-benefits-grid">
             <div className="k-benefit-card">
-              <div className="b-icon">🛡️</div>
+              <div className="b-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
               <h3>Bảo mật và an toàn tối cao</h3>
               <p>Cung cấp Bằng chứng Dự trữ (Proof of Reserves) 1:1, mã hóa cấp quân sự và ví đa chữ ký để đảm bảo tài sản của bạn luôn được bảo vệ tuyệt đối.</p>
             </div>
             <div className="k-benefit-card">
-              <div className="b-icon">📞</div>
+              <div className="b-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
               <h3>Hỗ trợ đa ngôn ngữ 24/7</h3>
               <p>Đội ngũ chăm sóc khách hàng chuyên nghiệp sẵn sàng trợ giúp bạn bất cứ lúc nào, hỗ trợ ngôn ngữ Tiếng Việt và các giải pháp tức thì.</p>
             </div>
             <div className="k-benefit-card">
-              <div className="b-icon">🤖</div>
+              <div className="b-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+              </div>
               <h3>Công cụ giao dịch đột phá</h3>
               <p>Dễ dàng tiếp cập Spot, Futures, Margin, Copy Trading, và các Bot giao dịch AI miễn phí để tối đa hóa chiến lược đầu tư của bạn.</p>
             </div>
             <div className="k-benefit-card">
-              <div className="b-icon">⚡</div>
+              <div className="b-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
               <h3>Thanh khoản hàng đầu thị trường</h3>
               <p>Hệ thống khớp lệnh siêu tốc độ, trượt giá cực thấp và nạp/rút nhanh chóng để bạn nắm bắt cơ hội thị trường một cách tối ưu.</p>
             </div>

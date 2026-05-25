@@ -1632,7 +1632,7 @@ export default function TradePage() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#24DB9B', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '20px' }}>⚡</span> Nạp tiền nhanh
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Nạp tiền nhanh
               </h3>
               <button 
                 onClick={() => setShowFastDepositModal(false)}
@@ -1807,7 +1807,7 @@ export default function TradePage() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#24DB9B', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '22px' }}>🏦</span> Chuyển khoản ngân hàng
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="10" rx="2" ry="2"></rect><path d="M12 2L2 7l10 5 10-5-10-5Z"></path><path d="M12 22V12"></path></svg> Chuyển khoản ngân hàng
               </h3>
               <button 
                 onClick={() => setShowTransferModal(false)}

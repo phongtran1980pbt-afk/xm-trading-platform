@@ -53,7 +53,7 @@ export function BuyCryptoMenu() {
         <div>
           <h3 className="mega-title">Chi tiêu tiền điện tử</h3>
           <div className="kucard-banner">
-            <img src="https://assets.staticimg.com/kucard/banner_kucard_new.png" alt="KuCard" />
+            <img src="/kucard_crypto_card.png" alt="KuCard" style={{ width: '100%', borderRadius: '12px', marginBottom: '16px' }} />
             <h4>KuCard</h4>
             <p>Dùng KuCard để thanh toán và nhận tiền hoàn lại</p>
           </div>
@@ -337,7 +337,10 @@ export function LaunchpadMenu() {
       <div className="mega-container mega-grid-3">
         {/* Col 1: Promo box */}
         <div className="trade-alpha-box">
-          <h3>🚀 Trung Tâm<br/>Bệ Phóng</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+            Trung Tâm<br/>Bệ Phóng
+          </h3>
           <p>Tham gia sớm vào các dự án blockchain tiềm năng trước khi niêm yết chính thức trên thị trường.</p>
           <Link to="/articles/category/launchpad" className="mega-btn-white">Xem tất cả</Link>
 
