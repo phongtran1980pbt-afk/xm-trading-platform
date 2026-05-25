@@ -18,7 +18,7 @@ export function BuyCryptoMenu() {
                 <p>Tiền sao thương gia đã được xác minh, sử dụng nhiều phương thức thanh toán nội địa</p>
               </div>
             </a>
-            <a href="#" className="mega-link-block">
+            <Link to="/support/deposit" className="mega-link-block">
               <div className="mega-link-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
               </div>
@@ -26,7 +26,7 @@ export function BuyCryptoMenu() {
                 <h4>Nạp tiền pháp định</h4>
                 <p>Nạp tiền vào số dư tiền pháp định thông qua chuyển khoản ngân hàng</p>
               </div>
-            </a>
+            </Link>
             <a href="#" className="mega-link-block">
               <div className="mega-link-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>

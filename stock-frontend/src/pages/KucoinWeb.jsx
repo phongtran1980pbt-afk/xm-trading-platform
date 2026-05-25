@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import LanguageSelector from '../components/LanguageSelector';
 import { BuyCryptoMenu, TradeMenu, DerivativesMenu, EarnMenu, MoreMenu } from './MegaMenus';
@@ -7,13 +7,31 @@ import './KucoinWeb.css';
 function KucoinWeb() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     try {
       const loggedInUser = localStorage.getItem('user');
       if (loggedInUser && loggedInUser !== 'undefined') {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        setUser(JSON.parse(loggedInUser));
+        let parsed = JSON.parse(loggedInUser);
+        if (parsed && parsed.fullName) {
+          const original = parsed.fullName;
+          parsed.fullName = parsed.fullName
+            .replace(/Quáº£n/g, 'Quản')
+            .replace(/trá»‹/g, 'trị')
+            .replace(/viÃªn/g, 'viên')
+            .replace(/HÃ¡»‡/g, 'Hệ')
+            .replace(/Há»‡/g, 'Hệ')
+            .replace(/thá»‘ng/g, 'thống')
+            .replace(/Tá»‘i/g, 'Tối')
+            .replace(/TiÃªu/g, 'Tiêu')
+            .replace(/chuáº©n/g, 'chuẩn');
+          
+          if (parsed.fullName !== original) {
+            localStorage.setItem('user', JSON.stringify(parsed));
+          }
+        }
+        setUser(parsed);
       }
     } catch (e) {
       console.error('Lỗi parse user:', e);
@@ -26,6 +44,91 @@ function KucoinWeb() {
     localStorage.removeItem('token');
     setUser(null);
   };
+
+  const [balance, setBalance] = useState(0);
+  const [showBalance, setShowBalance] = useState(true);
+
+  // Notifications state
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [toastMsg, setToastMsg] = useState(null);
+  const prevLatestId = useRef(null);
+  const toastTimerRef = useRef(null);
+  
+  // Fetch notifications
+  useEffect(() => {
+    let intervalId;
+    function fetchNotifications() {
+      if (user && user.id) {
+        fetch(`http://localhost:5001/api/notifications/${user.id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+              setNotifications(data);
+              
+              if (data.length > 0) {
+                const latestId = data[0].Id;
+                if (prevLatestId.current !== null && latestId !== prevLatestId.current) {
+                  // Mới có thông báo mới!
+                  setToastMsg(data[0].Message);
+                  if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+                  toastTimerRef.current = setTimeout(() => {
+                    setToastMsg(null);
+                  }, 5000); // 5 seconds
+                }
+                prevLatestId.current = latestId;
+              }
+            }
+          })
+          .catch(console.error);
+      }
+    }
+    
+    if (user && user.id) {
+      fetchNotifications();
+      intervalId = setInterval(fetchNotifications, 5000);
+    }
+    return () => clearInterval(intervalId);
+  }, [user]);
+
+  const unreadCount = notifications.filter(n => !n.IsRead).length;
+
+  const handleOpenNotifications = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications && unreadCount > 0 && user && user.id) {
+      // Mark as read
+      fetch(`http://localhost:5001/api/notifications/${user.id}/read`, { method: 'POST' })
+        .then(() => {
+          setNotifications(prev => prev.map(n => ({ ...n, IsRead: true })));
+        })
+        .catch(console.error);
+    }
+  };
+
+  // Poll for real-time balance
+  useEffect(() => {
+    let intervalId;
+    
+    function fetchBalance() {
+      if (user && user.id) {
+        fetch(`http://localhost:5001/api/auth/balance/${user.id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && typeof data.balance === 'number') {
+              setBalance(data.balance);
+            }
+          })
+          .catch(console.error);
+      }
+    }
+
+    if (user && user.id) {
+      fetchBalance();
+      intervalId = setInterval(fetchBalance, 3000);
+    }
+    
+    return () => clearInterval(intervalId);
+  }, [user]);
 
   const [emailInput, setEmailInput] = useState('');
   const [activeTab, setActiveTab] = useState('hot');
@@ -86,6 +189,16 @@ function KucoinWeb() {
       <header className="k-header">
         <div className="k-header-container">
           <div className="k-header-left">
+            <button className="k-hamburger-btn" onClick={() => setShowMobileMenu(!showMobileMenu)} aria-label="Menu">
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                {showMobileMenu ? (
+                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
+                )}
+              </svg>
+            </button>
+
             <Link to="/" className="k-logo">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7.5 4L4 7.5V16.5L7.5 20H10.5L7 16.5V7.5L10.5 4H7.5Z" fill="#24DB9B" />
@@ -144,6 +257,44 @@ function KucoinWeb() {
           </div>
 
           <div className="k-header-right">
+            <div className="k-header-assets-nav">
+              <Link to="/support/deposit" className="k-deposit-btn" style={{ textDecoration: 'none' }}>↓ Thêm tiền</Link>
+              <div className="k-dropdown-wrapper">
+                <span>Tài sản ▾</span>
+                <div className="k-assets-dropdown">
+                  <div className="k-assets-header">
+                    <span>Tổng quan</span>
+                  </div>
+                  <div className="k-assets-balance" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="k-currency" style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                      {showBalance ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '******'}
+                    </span>
+                    <svg onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBalance(!showBalance); }} style={{ cursor: 'pointer', marginTop: '2px' }} width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24">
+                      {showBalance ? (
+                        <>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </>
+                      ) : (
+                        <>
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </>
+                      )}
+                    </svg>
+                  </div>
+                  <div className="k-assets-divider" />
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Tài khoản tài trợ</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản giao dịch</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Tài khoản Futures</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Tài khoản Ký quỹ</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản tài chính</a>
+                </div>
+              </div>
+              <div className="k-dropdown-wrapper">
+                <span>Lệnh ▾</span>
+              </div>
+            </div>
             <div className="k-util-group">
               <button className="k-util-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -167,6 +318,37 @@ function KucoinWeb() {
                   </div>
                 )}
               </div>
+
+              <div style={{ position: 'relative' }}>
+                <button className="k-util-btn" title="Thông báo" onClick={handleOpenNotifications}>
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span style={{ position: 'absolute', top: '0', right: '0', background: 'red', color: 'white', fontSize: '10px', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <div className="k-notifications-dropdown" style={{ position: 'absolute', top: '40px', right: '-80px', width: '320px', background: '#1e2329', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: 100, border: '1px solid #2b3139', padding: '10px 0' }}>
+                    <div style={{ padding: '10px 20px', fontWeight: 'bold', borderBottom: '1px solid #2b3139', color: '#eaecef' }}>Thông báo</div>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                      {notifications.length === 0 ? (
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#848e9c', fontSize: '14px' }}>Không có thông báo nào</div>
+                      ) : (
+                        notifications.map(n => (
+                          <div key={n.Id} style={{ padding: '15px 20px', borderBottom: '1px solid #2b3139', color: n.IsRead ? '#848e9c' : '#eaecef', background: n.IsRead ? 'transparent' : 'rgba(0, 255, 163, 0.05)', fontSize: '13px' }}>
+                            <div style={{ marginBottom: '5px', lineHeight: '1.4' }}>{n.Message}</div>
+                            <div style={{ fontSize: '11px', color: '#848e9c' }}>{new Date(n.CreatedAt.replace('Z', '')).toLocaleString('vi-VN')}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               <button className="k-util-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -186,18 +368,50 @@ function KucoinWeb() {
             <div className="k-header-divider"></div>
             
             {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ color: '#fff', fontSize: '13px', fontWeight: '500' }}>
-                  Xin chào, {user.fullName || user.email}
-                </span>
-                {user.isAdmin && (
-                  <Link to="/admin" style={{ color: '#24DB9B', fontSize: '13px', fontWeight: 'bold', textDecoration: 'none', border: '1px solid #24DB9B', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer' }}>
-                    Quản trị viên
-                  </Link>
-                )}
-                <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid #7e8a9c', color: '#7e8a9c', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                  Đăng xuất
-                </button>
+              <div className="k-user-menu">
+                {/* Avatar + name (always visible) */}
+                <div className="k-user-trigger">
+                  <div className="k-user-avatar">
+                    {(user.username || user.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <span className="k-user-name">
+                    {user.username || user.fullName || user.email}
+                  </span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+
+                {/* Dropdown (visible on hover) */}
+                <div className="k-user-dropdown">
+                  <div className="k-user-dropdown-header">
+                    <div className="k-user-avatar k-user-avatar-lg">
+                      {(user.username || user.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ color: '#eaecef', fontWeight: 600, fontSize: '13px' }}>
+                        {user.username || user.fullName || user.email}
+                      </div>
+                      <div style={{ color: '#848e9c', fontSize: '11px' }}>
+                        {user.email}
+                      </div>
+                      {user.accountCode && (
+                        <div style={{ color: '#00FFA3', fontSize: '11px', marginTop: '4px', fontWeight: 600, display: 'inline-block', background: 'rgba(0, 255, 163, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                          UID: {user.accountCode}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="k-user-dropdown-divider" />
+                  {user.isAdmin && (
+                    <Link to="/admin" className="k-user-dropdown-item k-user-dropdown-admin">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                      Quản trị viên
+                    </Link>
+                  )}
+                  <button onClick={handleLogout} className="k-user-dropdown-item k-user-dropdown-logout">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Đăng xuất
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -208,6 +422,49 @@ function KucoinWeb() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Drawer Menu */}
+      {showMobileMenu && (
+        <div className="k-mobile-menu-drawer">
+          <div className="k-mobile-menu-body">
+            <div className="k-mobile-nav-item"><Link to="/" onClick={() => setShowMobileMenu(false)}>Trang chủ</Link></div>
+            <div className="k-mobile-nav-item"><Link to="/markets/alpha" onClick={() => setShowMobileMenu(false)}>Thị trường</Link></div>
+            <div className="k-mobile-nav-item"><Link to="/trade/BULL" onClick={() => setShowMobileMenu(false)}>Giao dịch</Link></div>
+            <div className="k-mobile-nav-item"><Link to="/support/deposit" onClick={() => setShowMobileMenu(false)}>↓ Thêm tiền</Link></div>
+            
+            <div className="k-mobile-divider" />
+            
+            {user ? (
+              <>
+                <div className="k-mobile-user-info" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0' }}>
+                  <div className="k-user-avatar">
+                    {(user.username || user.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ color: '#fff', fontSize: '14px', fontWeight: 600 }}>{user.username || user.fullName || user.email}</div>
+                    {user.accountCode && <div style={{ color: '#00FFA3', fontSize: '12px', marginTop: '2px' }}>UID: {user.accountCode}</div>}
+                  </div>
+                </div>
+                {user.isAdmin && (
+                  <div className="k-mobile-nav-item">
+                    <Link to="/admin" onClick={() => setShowMobileMenu(false)} style={{ color: '#24DB9B' }}>Quản trị viên</Link>
+                  </div>
+                )}
+                <div className="k-mobile-nav-item">
+                  <button onClick={() => { handleLogout(); setShowMobileMenu(false); }} className="k-mobile-logout-btn" style={{ background: 'none', border: 'none', color: '#ff6b7e', fontSize: '14px', fontWeight: 600, padding: 0, cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+                    Đăng xuất
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="k-mobile-auth-btns" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                <Link to="/login" className="k-mobile-login-btn" onClick={() => setShowMobileMenu(false)} style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#1e2329', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>Đăng nhập</Link>
+                <Link to="/register" className="k-mobile-register-btn" onClick={() => setShowMobileMenu(false)} style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#fff', color: '#000', borderRadius: '6px', textDecoration: 'none', fontWeight: 700 }}>Đăng ký</Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ===== HERO SECTION ===== */}
       <section className="k-hero">
@@ -516,9 +773,9 @@ function KucoinWeb() {
             <div className="footer-col">
               <h4>Dịch vụ</h4>
               <a href="#">Hướng dẫn cho người mới</a>
-              <a href="#">Trung tâm trợ giúp</a>
-              <a href="#">Gửi yêu cầu hỗ trợ</a>
-              <a href="#">Hỗ trợ kỹ thuật</a>
+              <Link to="/support/deposit">Trung tâm trợ giúp</Link>
+              <Link to="/support/deposit">Gửi yêu cầu hỗ trợ</Link>
+              <Link to="/support/deposit">Hỗ trợ kỹ thuật</Link>
               <a href="#">Xác minh về</a>
               <a href="#">Trung tâm xác minh chính thức</a>
               <a href="#">P2P & VIP</a>
@@ -599,6 +856,29 @@ function KucoinWeb() {
           </button>
         </div>
       </footer>
+
+      {/* ===== TOAST NOTIFICATION ===== */}
+      {toastMsg && (
+        <div style={{
+          position: 'fixed',
+          top: '80px',
+          right: '20px',
+          background: 'rgba(36, 219, 155, 0.95)',
+          color: '#000',
+          padding: '16px 24px',
+          borderRadius: '8px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          zIndex: 9999,
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          animation: 'slideInRight 0.3s ease-out'
+        }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          {toastMsg}
+        </div>
+      )}
     </div>
   );
 }

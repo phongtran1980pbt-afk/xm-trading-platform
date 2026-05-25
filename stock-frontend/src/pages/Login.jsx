@@ -20,8 +20,7 @@ function Login() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      const response = await axios.post(`${apiUrl}/api/auth/login`, {
+      const response = await axios.post('http://localhost:5001/api/auth/login', {
         email: identifier,
         password: password
       });
@@ -29,11 +28,8 @@ function Login() {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
-        if (response.data.user.isAdmin) {
-          navigate('/admin');
-        } else {
-          navigate('/'); // Redirect to homepage
-        }
+        // Redirect all users (including admin) to homepage
+        navigate('/');
       }
     } catch (error) {
       alert(error.response?.data?.message || 'Lỗi kết nối máy chủ!');

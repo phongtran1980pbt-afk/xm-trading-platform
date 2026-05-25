@@ -1,0 +1,319 @@
+/* Support Page Stylesheet */
+
+.support-page {
+  background-color: #0b0e11;
+  color: #eaecef;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.support-header {
+  background-color: #151a21;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.support-header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.support-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.support-logo-text {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.support-badge {
+  background: rgba(36, 219, 155, 0.1);
+  color: #24DB9B;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  letter-spacing: 0.5px;
+}
+
+.support-back-home {
+  color: #848e9c;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.support-back-home:hover {
+  color: #24DB9B;
+}
+
+/* Hero Section */
+.support-hero {
+  background: radial-gradient(circle at top right, rgba(36, 219, 155, 0.08), transparent 50%),
+              linear-gradient(180deg, #151a21, #0b0e11);
+  padding: 60px 24px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.support-hero-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.support-hero h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.support-hero p {
+  color: #848e9c;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 30px;
+}
+
+.support-search-wrap {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.support-search-wrap .search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #848e9c;
+}
+
+.support-search-wrap input {
+  width: 100%;
+  background-color: #1e2329;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  padding: 16px 20px 16px 52px;
+  color: #ffffff;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.25s;
+  box-sizing: border-box;
+}
+
+.support-search-wrap input:focus {
+  border-color: #24DB9B;
+  box-shadow: 0 0 12px rgba(36, 219, 155, 0.15);
+  background-color: #252b34;
+}
+
+/* Main Content */
+.support-main-content {
+  padding: 50px 24px 80px 24px;
+  flex: 1;
+}
+
+.support-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title-wrap {
+  margin-bottom: 32px;
+}
+
+.section-title-wrap h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.section-title-wrap p {
+  color: #848e9c;
+  font-size: 14px;
+}
+
+/* Grid of Cards */
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.faq-card {
+  background-color: #151a21;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.faq-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(36, 219, 155, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 
+              0 0 16px rgba(36, 219, 155, 0.05);
+}
+
+.faq-card-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.faq-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.faq-card p {
+  color: #848e9c;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  flex: 1;
+}
+
+.faq-card-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #24DB9B;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  padding-top: 16px;
+}
+
+.faq-card-action .arrow {
+  transition: transform 0.2s;
+}
+
+.faq-card:hover .faq-card-action .arrow {
+  transform: translateX(4px);
+}
+
+/* Empty State */
+.faq-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  background-color: #151a21;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.faq-empty-state p {
+  color: #848e9c;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Notice Card */
+.support-notice-card {
+  background-color: rgba(246, 70, 93, 0.05);
+  border: 1px solid rgba(246, 70, 93, 0.15);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 50px;
+  align-items: flex-start;
+}
+
+.support-notice-card .notice-icon {
+  font-size: 24px;
+}
+
+.support-notice-card h4 {
+  color: #F6465D;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.support-notice-card p {
+  color: #c3ced9;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Call to action footer buttons */
+.support-footer-cta {
+  text-align: center;
+  padding: 30px;
+  background: linear-gradient(135deg, rgba(36, 219, 155, 0.05), transparent);
+  border-radius: 16px;
+  border: 1px solid rgba(36, 219, 155, 0.1);
+}
+
+.support-footer-cta p {
+  color: #848e9c;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.support-direct-chat-btn,
+.support-direct-chat-btn-lg {
+  background-color: #24DB9B;
+  color: #0c0e12;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(36, 219, 155, 0.2);
+}
+
+.support-direct-chat-btn {
+  border-radius: 20px;
+  padding: 10px 24px;
+  font-size: 13px;
+}
+
+.support-direct-chat-btn-lg {
+  border-radius: 26px;
+  padding: 14px 32px;
+  font-size: 15px;
+}
+
+.support-direct-chat-btn:hover,
+.support-direct-chat-btn-lg:hover {
+  background-color: #1ec88c;
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(36, 219, 155, 0.3);
+}
+
+@media (max-width: 768px) {
+  .faq-grid {
+    grid-template-columns: 1fr;
+  }
+  .support-hero h1 {
+    font-size: 26px;
+  }
+}

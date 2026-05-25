@@ -66,8 +66,46 @@ const INITIAL_COINS = {
 
 const COIN_KEYS = Object.keys(INITIAL_COINS);
 
-// ─── Seeded Pseudo-Random (mulberry32) ───────────────────────────────────────
-// Same seed → same number. Used to make all browsers compute identical prices.
+// Mapping from local symbols to Binance USDT pairs
+const BINANCE_MAPPING = {
+  BTC: 'BTCUSDT',
+  ETH: 'ETHUSDT',
+  ZEC: 'ZECUSDT',
+  XMR: 'XMRUSDT',
+  AAVE: 'AAVEUSDT',
+  NEAR: 'NEARUSDT',
+  TAO: 'TAOUSDT',
+  UNI: 'UNIUSDT',
+  SHIB: 'SHIBUSDT',
+  DOGE: 'DOGEUSDT',
+  PEPE: 'PEPEUSDT',
+  WIF: 'WIFUSDT',
+  BONK: 'BONKUSDT',
+  FLOKI: 'FLOKIUSDT',
+  BRETT: 'BRETTUSDT',
+  FIL: 'FILUSDT',
+  STORJ: 'STORJUSDT',
+  AR: 'ARUSDT',
+  DATA: 'DATAUSDT',
+  SKL: 'SKLUSDT',
+  ELA: 'ELAUSDT',
+  ALEPH: 'ALEPHUSDT',
+  VET: 'VETUSDT',
+  THETA: 'THETAUSDT',
+  AIOZ: 'AIOZUSDT',
+  KIN: 'KINUSDT',
+  WAXP: 'WAXPUSDT',
+  TFUEL: 'TFUELUSDT',
+};
+
+const REVERSE_BINANCE_MAPPING = Object.fromEntries(
+  Object.entries(BINANCE_MAPPING).map(([k, v]) => [v, k])
+);
+
+// Global mutable cache of real-world prices
+const LATEST_REAL_PRICES = {};
+
+// ─── Seeded Pseudo-Random (mulberry32) — same seed → same number ──────────────
 function seededRand(seed) {
   let t = (seed + 0x6D2B79F5) | 0;
   t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -75,7 +113,6 @@ function seededRand(seed) {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
-// Stable integer hash of a string (for per-coin offset)
 function hashStr(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) {
@@ -86,26 +123,23 @@ function hashStr(str) {
 
 const COIN_HASHES = Object.fromEntries(COIN_KEYS.map(k => [k, hashStr(k)]));
 
-// ─── Fixed epoch: start of today UTC (same for everyone worldwide) ────────────
-// We fast-forward from this point so F5 always gives the same price as "live"
-function getEpochBucket() {
-  const d = new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  return Math.floor(d.getTime() / 2000);
-}
+// ─── Fixed epoch: Jan 1, 2026 00:00:00 UTC — NEVER changes across days ────────
+const FIXED_EPOCH_SEC = 1767225600; // 2026-01-01T00:00:00Z
+const MACRO_BUCKET_SEC = 300;       // 5-minute macro buckets for long history (~40k/year, fast)
+const MICRO_BUCKET_SEC = 2;         // 2-second micro buckets for live smooth updates
 
-// Apply one tick (one 2-second bucket) to a price state
-function applyBucket(state, bucket) {
+// ─── Apply one 5-minute macro bucket (used for historical fast-forward) ────────
+function applyMacroBucket(state, bucket) {
   COIN_KEYS.forEach(key => {
     const coinHash = COIN_HASHES[key];
-    const r1 = seededRand(bucket * 131 + coinHash);       // delta direction
-    const r2 = seededRand(bucket * 131 + coinHash + 7);   // change nudge
+    const r1 = seededRand(bucket * 7919 + coinHash * 31);
+    const r2 = seededRand(bucket * 7919 + coinHash * 31 + 17);
 
     const p = state[key].price;
-    const delta = p * (r1 * 0.004 - 0.002);               // ±0.2% per tick
-    const newP = Math.max(p + delta, p * 0.0001);
-    let chg = state[key].change + (r2 * 0.2 - 0.1);
-    if (chg > 15) chg = 2;   // reset runaway % display
+    const delta = p * (r1 * 0.02 - 0.01);
+    const newP  = Math.max(p + delta, p * 0.0001);
+    let chg = state[key].change + (r2 * 2 - 1);
+    if (chg >  15) chg =  2;
     if (chg < -15) chg = -2;
 
     state[key] = {
@@ -113,36 +147,61 @@ function applyBucket(state, bucket) {
       prev:   p,
       change: parseFloat(chg.toFixed(2)),
       isUp:   newP >= p,
+      isReal: false,
     };
   });
 }
 
-// ─── Build the CURRENT state by fast-forwarding from epoch to now ─────────────
-// This is deterministic: same result whether you F5'd or not.
+// ─── Apply one 2-second micro bucket (live updates inside current 5-min window) ─
+function applyMicroBucket(state, microBucket) {
+  COIN_KEYS.forEach(key => {
+    const coinHash = COIN_HASHES[key];
+    const r1 = seededRand(microBucket * 131 + coinHash);
+    const r2 = seededRand(microBucket * 131 + coinHash + 7);
+
+    const p = state[key].price;
+    const delta = p * (r1 * 0.004 - 0.002);
+    const newP  = Math.max(p + delta, p * 0.0001);
+    let chg = state[key].change + (r2 * 0.2 - 0.1);
+    if (chg >  15) chg =  2;
+    if (chg < -15) chg = -2;
+
+    state[key] = {
+      price:  newP,
+      prev:   p,
+      change: parseFloat(chg.toFixed(2)),
+      isUp:   newP >= p,
+      isReal: false,
+    };
+  });
+}
+
+// ─── Build CURRENT state: deterministic, same result regardless of when user opens ─
 function buildCurrentState() {
-  // Start from initial prices
   const state = Object.fromEntries(
     COIN_KEYS.map(k => [k, {
       price:  INITIAL_COINS[k].price,
       prev:   INITIAL_COINS[k].price,
       change: 0,
       isUp:   false,
+      isReal: false,
     }])
   );
-
-  const epochBucket  = getEpochBucket();
-  const currentBucket = Math.floor(Date.now() / 2000);
-
-  // Fast-forward: iterate through every 2-second bucket since midnight UTC
-  // Max ~43 200 buckets per day — runs in <150ms thanks to simple arithmetic
-  for (let b = epochBucket; b <= currentBucket; b++) {
-    applyBucket(state, b);
-  }
 
   return state;
 }
 
-// Export so other components can read initial prices
+export function computeCurrentCoinPrice(coinKey) {
+  if (LATEST_REAL_PRICES[coinKey]) {
+    return LATEST_REAL_PRICES[coinKey].price;
+  }
+
+  const initialPrice = INITIAL_COINS[coinKey]?.price;
+  if (initialPrice === undefined) return null;
+
+  return initialPrice;
+}
+
 export const INITIAL_COIN_PRICES = Object.fromEntries(
   COIN_KEYS.map(k => [k, INITIAL_COINS[k].price])
 );
@@ -150,28 +209,185 @@ export const INITIAL_COIN_PRICES = Object.fromEntries(
 export const PriceContext = createContext(null);
 
 export function PriceProvider({ children }) {
-  // On first render: compute where prices "should be right now"
   const [prices, setPrices] = useState(buildCurrentState);
-  const lastBucket = useRef(Math.floor(Date.now() / 2000));
 
+  const lastMicroRef = useRef(Math.floor(Date.now() / 1000 / MICRO_BUCKET_SEC));
+  const lastMacroRef = useRef(Math.floor(Date.now() / 1000 / MACRO_BUCKET_SEC));
+  const coinOffsetsRef = useRef({});
+
+  // Initialize and synchronise Binance live prices
   useEffect(() => {
-    function tick() {
-      const nowBucket = Math.floor(Date.now() / 2000);
-      if (nowBucket <= lastBucket.current) return; // same bucket, skip
-      lastBucket.current = nowBucket;
+    let ws = null;
+    let isClosed = false;
 
-      // Apply exactly the new bucket on top of current prices
-      setPrices(prev => {
-        const next = {};
-        COIN_KEYS.forEach(k => { next[k] = { ...prev[k] }; });
-        applyBucket(next, nowBucket);
-        return next;
-      });
+    const fetchInitialRealPrices = async () => {
+      try {
+        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+        if (!res.ok) throw new Error('Failed to fetch Binance prices');
+        const data = await res.json();
+        
+        const updates = {};
+        data.forEach(item => {
+          const coinKey = REVERSE_BINANCE_MAPPING[item.symbol];
+          if (coinKey) {
+            const priceVal = parseFloat(item.lastPrice);
+              const changePercent = parseFloat(item.priceChangePercent);
+            if (!isNaN(priceVal)) {
+              const offset = coinOffsetsRef.current[coinKey] || 0;
+              const adjustedPrice = priceVal * (1 + offset);
+              updates[coinKey] = {
+                price: adjustedPrice,
+                prev: adjustedPrice,
+                change: isNaN(changePercent) ? 0 : parseFloat(changePercent.toFixed(2)),
+                isUp: changePercent >= 0,
+                isReal: true,
+                rawPrice: priceVal,
+              };
+              LATEST_REAL_PRICES[coinKey] = updates[coinKey];
+            }
+          }
+        });
+
+        if (Object.keys(updates).length > 0) {
+          setPrices(prev => {
+            const next = { ...prev };
+            Object.entries(updates).forEach(([key, val]) => {
+              next[key] = val;
+            });
+            return next;
+          });
+        }
+      } catch (err) {
+        console.warn('Could not initialize real prices:', err);
+      }
+    };
+
+    fetchInitialRealPrices();
+
+    function connectWS() {
+      if (isClosed) return;
+      
+      ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
+
+      ws.onmessage = (event) => {
+        try {
+          const arr = JSON.parse(event.data);
+          if (!Array.isArray(arr)) return;
+
+          const updates = {};
+          arr.forEach(item => {
+            const coinKey = REVERSE_BINANCE_MAPPING[item.s];
+            if (coinKey) {
+              const price = parseFloat(item.c);
+              const open = parseFloat(item.o);
+              if (!isNaN(price) && !isNaN(open) && open > 0) {
+                const offset = coinOffsetsRef.current[coinKey] || 0;
+                const adjustedPrice = price * (1 + offset);
+                const change = ((adjustedPrice - open) / open) * 100;
+                updates[coinKey] = {
+                  price: adjustedPrice,
+                  change: parseFloat(change.toFixed(2)),
+                  isUp: adjustedPrice >= open,
+                  isReal: true,
+                  rawPrice: price
+                };
+              }
+            }
+          });
+
+          if (Object.keys(updates).length > 0) {
+            setPrices(prev => {
+              const next = { ...prev };
+              Object.entries(updates).forEach(([key, val]) => {
+                const oldPrice = prev[key]?.price ?? val.price;
+                next[key] = {
+                  ...val,
+                  prev: oldPrice,
+                  isUp: val.price >= oldPrice
+                };
+                LATEST_REAL_PRICES[key] = next[key];
+              });
+              return next;
+            });
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.warn('Binance WebSocket error:', err);
+      };
+
+      ws.onclose = () => {
+        console.warn('Binance WebSocket closed, reconnecting in 5s...');
+        setTimeout(() => {
+          if (!isClosed) connectWS();
+        }, 5000);
+      };
     }
 
-    // Poll every 500ms to catch bucket boundary quickly
-    const id = setInterval(tick, 500);
-    return () => clearInterval(id);
+    connectWS();
+
+    return () => {
+      isClosed = true;
+      if (ws) ws.close();
+    };
+  }, []);
+
+  // Fetch custom coin prices from backend every 2 seconds
+  useEffect(() => {
+    const fetchBackendPrices = async () => {
+      try {
+        const res = await fetch('http://localhost:5001/api/prices');
+        if (!res.ok) throw new Error('Failed to fetch backend prices');
+        const data = await res.json();
+        const serverPrices = data.prices || data;
+        const coinOffsets = data.coinOffsets || {};
+        coinOffsetsRef.current = coinOffsets;
+        
+        setPrices(prev => {
+          const next = { ...prev };
+          
+          // Apply coin offset to real coins
+          Object.keys(next).forEach(key => {
+            if (next[key].isReal && LATEST_REAL_PRICES[key]) {
+               const rawPrice = LATEST_REAL_PRICES[key].rawPrice || LATEST_REAL_PRICES[key].price;
+               if (!LATEST_REAL_PRICES[key].rawPrice) {
+                 LATEST_REAL_PRICES[key].rawPrice = LATEST_REAL_PRICES[key].price;
+               }
+               const offset = coinOffsets[key] || 0;
+               const newPrice = rawPrice * (1 + offset);
+               next[key].price = newPrice;
+               next[key].isUp = newPrice >= next[key].prev;
+            }
+          });
+
+          Object.entries(serverPrices).forEach(([key, val]) => {
+            // Only update custom coins from backend
+            if (next[key] && !next[key].isReal) {
+              const oldPrice = next[key].price;
+              next[key] = {
+                price: val.price,
+                prev: oldPrice,
+                change: val.change,
+                isUp: val.price >= oldPrice,
+                isReal: false,
+                backendSynced: true
+              };
+              LATEST_REAL_PRICES[key] = next[key];
+            }
+          });
+          return next;
+        });
+      } catch (err) {
+        console.warn('Could not fetch custom prices from backend:', err);
+      }
+    };
+
+    fetchBackendPrices();
+    const interval = setInterval(fetchBackendPrices, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

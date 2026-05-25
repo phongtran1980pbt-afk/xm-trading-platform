@@ -9,7 +9,7 @@ const TEMPLATES = [
   'Xin chào! Tôi có thể giúp gì cho bạn?',
   'Vui lòng chờ một chút.',
   'Vấn đề đã được ghi nhận.',
-  'Để nạp tiền vào mục Nạp tiền > Pháp định.',
+  'Hãy thanh toán trước khi giao dịch',
   'Phí giao dịch là 0.1% mỗi lệnh.',
 ];
 
@@ -28,6 +28,7 @@ export default function AdminChatPanel() {
   const [text, setText] = useState('');
   const [totalUnread, setTotalUnread] = useState(0);
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Poll mỗi 2 giây
   useEffect(() => {
@@ -81,6 +82,17 @@ export default function AdminChatPanel() {
     setMessages(msgs);
   }
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      handleSend(`[IMAGE]:${ev.target.result}`);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset
+  };
+
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -97,7 +109,7 @@ export default function AdminChatPanel() {
     <>
       {/* ── Nút FAB admin ── */}
       <button
-        className="admin-panel-fab"
+        className={`admin-panel-fab ${open ? 'open' : ''}`}
         onClick={() => setOpen(o => !o)}
         title="Mở bảng quản trị viên"
       >
@@ -107,13 +119,10 @@ export default function AdminChatPanel() {
           </svg>
         ) : (
           <>
-            <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            <svg width="20" height="20" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
-            <span className="fab-label">ADMIN</span>
+            <span className="fab-text">ADMIN</span>
           </>
         )}
         {!open && totalUnread > 0 && (
@@ -123,7 +132,7 @@ export default function AdminChatPanel() {
 
       {/* ── Panel nổi ── */}
       {open && (
-        <div className="admin-float-panel">
+        <div className={`admin-float-panel ${activeId ? 'has-active-chat' : ''}`}>
 
           {/* Sidebar danh sách khách */}
           <aside className="afp-sidebar">
@@ -193,6 +202,28 @@ export default function AdminChatPanel() {
               <>
                 {/* Header */}
                 <div className="afp-chat-header">
+                  <button 
+                    className="afp-back-btn" 
+                    onClick={() => setActiveId(null)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#848e9c',
+                      marginRight: '8px',
+                      cursor: 'pointer',
+                      display: 'none',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px'
+                    }}
+                    title="Quay lại"
+                  >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <line x1="19" y1="12" x2="5" y2="12"></line>
+                      <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                  </button>
+
                   <div className="afp-chat-avatar">
                     {(activeSession?.username || 'K')[0].toUpperCase()}
                   </div>
@@ -216,11 +247,15 @@ export default function AdminChatPanel() {
                     <div key={msg.id} className={`afp-bubble-wrap ${msg.from === 'admin' ? 'admin' : 'customer'}`}>
                       <span className="afp-label">
                         {msg.from === 'admin'
-                          ? '🛡️ Bạn (Quản trị viên)'
-                          : `👤 ${activeSession?.username || 'Khách hàng'}`}
+                          ? 'Bạn (Quản trị viên)'
+                          : `${activeSession?.username || 'Khách hàng'}`}
                       </span>
                       <div className={`afp-bubble ${msg.from === 'admin' ? 'admin' : 'customer'}`}>
-                        {msg.text}
+                        {msg.text.startsWith('[IMAGE]:') ? (
+                          <img src={msg.text.substring(8)} alt="attachment" style={{ maxWidth: '100%', borderRadius: '8px', display: 'block', maxHeight: '200px', objectFit: 'contain' }} />
+                        ) : (
+                          msg.text
+                        )}
                       </div>
                       <span className="afp-time">{formatTime(msg.timestamp)}</span>
                     </div>
@@ -239,7 +274,24 @@ export default function AdminChatPanel() {
                 </div>
 
                 {/* Input gửi tin */}
-                <div className="afp-input-area">
+                <div className="afp-input-area" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref={fileInputRef} 
+                    style={{ display: 'none' }} 
+                    onChange={handleFileChange} 
+                  />
+                  <button 
+                    className="afp-attach-btn" 
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Gửi hình ảnh"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}
+                  >
+                    <svg width="20" height="20" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                    </svg>
+                  </button>
                   <textarea
                     className="afp-input"
                     placeholder="Nhập phản hồi... (Enter để gửi)"

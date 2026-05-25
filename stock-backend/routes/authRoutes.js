@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login } from '../controllers/authController.js';
+import { register, login, getBalance } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -39,5 +39,7 @@ router.post('/register', register);
  *               password: { type: string, example: "Password123!" }
  */
 router.post('/login', login);
+
+router.get('/balance/:id', getBalance);
 
 export default router;

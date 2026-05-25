@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5001') + '/api/chat';
+const API_BASE = 'http://localhost:5001/api/chat';
 
 /** Get or create a session ID for this customer browser tab */
 export function getSessionId() {

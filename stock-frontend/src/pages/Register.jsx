@@ -55,8 +55,7 @@ function Register() {
        setIsLoading(true);
        setServerError('');
        try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-          const response = await axios.post(`${apiUrl}/api/auth/register`, {
+          const response = await axios.post('http://localhost:5001/api/auth/register', {
              email: email,
              password: password,
              fullName: 'Nhà giao dịch KUCOIN'

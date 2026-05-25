@@ -12,7 +12,7 @@ const ADMIN_TEMPLATES = [
   'Xin chào! Tôi có thể giúp gì cho bạn?',
   'Cảm ơn bạn đã liên hệ! Vui lòng chờ một chút.',
   'Vấn đề của bạn đã được ghi nhận, chúng tôi sẽ xử lý sớm.',
-  'Để nạp tiền, vui lòng vào mục Nạp tiền > Pháp định.',
+  'Hãy thanh toán trước khi giao dịch',
   'Phí giao dịch tại sàn là 0.1% cho mỗi lệnh.',
 ];
 
@@ -22,10 +22,16 @@ function formatTime(ts) {
   return new Date(numTs).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 function formatDate(ts) {
-  const numTs = typeof ts === 'string' ? parseInt(ts, 10) : ts;
-  if (!numTs || isNaN(numTs)) return '';
-  const d = new Date(numTs);
-  return d.toLocaleDateString('vi-VN') + ' ' + formatTime(ts);
+  if (!ts) return '';
+  let d;
+  if (typeof ts === 'string' && ts.includes('T')) {
+    d = new Date(ts.replace('Z', ''));
+  } else {
+    const numTs = typeof ts === 'string' ? parseInt(ts, 10) : ts;
+    d = new Date(numTs);
+  }
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleString('vi-VN');
 }
 
 function playNotificationSound() {
@@ -62,8 +68,15 @@ export default function AdminDashboard() {
   const [sessionPreviews, setSessionPreviews] = useState({});
   const [text, setText] = useState('');
   const [totalUnread, setTotalUnread] = useState(0);
-  const [view, setView] = useState('chats'); // 'chats' | 'logs'
+  const [view, setView] = useState('chats'); // 'chats' | 'logs' | 'deposit'
+  const [showSidebarMobile, setShowSidebarMobile] = useState(true);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [logTab, setLogTab] = useState('all');
+  const [users, setUsers] = useState([]);
+  const [uidInput, setUidInput] = useState('');
+  const [amountInput, setAmountInput] = useState('');
+  const [tradeStats, setTradeStats] = useState({ upUsers: 0, upAmount: 0, downUsers: 0, downAmount: 0 });
+  const [trend, setTrend] = useState('neutral');
   const bottomRef = useRef(null);
 
   // Poll for updates every 1.5 seconds
@@ -100,17 +113,16 @@ export default function AdminDashboard() {
 
     async function fetchLogs() {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-        const res = await fetch(`${apiUrl}/api/admin/audit-logs`);
+        const res = await fetch('http://localhost:5001/api/admin/audit-logs');
         const data = await res.json();
         setAuditLogs(data);
 
         if (data && data.length > 0) {
-          const latestId = data[0].Id;
+          const latestId = Number(data[0].Id);
 
           if (!isFirstLoad && localLastLogId && latestId > localLastLogId) {
             // Found new logs
-            const newLogs = data.filter(log => log.Id > localLastLogId);
+            const newLogs = data.filter(log => Number(log.Id) > localLastLogId);
             newLogs.forEach(log => {
               if (log.Action === 'Tạo tài khoản') {
                 playNotificationSound();
@@ -139,13 +151,199 @@ export default function AdminDashboard() {
     return () => clearInterval(id);
   }, []);
 
-  // Scroll to bottom
+  // Fetch & Poll Users when view is 'deposit' or 'trade'
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (view === 'deposit' || view === 'trade') {
+      const fetchUsers = () => {
+        fetch('http://localhost:5001/api/admin/users')
+          .then(res => res.json())
+          .then(data => setUsers(data))
+          .catch(console.error);
+      };
+      fetchUsers();
+      const id = setInterval(fetchUsers, 5000);
+      return () => clearInterval(id);
+    }
+  }, [view]);
+
+  // Poll Trade Stats and Trend
+  useEffect(() => {
+    if (view === 'trade') {
+      const fetchTradeData = async () => {
+        try {
+          const statsRes = await fetch('http://localhost:5001/api/admin/trade-stats');
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            setTradeStats(stats);
+          }
+          const trendRes = await fetch('http://localhost:5001/api/prices/trend');
+          if (trendRes.ok) {
+            const trendData = await trendRes.json();
+            setTrend(trendData.trend);
+          }
+        } catch (e) { console.error('Error fetching trade data', e); }
+      };
+      fetchTradeData();
+      const id = setInterval(fetchTradeData, 2000);
+      return () => clearInterval(id);
+    }
+  }, [view]);
+
+  async function handleSetTrend(newTrend) {
+    try {
+      const res = await fetch('http://localhost:5001/api/prices/trend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trend: newTrend })
+      });
+      if (res.ok) {
+        setTrend(newTrend);
+        toast.success(`Đã đổi xu hướng thành: ${newTrend === 'up' ? 'TĂNG' : newTrend === 'down' ? 'GIẢM' : 'NGẪU NHIÊN'}`);
+      }
+    } catch (e) {
+      toast.error('Lỗi khi đổi xu hướng');
+    }
+  }
+
+  async function handleDeposit(userId, currentBalance) {
+    const amountStr = window.prompt(`Nhập số lượng $ muốn nạp:`);
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Số tiền không hợp lệ!');
+      return;
+    }
+    
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/deposit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        // Refresh users
+        const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+        const updatedData = await updatedRes.json();
+        setUsers(updatedData);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Có lỗi xảy ra khi nạp tiền');
+    }
+  }
+
+  async function handleConfirmTransfer() {
+    if (!activeId) return;
+    if (!activeId.startsWith('auth_user_')) {
+      toast.error('Cuộc trò chuyện này thuộc khách vãng lai, không thể rút tiền!');
+      return;
+    }
+    
+    const amountStr = window.prompt('Nhập số tiền đã chuyển (Rút từ tài khoản khách hàng) ($):');
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Số tiền không hợp lệ!');
+      return;
+    }
+    
+    const userId = activeId.replace('auth_user_', '');
+    
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/withdraw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        // Tự động gửi tin nhắn xác nhận vào chat
+        await sendMessage(activeId, 'admin', `Hệ thống: Xác nhận đã chuyển tiền thành công số tiền $${amount}.`);
+        // Refresh tin nhắn
+        const newMsgs = await getMessages(activeId);
+        setMessages(newMsgs);
+        // Refresh danh sách users nếu cần
+        if (view === 'deposit' || view === 'trade') {
+          const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+          const updatedData = await updatedRes.json();
+          setUsers(updatedData);
+        }
+      } else {
+        toast.error(data.message || 'Lỗi khi thực hiện rút tiền');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Có lỗi xảy ra khi thực hiện rút tiền');
+    }
+  }
+
+  async function handleFastDeposit(e) {
+    e.preventDefault();
+    if (!uidInput) return toast.error('Vui lòng nhập mã UID!');
+    const amount = parseFloat(amountInput);
+    if (isNaN(amount) || amount <= 0) return toast.error('Số tiền không hợp lệ!');
+    
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/users/deposit-by-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountCode: uidInput, amount })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setUidInput('');
+        setAmountInput('');
+        // Refresh users
+        const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+        const updatedData = await updatedRes.json();
+        setUsers(updatedData);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Có lỗi xảy ra khi nạp tiền bằng UID');
+    }
+  }
+
+  const handleToggleStatus = async (userId) => {
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/toggle-status`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.isActive ? 'Đã mở khóa tài khoản!' : 'Đã khóa tài khoản thành công!');
+        setUsers(prev => prev.map(u => u.Id === userId ? { ...u, IsActive: data.isActive } : u));
+      } else {
+        toast.error(data.message || 'Lỗi khi thay đổi trạng thái tài khoản');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Lỗi kết nối server');
+    }
+  };
+
+  const prevMessagesLength = useRef(0);
+  const prevActiveId = useRef(null);
+
+  useEffect(() => {
+    if (activeId !== prevActiveId.current || messages.length > prevMessagesLength.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    prevActiveId.current = activeId;
+    prevMessagesLength.current = messages.length;
+  }, [messages, activeId]);
 
   async function openSession(id) {
     setActiveId(id);
+    setShowSidebarMobile(false);
     await markAdminRead(id);
     const msgs = await getMessages(id);
     setMessages(msgs);
@@ -159,6 +357,23 @@ export default function AdminDashboard() {
     const newMsgs = await getMessages(activeId);
     setMessages(newMsgs);
   }
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 190 * 1024 * 1024) {
+      toast.error("File quá lớn (tối đa 190MB)");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      handleSend(`[IMAGE]:${ev.target.result}`);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -174,7 +389,7 @@ export default function AdminDashboard() {
   const activeSession = sessions[activeId];
 
   return (
-    <div className="admin-page">
+    <div className={`admin-page ${showSidebarMobile ? 'show-sidebar-mobile' : 'hide-sidebar-mobile'}`}>
       {/* ── Sidebar ── */}
       <aside className="admin-sidebar">
         <div className="admin-sidebar-header">
@@ -189,7 +404,7 @@ export default function AdminDashboard() {
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div 
               style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center' }} 
-              onClick={() => setView('logs')}
+              onClick={() => { setView('logs'); setShowSidebarMobile(false); }}
               title="Nhật ký hệ thống"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2">
@@ -203,71 +418,242 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="admin-sidebar-tabs" style={{ display: 'flex', borderBottom: '1px solid #1e2329' }}>
-          <button 
-            onClick={() => setView('chats')} 
-            style={{ flex: 1, padding: '12px 0', background: view === 'chats' ? '#1e2329' : 'transparent', color: view === 'chats' ? '#24DB9B' : '#848e9c', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}>
-            Tin nhắn
+        <div className="admin-sidebar-menu">
+          <button className={`admin-menu-item ${view === 'chats' ? 'active' : ''}`} onClick={() => { setView('chats'); setShowSidebarMobile(true); }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '8px'}}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Tin nhắn khách hàng
           </button>
-          <button 
-            onClick={() => setView('logs')} 
-            style={{ flex: 1, padding: '12px 0', background: view === 'logs' ? '#1e2329' : 'transparent', color: view === 'logs' ? '#24DB9B' : '#848e9c', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}>
-            Nhật ký
+          <button className={`admin-menu-item ${view === 'trade' ? 'active' : ''}`} onClick={() => { setView('trade'); setShowSidebarMobile(false); }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '8px'}}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Quản lý người dùng
+          </button>
+          <button className={`admin-menu-item ${view === 'deposit' ? 'active' : ''}`} onClick={() => { setView('deposit'); setShowSidebarMobile(false); }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '8px'}}><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Nạp tiền tài khoản
+          </button>
+          <button className={`admin-menu-item ${view === 'logs' ? 'active' : ''}`} onClick={() => { setView('logs'); setShowSidebarMobile(false); }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '8px'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Nhật ký hệ thống
           </button>
         </div>
 
-        <div className="admin-sidebar-search">
-          <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <span>Tin nhắn khách hàng</span>
-        </div>
-
-        <div className="admin-sessions-list">
-          {sortedSessions.length === 0 && (
-            <div className="admin-sidebar-empty">
-              <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        {view === 'chats' && (
+          <>
+            <div className="admin-sidebar-search">
+              <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              <p>Chưa có tin nhắn nào.</p>
-              <p>Khách hàng sẽ hiện ở đây khi nhắn.</p>
+              <span>Tìm kiếm tin nhắn...</span>
             </div>
-          )}
-          {sortedSessions.map(s => {
-            const lastMsg = sessionPreviews[s.sessionId];
-            const hasUnread = (s.unreadAdmin || 0) > 0;
-            const displayName = s.username || 'Khách hàng';
-            const initial = displayName[0].toUpperCase();
-            return (
-              <div
-                key={s.sessionId}
-                className={`admin-session-item ${activeId === s.sessionId ? 'active' : ''} ${hasUnread ? 'unread' : ''}`}
-                onClick={() => openSession(s.sessionId)}
-              >
-                <div className="session-avatar">{initial}</div>
-                <div className="session-info">
-                  <div className="session-row">
-                    <span className="session-name">{displayName}</span>
-                    <span className="session-time">{lastMsg ? formatTime(lastMsg.timestamp) : ''}</span>
-                  </div>
-                  <div className="session-preview">
-                    {lastMsg
-                      ? `${lastMsg.from === 'admin' ? 'Bạn: ' : ''}${lastMsg.text}`
-                      : 'Chưa có tin nhắn'}
-                  </div>
+
+            <div className="admin-sessions-list">
+              {sortedSessions.length === 0 && (
+                <div className="admin-sidebar-empty">
+                  <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <p>Chưa có tin nhắn nào.</p>
+                  <p>Khách hàng sẽ hiện ở đây khi nhắn.</p>
                 </div>
-                {hasUnread && <div className="session-unread-badge">{s.unreadAdmin}</div>}
-              </div>
-            );
-          })}
-        </div>
+              )}
+              {sortedSessions.map(s => {
+                const lastMsg = sessionPreviews[s.sessionId];
+                const hasUnread = (s.unreadAdmin || 0) > 0;
+                const rawName = s.username || 'Khách hàng';
+                const nameParts = rawName.split(' - UID: ');
+                const displayName = nameParts[0];
+                const uid = nameParts[1] || '';
+                const initial = displayName[0].toUpperCase();
+                return (
+                  <div
+                    key={s.sessionId}
+                    className={`admin-session-item ${activeId === s.sessionId ? 'active' : ''} ${hasUnread ? 'unread' : ''}`}
+                    onClick={() => openSession(s.sessionId)}
+                  >
+                    <div className="session-avatar">{initial}</div>
+                    <div className="session-info">
+                      <div className="session-row">
+                        <span className="session-name">{displayName}</span>
+                        <span className="session-time">{lastMsg ? formatTime(lastMsg.timestamp) : ''}</span>
+                      </div>
+                      {uid && <div style={{ fontSize: '11px', color: '#00FFA3', marginBottom: '2px', userSelect: 'all', cursor: 'copy' }} title="Click to copy">UID: {uid}</div>}
+                      <div className="session-preview">
+                        {lastMsg
+                          ? `${lastMsg.from === 'admin' ? 'Bạn: ' : ''}${lastMsg.text}`
+                          : 'Chưa có tin nhắn'}
+                      </div>
+                    </div>
+                    {hasUnread && <div className="session-unread-badge">{s.unreadAdmin}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </aside>
 
       {/* ── Main ── */}
       <div className="admin-main">
-        {view === 'logs' ? (
+        {view === 'trade' ? (
+          <div className="admin-users-container" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <button 
+                className="admin-mobile-back-btn" 
+                onClick={() => setShowSidebarMobile(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#848e9c',
+                  cursor: 'pointer',
+                  display: 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px'
+                }}
+                title="Quay lại"
+              >
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Quản lý người dùng (Danh sách User)</h2>
+            </div>
+            
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #1e2329', color: '#848e9c', textAlign: 'left' }}>
+                  <th style={{ padding: '12px', width: '60px' }}>ID</th>
+                  <th style={{ padding: '12px', width: '100px' }}>Mã UID</th>
+                  <th style={{ padding: '12px' }}>Tên người dùng</th>
+                  <th style={{ padding: '12px' }}>Email</th>
+                  <th style={{ padding: '12px' }}>Số dư ($)</th>
+                  <th style={{ padding: '12px', width: '150px' }}>Trạng thái</th>
+                  <th style={{ padding: '12px', width: '120px', textAlign: 'right' }}>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length === 0 ? (
+                  <tr><td colSpan="7" style={{ padding: '24px', textAlign: 'center', color: '#5e6673' }}>Chưa có người dùng nào</td></tr>
+                ) : (
+                  users.map(user => (
+                    <tr key={user.Id} style={{ borderBottom: '1px solid #1a1e27', color: '#eaecef' }}>
+                      <td style={{ padding: '12px', color: '#848e9c' }}>#{user.Id}</td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{ background: 'rgba(0, 255, 163, 0.1)', color: '#00FFA3', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                          {user.AccountCode || 'N/A'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', fontWeight: 600 }}>{user.FullName}</td>
+                      <td style={{ padding: '12px', color: '#848e9c' }}>{user.Email}</td>
+                      <td style={{ padding: '12px', color: '#24DB9B', fontWeight: 700 }}>
+                        ${Number(user.Balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {user.IsActive ? (
+                          <span style={{ background: 'rgba(0, 255, 163, 0.1)', color: '#00FFA3', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                            Đang hoạt động
+                          </span>
+                        ) : (
+                          <span style={{ background: 'rgba(246, 70, 93, 0.1)', color: '#F6465D', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                            Bị khóa
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleToggleStatus(user.Id)}
+                          style={{
+                            padding: '6px 12px',
+                            background: user.IsActive ? 'rgba(246, 70, 93, 0.1)' : 'rgba(0, 255, 163, 0.1)',
+                            color: user.IsActive ? '#F6465D' : '#00FFA3',
+                            border: `1px solid ${user.IsActive ? '#F6465D' : '#00FFA3'}`,
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            width: '84px',
+                            textAlign: 'center'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = user.IsActive ? '#F6465D' : '#00FFA3';
+                            e.target.style.color = '#000';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = user.IsActive ? 'rgba(246, 70, 93, 0.1)' : 'rgba(0, 255, 163, 0.1)';
+                            e.target.style.color = user.IsActive ? '#F6465D' : '#00FFA3';
+                          }}
+                        >
+                          {user.IsActive ? 'Khóa' : 'Mở khóa'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : view === 'logs' ? (
           <div className="admin-logs-container" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
-            <h2 style={{ color: '#eaecef', marginBottom: '20px', fontSize: '18px' }}>Nhật ký hệ thống (Audit Logs)</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <button 
+                className="admin-mobile-back-btn" 
+                onClick={() => setShowSidebarMobile(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#848e9c',
+                  cursor: 'pointer',
+                  display: 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px'
+                }}
+                title="Quay lại"
+              >
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Nhật ký hệ thống (Audit Logs)</h2>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="admin-logs-tabs">
+              <button 
+                className={`admin-log-tab-btn ${logTab === 'all' ? 'active' : ''}`}
+                onClick={() => setLogTab('all')}
+              >
+                Tất cả
+              </button>
+              <button 
+                className={`admin-log-tab-btn ${logTab === 'register' ? 'active' : ''}`}
+                onClick={() => setLogTab('register')}
+              >
+                Tạo tài khoản
+              </button>
+              <button 
+                className={`admin-log-tab-btn ${logTab === 'deposit' ? 'active' : ''}`}
+                onClick={() => setLogTab('deposit')}
+              >
+                Nạp tiền
+              </button>
+              <button 
+                className={`admin-log-tab-btn ${logTab === 'withdraw' ? 'active' : ''}`}
+                onClick={() => setLogTab('withdraw')}
+              >
+                Rút tiền
+              </button>
+              <button 
+                className={`admin-log-tab-btn ${logTab === 'other' ? 'active' : ''}`}
+                onClick={() => setLogTab('other')}
+              >
+                Khác
+              </button>
+            </div>
+
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #1e2329', color: '#848e9c', textAlign: 'left' }}>
@@ -277,10 +663,34 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {auditLogs.length === 0 ? (
+                {auditLogs.filter(log => {
+                  if (logTab === 'all') return true;
+                  if (logTab === 'register') return log.Action === 'Tạo tài khoản';
+                  if (logTab === 'deposit') return log.Action === 'Nạp tiền' || log.Action === 'Nạp tiền (UID)';
+                  if (logTab === 'withdraw') return log.Action === 'Rút tiền';
+                  if (logTab === 'other') {
+                    return log.Action !== 'Tạo tài khoản' && 
+                           log.Action !== 'Nạp tiền' && 
+                           log.Action !== 'Nạp tiền (UID)' && 
+                           log.Action !== 'Rút tiền';
+                  }
+                  return true;
+                }).length === 0 ? (
                   <tr><td colSpan="3" style={{ padding: '24px', textAlign: 'center', color: '#5e6673' }}>Chưa có nhật ký nào</td></tr>
                 ) : (
-                  auditLogs.map(log => (
+                  auditLogs.filter(log => {
+                    if (logTab === 'all') return true;
+                    if (logTab === 'register') return log.Action === 'Tạo tài khoản';
+                    if (logTab === 'deposit') return log.Action === 'Nạp tiền' || log.Action === 'Nạp tiền (UID)';
+                    if (logTab === 'withdraw') return log.Action === 'Rút tiền';
+                    if (logTab === 'other') {
+                      return log.Action !== 'Tạo tài khoản' && 
+                             log.Action !== 'Nạp tiền' && 
+                             log.Action !== 'Nạp tiền (UID)' && 
+                             log.Action !== 'Rút tiền';
+                    }
+                    return true;
+                  }).map(log => (
                     <tr key={log.Id} style={{ borderBottom: '1px solid #1a1e27', color: '#eaecef' }}>
                       <td style={{ padding: '12px', color: '#848e9c' }}>{formatDate(log.CreatedAt)}</td>
                       <td style={{ padding: '12px' }}>
@@ -289,6 +699,95 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td style={{ padding: '12px' }}>{log.Details}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : view === 'deposit' ? (
+          <div className="admin-deposit-container" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <button 
+                className="admin-mobile-back-btn" 
+                onClick={() => setShowSidebarMobile(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#848e9c',
+                  cursor: 'pointer',
+                  display: 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px'
+                }}
+                title="Quay lại"
+              >
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Quản lý Tài sản (Nạp tiền)</h2>
+            </div>
+            
+            {/* Quick Deposit Form */}
+            <div style={{ background: '#11141a', padding: '20px', borderRadius: '12px', border: '1px solid #1e2329', marginBottom: '24px' }}>
+              <h3 style={{ color: '#24DB9B', marginBottom: '16px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Nạp tiền nhanh bằng mã UID
+              </h3>
+              <form style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }} onSubmit={handleFastDeposit}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#848e9c', fontWeight: 600 }}>Mã tài khoản khách hàng (UID)</label>
+                  <input type="text" value={uidInput} onChange={e => setUidInput(e.target.value)} placeholder="Nhập mã UID..." style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#eaecef', outline: 'none' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#848e9c', fontWeight: 600 }}>Số lượng ($)</label>
+                  <input type="number" value={amountInput} onChange={e => setAmountInput(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#eaecef', outline: 'none' }} />
+                </div>
+                <button type="submit" style={{ padding: '10px 24px', background: '#24DB9B', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', height: '41px', transition: 'opacity 0.2s' }}>
+                  Nạp ngay
+                </button>
+              </form>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #1e2329', color: '#848e9c', textAlign: 'left' }}>
+                  <th style={{ padding: '12px', width: '60px' }}>ID</th>
+                  <th style={{ padding: '12px', width: '100px' }}>Mã UID</th>
+                  <th style={{ padding: '12px' }}>Tên người dùng</th>
+                  <th style={{ padding: '12px' }}>Email</th>
+                  <th style={{ padding: '12px' }}>Số dư ($)</th>
+                  <th style={{ padding: '12px', width: '120px', textAlign: 'right' }}>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length === 0 ? (
+                  <tr><td colSpan="6" style={{ padding: '24px', textAlign: 'center', color: '#5e6673' }}>Chưa có người dùng nào</td></tr>
+                ) : (
+                  users.map(user => (
+                    <tr key={user.Id} style={{ borderBottom: '1px solid #1a1e27', color: '#eaecef' }}>
+                      <td style={{ padding: '12px', color: '#848e9c' }}>#{user.Id}</td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{ background: 'rgba(0, 255, 163, 0.1)', color: '#00FFA3', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                          {user.AccountCode || 'N/A'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', fontWeight: 600 }}>{user.FullName}</td>
+                      <td style={{ padding: '12px', color: '#848e9c' }}>{user.Email}</td>
+                      <td style={{ padding: '12px', color: '#24DB9B', fontWeight: 700 }}>
+                        ${Number(user.Balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleDeposit(user.Id, user.Balance)}
+                          className="admin-deposit-btn"
+                        >
+                          Nạp tiền
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -307,12 +806,39 @@ export default function AdminDashboard() {
           <>
             {/* Header */}
             <div className="admin-chat-header">
+              <button 
+                className="admin-chat-back-btn" 
+                onClick={() => { setActiveId(null); setShowSidebarMobile(true); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#848e9c',
+                  marginRight: '12px',
+                  cursor: 'pointer',
+                  display: 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px'
+                }}
+                title="Quay lại"
+              >
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+
               <div className="admin-chat-avatar">
-                {(activeSession?.username || 'K')[0].toUpperCase()}
+                {((activeSession?.username || 'K').split(' - UID: ')[0])[0].toUpperCase()}
               </div>
               <div>
-                <div className="admin-chat-name">{activeSession?.username || 'Khách hàng'}</div>
-                <div className="admin-chat-meta">
+                <div className="admin-chat-name">{activeSession?.username?.split(' - UID: ')[0] || 'Khách hàng'}</div>
+                {activeSession?.username?.includes(' - UID: ') && (
+                  <div style={{ fontSize: '12px', color: '#00FFA3', fontWeight: 600, userSelect: 'all', cursor: 'copy', display: 'inline-block', background: 'rgba(0,255,163,0.1)', padding: '2px 6px', borderRadius: '4px', marginTop: '2px' }} title="Click to copy">
+                    UID: {activeSession.username.split(' - UID: ')[1]}
+                  </div>
+                )}
+                <div className="admin-chat-meta" style={{ marginTop: '2px' }}>
                   <span className="admin-online-dot"/> Đang hoạt động
                 </div>
               </div>
@@ -334,10 +860,14 @@ export default function AdminDashboard() {
                   className={`admin-bubble-wrap ${msg.from === 'admin' ? 'admin-msg' : 'customer'}`}
                 >
                   <span className="admin-label">
-                    {msg.from === 'admin' ? '🛡️ Bạn (Quản trị viên)' : `👤 ${activeSession?.username || 'Khách hàng'}`}
+                    {msg.from === 'admin' ? 'Bạn (Quản trị viên)' : `${activeSession?.username || 'Khách hàng'}`}
                   </span>
                   <div className={`admin-bubble ${msg.from === 'admin' ? 'admin-msg' : 'customer'}`}>
-                    {msg.text}
+                    {msg.text.startsWith('[IMAGE]:') ? (
+                      <img src={msg.text.replace('[IMAGE]:', '')} alt="attachment" style={{ maxWidth: '100%', borderRadius: '4px' }} />
+                    ) : (
+                      msg.text
+                    )}
                   </div>
                   <span className="admin-time">{formatTime(msg.timestamp)}</span>
                 </div>
@@ -359,11 +889,59 @@ export default function AdminDashboard() {
               ))}
             </div>
 
+            {/* Quick Actions Panel */}
+            <div className="admin-chat-actions" style={{ padding: '8px 16px', background: '#11141a', borderTop: '1px solid #1e2329', display: 'flex', alignItems: 'center' }}>
+              <button
+                className="admin-action-withdraw-btn"
+                onClick={handleConfirmTransfer}
+                style={{
+                  background: 'rgba(246, 70, 93, 0.1)',
+                  color: '#F6465D',
+                  border: '1px solid #F6465D',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = '#F6465D';
+                  e.currentTarget.style.color = '#000';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(246, 70, 93, 0.1)';
+                  e.currentTarget.style.color = '#F6465D';
+                }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                Xác nhận đã chuyển tiền (Rút tiền)
+              </button>
+            </div>
+
             {/* Input */}
             <div className="admin-input-area">
               <div className="admin-input-avatar">
                 A
               </div>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px', color: '#848e9c', transition: 'color 0.2s' }}>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={handleImageUpload} 
+                />
+                <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+              </label>
               <textarea
                 className="admin-input"
                 placeholder="Nhập phản hồi cho khách hàng... (Enter để gửi)"

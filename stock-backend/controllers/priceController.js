@@ -62,33 +62,148 @@ const INITIAL_COINS = {
   TFUEL: { price: 0.01058834,  name: 'TFUEL' },
 };
 
-function buildInitialState() {
-  const state = {};
-  Object.entries(INITIAL_COINS).forEach(([key, info]) => {
-    state[key] = {
-      price:  info.price,
-      prev:   info.price,
-      change: +(Math.random() * 10 - 5).toFixed(2),
-      isUp:   Math.random() > 0.5,
-    };
-  });
-  return state;
+function seededRand(seed) {
+  let t = (seed + 0x6D2B79F5) | 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
-let prices = buildInitialState();
-let currentTrend = 'neutral'; // 'up', 'down', 'neutral'
+function hashStr(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+function generateInitialCandles(coinSym, count = 1000) {
+  const info = INITIAL_COINS[coinSym];
+  const initialPrice = info ? info.price : 100;
+  const coinHash = hashStr(coinSym);
+  
+  let price = initialPrice;
+  const candles = [];
+  const nowMin = Math.floor(Date.now() / 1000 / 60);
+  const startMin = nowMin - count;
+  
+  const FIXED_EPOCH_MIN = 29453760; // Jan 1, 2026
+  const simulationStart = Math.min(startMin, FIXED_EPOCH_MIN);
+  
+  for (let m = simulationStart; m < nowMin; m++) {
+    const seed1 = coinHash + m * 3;
+    const seed2 = coinHash + m * 3 + 1;
+    const seed3 = coinHash + m * 3 + 2;
+    const seed4 = coinHash + m * 3 + 3;
+    
+    const r1 = seededRand(seed1);
+    const drift = ((initialPrice - price) / initialPrice) * 0.01;
+    const change = (r1 * 0.003 - 0.0015) + drift;
+    const factor = Math.max(0.1, 1 + change);
+    const nextPrice = Math.max(price * factor, initialPrice * 0.01);
+    
+    const open = price;
+    const close = nextPrice;
+    
+    if (m >= startMin) {
+      const r2 = seededRand(seed2);
+      const r3 = seededRand(seed3);
+      const high = Math.max(open, close) + Math.abs(open * r2 * 0.001);
+      const low  = Math.max(Math.min(open, close) - Math.abs(open * r3 * 0.001), initialPrice * 0.001);
+      
+      candles.push({
+        time: m * 60,
+        open,
+        high,
+        low,
+        close,
+        _seed4: seed4
+      });
+    }
+    
+    price = nextPrice;
+  }
+  return { candles, lastPrice: price };
+}
+
+function initializePriceState() {
+  const state = {};
+  const history = {};
+  const current = {};
+  const nowMin = Math.floor(Date.now() / 1000 / 60);
+
+  Object.keys(INITIAL_COINS).forEach(key => {
+    const { candles, lastPrice } = generateInitialCandles(key, 1000);
+    history[key] = candles;
+    state[key] = {
+      price: lastPrice,
+      prev: lastPrice,
+      change: +(Math.random() * 10 - 5).toFixed(2),
+      isUp: Math.random() > 0.5
+    };
+    current[key] = {
+      time: nowMin * 60,
+      open: lastPrice,
+      high: lastPrice,
+      low: lastPrice,
+      close: lastPrice,
+      minute: nowMin
+    };
+  });
+  return { state, history, current };
+}
+
+const { state: initialStates, history: initialHistories, current: initialCurrents } = initializePriceState();
+let prices = initialStates;
+let candleHistory = initialHistories;
+let currentCandles = initialCurrents;
+let coinTrends = {}; // { BTC: 'up', quq: 'down', ... }
+let coinOffsets = {}; // { BTC: 0.003, quq: -0.003, ... }
 
 // Background task to update prices every 2 seconds
 setInterval(() => {
-  const bias = currentTrend === 'up' ? 0.003 : currentTrend === 'down' ? -0.003 : 0;
-  
   const next = { ...prices };
+  const nowMin = Math.floor(Date.now() / 1000 / 60);
+
   Object.keys(next).forEach(key => {
+    const trend = coinTrends[key] || 'neutral';
     const p = next[key].price;
-    // Random slow change
-    const delta = p * ((Math.random() * 0.004 - 0.002) + bias);
-    const newP = Math.max(p + delta, p * 0.0001); // floor
-    const chg = next[key].change + (Math.random() * 0.2 - 0.1);
+    let newP = p;
+    let change = 0;
+
+    if (trend === 'up') {
+      // 62% chance to go up, 38% chance to go down for smoother, segmented fluctuation
+      const isUpTick = Math.random() < 0.62;
+      change = isUpTick ? (Math.random() * 0.0004) : -(Math.random() * 0.00035);
+      newP = Math.max(p * (1 + change), p * 0.0001);
+      coinOffsets[key] = (coinOffsets[key] || 0) + change;
+    } else if (trend === 'down') {
+      // 62% chance to go down, 38% chance to go up
+      const isDownTick = Math.random() < 0.62;
+      change = isDownTick ? -(Math.random() * 0.0004) : (Math.random() * 0.00035);
+      newP = Math.max(p * (1 + change), p * 0.0001);
+      coinOffsets[key] = (coinOffsets[key] || 0) + change;
+    } else {
+      // Neutral trend: 50/50 fluctuation
+      change = Math.random() * 0.0004 - 0.0002;
+      newP = Math.max(p * (1 + change), p * 0.0001);
+      // Decaying offset to return to base Binance price slowly when neutral
+      coinOffsets[key] = ((coinOffsets[key] || 0) * 0.99) + (Math.random() * 0.0001 - 0.00005);
+    }
+    
+    // Cap maximum change from candle open to prevent extremely tall (monster) candles
+    const openP = currentCandles[key]?.open || p;
+    const diffPct = (newP - openP) / openP;
+    const MAX_CANDLE_DIFF = 0.0025; // max 0.25% body change per candle
+    if (diffPct > MAX_CANDLE_DIFF) {
+      newP = openP * (1 + MAX_CANDLE_DIFF);
+    } else if (diffPct < -MAX_CANDLE_DIFF) {
+      newP = openP * (1 - MAX_CANDLE_DIFF);
+    }
+    
+    // Calculate the true change percentage based on the initial price
+    const initialPrice = INITIAL_COINS[key]?.price || p || 1;
+    const chg = ((newP - initialPrice) / initialPrice) * 100;
     
     next[key] = {
       price: newP,
@@ -96,24 +211,80 @@ setInterval(() => {
       change: parseFloat(chg.toFixed(2)),
       isUp: newP >= p,
     };
+
+    // Update candle
+    if (!currentCandles[key] || currentCandles[key].minute !== nowMin) {
+      if (currentCandles[key]) {
+        candleHistory[key].push({
+          time: currentCandles[key].time,
+          open: currentCandles[key].open,
+          high: currentCandles[key].high,
+          low: currentCandles[key].low,
+          close: currentCandles[key].close
+        });
+        if (candleHistory[key].length > 1000) {
+          candleHistory[key].shift();
+        }
+      }
+      currentCandles[key] = {
+        time: nowMin * 60,
+        open: p,
+        high: Math.max(p, newP),
+        low: Math.min(p, newP),
+        close: newP,
+        minute: nowMin
+      };
+    } else {
+      currentCandles[key].high = Math.max(currentCandles[key].high, newP);
+      currentCandles[key].low = Math.min(currentCandles[key].low, newP);
+      currentCandles[key].close = newP;
+    }
   });
   prices = next;
 }, 2000);
 
+export const getCandles = (req, res) => {
+  const { symbol } = req.query;
+  if (!symbol) return res.status(400).json({ success: false, message: 'Missing symbol' });
+  const hist = candleHistory[symbol] || [];
+  const curr = currentCandles[symbol];
+  if (curr) {
+    res.json([...hist, {
+      time: curr.time,
+      open: curr.open,
+      high: curr.high,
+      low: curr.low,
+      close: curr.close
+    }]);
+  } else {
+    res.json(hist);
+  }
+};
+
+export const getPricesData = () => prices;
+
 export const getPrices = (req, res) => {
-  res.json(prices);
+  res.json({ prices, coinOffsets });
 };
 
 export const setTrend = (req, res) => {
-  const { trend } = req.body;
+  const { symbol, trend } = req.body;
+  const targetSymbol = symbol || 'BTC';
   if (['up', 'down', 'neutral'].includes(trend)) {
-    currentTrend = trend;
-    res.json({ success: true, trend: currentTrend });
+    coinTrends[targetSymbol] = trend;
+    res.json({ success: true, symbol: targetSymbol, trend });
   } else {
     res.status(400).json({ success: false, message: 'Invalid trend' });
   }
 };
 
 export const getTrend = (req, res) => {
-  res.json({ trend: currentTrend });
+  const { symbol } = req.query;
+  const targetSymbol = symbol || 'BTC';
+  res.json({ trend: coinTrends[targetSymbol] || 'neutral' });
+};
+
+export const resetTrendToNeutral = (symbol) => {
+  const targetSymbol = symbol || 'BTC';
+  coinTrends[targetSymbol] = 'neutral';
 };

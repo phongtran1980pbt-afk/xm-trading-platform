@@ -307,3 +307,56 @@
   border: 1px solid #474d57;
   color: #fff;
 }
+
+/* ===================== MOBILE RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .alpha-main-container {
+    padding: 20px 16px;
+  }
+  .alpha-page-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .alpha-overview-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .alpha-sub-tabs {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .alpha-pills {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .alpha-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .alpha-search-box {
+    flex: 1;
+  }
+  .alpha-search-box input {
+    width: 100%;
+  }
+  .alpha-table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+  }
+  .alpha-table th, .alpha-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+  
+  /* Ẩn các cột phụ trên mobile để đỡ chật chội */
+  @media (max-width: 480px) {
+    .alpha-table th:nth-child(4), .alpha-table td:nth-child(4), /* Giá cao */
+    .alpha-table th:nth-child(5), .alpha-table td:nth-child(5)  /* Giá thấp */ {
+      display: none !important;
+    }
+  }
+}

@@ -283,3 +283,130 @@
   background: rgba(0,255,163,0.1);
   border-color: #00FFA3;
 }
+
+/* Sidebar vertical menu */
+.admin-sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 4px;
+  border-bottom: 1px solid #1e2329;
+}
+.admin-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background: transparent;
+  color: #848e9c;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s;
+  text-align: left;
+}
+.admin-menu-item:hover {
+  background: #1a1e27;
+  color: #eaecef;
+}
+.admin-menu-item.active {
+  background: #1e2329;
+  color: #00FFA3;
+}
+
+/* Deposit Button */
+.admin-deposit-btn {
+  padding: 8px 16px;
+  background: #24DB9B;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.admin-deposit-btn:hover {
+  opacity: 0.85;
+}
+
+/* ===================== MOBILE RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .admin-page {
+    position: relative;
+  }
+  
+  /* Khi show-sidebar-mobile: hiện sidebar 100% width, ẩn main content */
+  .admin-page.show-sidebar-mobile .admin-sidebar {
+    width: 100% !important;
+    display: flex !important;
+  }
+  .admin-page.show-sidebar-mobile .admin-main {
+    display: none !important;
+  }
+  
+  /* Khi hide-sidebar-mobile: ẩn sidebar, hiện main content */
+  .admin-page.hide-sidebar-mobile .admin-sidebar {
+    display: none !important;
+  }
+  .admin-page.hide-sidebar-mobile .admin-main {
+    display: flex !important;
+    width: 100% !important;
+  }
+  
+  /* Hiện các nút Back trên mobile */
+  .admin-chat-back-btn, .admin-mobile-back-btn {
+    display: flex !important;
+  }
+  
+  /* Các tab phụ trong sidebar hoặc view nạp tiền */
+  .admin-deposit-container {
+    padding: 16px !important;
+  }
+  .admin-deposit-container form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .admin-deposit-container form button {
+    width: 100% !important;
+    height: 41px !important;
+  }
+  
+  /* Cuộn ngang bảng nạp tiền */
+  .admin-deposit-container table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* Tabs for logs filtering */
+.admin-logs-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #1e2329;
+  padding-bottom: 12px;
+}
+.admin-log-tab-btn {
+  padding: 6px 14px;
+  background: #11141a;
+  color: #848e9c;
+  border: 1px solid #1e2329;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-log-tab-btn:hover {
+  background: #1a1e27;
+  color: #eaecef;
+}
+.admin-log-tab-btn.active {
+  background: rgba(36, 219, 155, 0.1);
+  color: #24DB9B;
+  border-color: #24DB9B;
+}

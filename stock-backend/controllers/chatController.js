@@ -1,14 +1,16 @@
 import sql from 'mssql';
 import { poolPromise } from '../config/db.js';
+import { getTrueTime, getTrueTimestamp } from '../timeService.js';
 
 // GET /api/chat/sessions
 export const getAllSessions = async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
-      SELECT SessionId, Username, UnreadAdmin, UnreadUser, LastActivity 
-      FROM ChatSessions
-      ORDER BY LastActivity DESC
+      SELECT cs.SessionId, cs.Username, cs.UnreadAdmin, cs.UnreadUser, cs.LastActivity, u.AccountCode 
+      FROM ChatSessions cs
+      LEFT JOIN Users u ON cs.SessionId = 'auth_user_' + CAST(u.Id AS NVARCHAR)
+      ORDER BY cs.LastActivity DESC
     `);
     
     // Transform to an object keyed by SessionId to match previous localStorage format
@@ -16,7 +18,7 @@ export const getAllSessions = async (req, res) => {
     for (const row of result.recordset) {
       sessions[row.SessionId] = {
         sessionId: row.SessionId,
-        username: row.Username,
+        username: (row.AccountCode && !row.Username.includes('UID')) ? `${row.Username} - UID: ${row.AccountCode}` : row.Username,
         unreadAdmin: row.UnreadAdmin,
         unreadUser: row.UnreadUser,
         lastActivity: row.LastActivity,
@@ -62,8 +64,8 @@ export const getMessagesBySession = async (req, res) => {
 export const sendMessage = async (req, res) => {
   const { sessionId } = req.params;
   const { from, text, username } = req.body; // 'customer' or 'admin'
-  const msgId = Date.now() + '_' + Math.random().toString(36).slice(2);
-  const timestamp = Date.now();
+  const msgId = getTrueTimestamp() + '_' + Math.random().toString(36).slice(2);
+  const timestamp = getTrueTimestamp();
 
   try {
     const pool = await poolPromise;
@@ -77,21 +79,24 @@ export const sendMessage = async (req, res) => {
       await pool.request()
         .input('sessionId', sql.NVarChar, sessionId)
         .input('username', sql.NVarChar, username || 'Khách hàng')
+        .input('createdAt', sql.DateTime, getTrueTime())
         .query(`
           INSERT INTO ChatSessions (SessionId, Username, UnreadAdmin, UnreadUser, LastActivity)
-          VALUES (@sessionId, @username, 0, 0, GETDATE())
+          VALUES (@sessionId, @username, 0, 0, @createdAt)
         `);
     }
 
     // Cập nhật số tin nhắn chưa đọc & LastActivity
     if (from === 'customer') {
       await pool.request()
-        .input('sessionId', sql.NVarChar, sessionId)
-        .query('UPDATE ChatSessions SET UnreadAdmin = UnreadAdmin + 1, LastActivity = GETDATE() WHERE SessionId = @sessionId');
+        .input('sessionId', sql.VarChar, sessionId)
+        .input('lastAct', sql.DateTime, getTrueTime())
+        .query('UPDATE ChatSessions SET UnreadAdmin = UnreadAdmin + 1, LastActivity = @lastAct WHERE SessionId = @sessionId');
     } else {
       await pool.request()
-        .input('sessionId', sql.NVarChar, sessionId)
-        .query('UPDATE ChatSessions SET UnreadUser = UnreadUser + 1, LastActivity = GETDATE() WHERE SessionId = @sessionId');
+        .input('sessionId', sql.VarChar, sessionId)
+        .input('lastAct', sql.DateTime, getTrueTime())
+        .query('UPDATE ChatSessions SET UnreadUser = UnreadUser + 1, LastActivity = @lastAct WHERE SessionId = @sessionId');
     }
 
     // Thêm tin nhắn

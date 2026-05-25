@@ -264,3 +264,23 @@
 }
 .chat-send-btn:hover { opacity: 0.85; }
 .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===================== MOBILE RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .chat-widget-btn {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .chat-panel {
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    width: auto !important;
+    max-width: none !important;
+    height: calc(100vh - 160px) !important;
+    border-radius: 12px;
+  }
+}

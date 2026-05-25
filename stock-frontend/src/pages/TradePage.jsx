@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { createChart, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
-import { useCoinPrice, INITIAL_COIN_PRICES } from '../contexts/PriceContext';
+import { useCoinPrice, INITIAL_COIN_PRICES, computeCurrentCoinPrice } from '../contexts/PriceContext';
+import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './TradePage.css';
 
 /* ─── Seeded PRNG (mulberry32) — same seed → same number always ─── */
@@ -18,44 +21,24 @@ function hashStr(str) {
 }
 
 /* ─── Helpers ─── */
-// coinSym is used as part of the seed so each coin has a unique but stable history
-function generateCandles(currentPrice, count = 200, coinSym = '') {
-  const coinHash = hashStr(coinSym || 'default');
-  // Candle timestamps: each candle = 1 minute, ending count minutes ago
-  // Round to the nearest minute boundary so times are stable on F5
-  const nowMin = Math.floor(Date.now() / 1000 / 60);
-  const startMin = nowMin - count;
-
-  // Build raw candles with seeded random (seed = coinHash + candle minute)
-  const rawCandles = [];
-  let price = 100;
-  for (let i = 0; i < count; i++) {
-    const candleMin = startMin + i;
-    const seed1 = coinHash + candleMin * 3;
-    const seed2 = coinHash + candleMin * 3 + 1;
-    const seed3 = coinHash + candleMin * 3 + 2;
-    const seed4 = coinHash + candleMin * 3 + 3;
-    const open = price;
-    const chg = price * (seededRand(seed1) * 0.03 - 0.015);
-    const close = open + chg;
-    const high = Math.max(open, close) + Math.abs(price * seededRand(seed2) * 0.01);
-    const low  = Math.min(open, close) - Math.abs(price * seededRand(seed3) * 0.01);
-    rawCandles.push({ time: candleMin * 60, open, high, low, close, _seed4: seed4 });
-    price = close;
+function getPriceFormatOptions(price) {
+  let precision = 2;
+  let minMove = 0.01;
+  if (price < 0.0001) {
+    precision = 8;
+    minMove = 0.00000001;
+  } else if (price < 0.01) {
+    precision = 6;
+    minMove = 0.000001;
+  } else if (price < 1) {
+    precision = 4;
+    minMove = 0.0001;
   }
-
-  // Shift all prices so the last close = currentPrice
-  const ratio = currentPrice / rawCandles[rawCandles.length - 1].close;
-  const candles = rawCandles.map(c => ({
-    time:  c.time,
-    open:  c.open  * ratio,
-    high:  c.high  * ratio,
-    low:   c.low   * ratio,
-    close: c.close * ratio,
-    _seed4: c._seed4,
-  }));
-
-  return { candles, lastPrice: currentPrice };
+  return {
+    type: 'price',
+    precision,
+    minMove,
+  };
 }
 
 function generateVolume(candles) {
@@ -68,26 +51,228 @@ function generateVolume(candles) {
 
 function genOrderBook(price) {
   const asks = [], bids = [];
-  for (let i = 0; i < 12; i++) {
-    const pAsk = price * (1 + 0.001 * (12 - i));
-    const pBid = price * (1 - 0.001 * (i + 1));
-    const amt  = (Math.random() * 8 + 0.1).toFixed(2);
-    asks.push({ price: pAsk, amount: amt, total: (pAsk * amt).toFixed(0) });
-    bids.push({ price: pBid, amount: amt, total: (pBid * amt).toFixed(0) });
+  let cumAsk = 0, cumBid = 0;
+  for (let i = 0; i < 30; i++) {
+    // Generate 30 levels for a smoother depth chart
+    const pAsk = price * (1 + 0.0005 * (30 - i)); // Highest to lowest ask
+    const pBid = price * (1 - 0.0005 * (i + 1));  // Highest to lowest bid
+    const amtAsk  = Math.random() * 5 + 0.1;
+    const amtBid  = Math.random() * 5 + 0.1;
+    
+    cumAsk += amtAsk;
+    cumBid += amtBid;
+
+    asks.push({ price: pAsk, amount: amtAsk.toFixed(2), total: cumAsk.toFixed(0) });
+    bids.push({ price: pBid, amount: amtBid.toFixed(2), total: cumBid.toFixed(0) });
   }
-  return { asks, bids };
+  // Reverse asks so it goes from lowest to highest (for the UI and depth chart)
+  asks.reverse(); 
+  
+  // Now recalculate cumulative totals for asks (since we reversed, the lowest ask should have lowest cumulative, building up to highest ask)
+  let ascCumAsk = 0;
+  const finalAsks = asks.map(a => {
+    ascCumAsk += parseFloat(a.amount);
+    return { ...a, total: ascCumAsk.toFixed(0), cum: ascCumAsk };
+  });
+
+  // For bids, they are already sorted highest to lowest. 
+  // Cumulative volume should build up as price goes DOWN (away from center).
+  let ascCumBid = 0;
+  const finalBids = bids.map(b => {
+    ascCumBid += parseFloat(b.amount);
+    return { ...b, total: ascCumBid.toFixed(0), cum: ascCumBid }; // b.cum is cumulative from center
+  });
+
+  return { asks: finalAsks, bids: finalBids };
 }
 
-const fmt = (v, digits = 2) => Number(v).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-const fmtP = (v) => {
-  if (v < 0.01) return v.toPrecision(4);
-  return fmt(v, 4);
+const fmt = (v, digits = 2) => {
+  const num = Number(v);
+  if (isNaN(num)) return '0.00';
+  if (num === 0) return '0.00';
+  if (num < 0.0001) {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+  }
+  if (num < 0.01) {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 6, maximumFractionDigits: 6 });
+  }
+  if (num < 1) {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  }
+  return num.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 };
+const fmtP = (v) => fmt(v, 2);
+
+// ─── SVG Depth Chart Component ───
+function DepthChartSVG({ obData }) {
+  if (!obData || !obData.bids.length) return null;
+
+  // bids are sorted highest price to lowest price
+  // asks are sorted lowest price to highest price
+
+  // For drawing, we want X axis: lowest bid -> highest bid -> lowest ask -> highest ask
+  // Reverse bids for drawing so it goes low -> high
+  const drawBids = [...obData.bids].reverse(); 
+  const drawAsks = obData.asks;
+
+  const minBid = drawBids[0].price;
+  const maxBid = drawBids[drawBids.length - 1].price;
+  const minAsk = drawAsks[0].price;
+  const maxAsk = drawAsks[drawAsks.length - 1].price;
+
+  const maxCum = Math.max(
+    drawBids[0].cum, // Last item in original bids array (lowest price) has max cum
+    drawAsks[drawAsks.length - 1].cum
+  );
+
+  // viewBox is 1000x300
+  const width = 1000;
+  const height = 300;
+  const midX = width / 2;
+
+  // Map Bid price to X: minBid -> 0, maxBid -> midX
+  const mapBidX = p => ((p - minBid) / (maxBid - minBid)) * midX;
+  
+  // Map Ask price to X: minAsk -> midX, maxAsk -> width
+  const mapAskX = p => midX + ((p - minAsk) / (maxAsk - minAsk)) * (width - midX);
+
+  const mapY = cum => height - (cum / maxCum) * height * 0.9; // leave 10% padding top
+
+  // Build SVG path for Bids (green)
+  let bidPath = `M 0 ${height} `;
+  for (let i = 0; i < drawBids.length; i++) {
+    const pt = drawBids[i];
+    const x = mapBidX(pt.price);
+    const y = mapY(pt.cum);
+    // Step line: horizontal then vertical
+    if (i === 0) {
+      bidPath += `L ${x} ${height} L ${x} ${y} `;
+    } else {
+      const prevX = mapBidX(drawBids[i-1].price);
+      bidPath += `L ${x} ${mapY(drawBids[i-1].cum)} L ${x} ${y} `;
+    }
+  }
+  bidPath += `L ${midX} ${mapY(drawBids[drawBids.length-1].cum)} L ${midX} ${height} Z`;
+
+  // Build SVG path for Asks (red)
+  let askPath = `M ${midX} ${height} `;
+  // Asks cum goes up as X goes right
+  for (let i = 0; i < drawAsks.length; i++) {
+    const pt = drawAsks[i];
+    const x = mapAskX(pt.price);
+    const y = mapY(pt.cum);
+    if (i === 0) {
+      askPath += `L ${midX} ${y} L ${x} ${y} `;
+    } else {
+      const prevY = mapY(drawAsks[i-1].cum);
+      askPath += `L ${x} ${prevY} L ${x} ${y} `;
+    }
+  }
+  askPath += `L ${width} ${mapY(drawAsks[drawAsks.length-1].cum)} L ${width} ${height} Z`;
+
+  return (
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+        <path d={bidPath} fill="rgba(0, 255, 163, 0.15)" stroke="#00FFA3" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        <path d={askPath} fill="rgba(246, 70, 93, 0.15)" stroke="#F6465D" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        
+        {/* Center dashed line */}
+        <line x1={midX} y1="0" x2={midX} y2={height} stroke="#333" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+      </svg>
+      {/* Price Labels */}
+      <div style={{ position: 'absolute', bottom: '10px', left: '10px', color: '#848e9c', fontSize: '11px' }}>{fmtP(minBid)}</div>
+      <div style={{ position: 'absolute', bottom: '10px', left: 'calc(50% - 20px)', color: '#848e9c', fontSize: '11px' }}>{fmtP(maxBid)}</div>
+      <div style={{ position: 'absolute', bottom: '10px', right: '10px', color: '#848e9c', fontSize: '11px' }}>{fmtP(maxAsk)}</div>
+    </div>
+  );
+}
+
+// ─── Separate Volume Chart Component ───
+function VolumeChartComponent({ candles, volSeriesRef }) {
+  const chartRef = useRef(null);
+  
+  useEffect(() => {
+    if (!chartRef.current || !candles || candles.length === 0) return;
+    
+    const chart = createChart(chartRef.current, {
+      layout: { background: { color: '#0b0e11' }, textColor: '#848e9c' },
+      grid:   { vertLines: { color: '#1a1e27' }, horzLines: { color: '#1a1e27' } },
+      timeScale: { 
+        borderColor: '#1e2329', 
+        timeVisible: true, 
+        secondsVisible: false,
+        tickMarkFormatter: (time, tickMarkType, locale) => {
+          const date = new Date(time * 1000);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          return `${hours}:${minutes}`;
+        }
+      },
+      rightPriceScale: { borderColor: '#1e2329' },
+      width: chartRef.current.clientWidth,
+      height: chartRef.current.clientHeight,
+    });
+    
+    const volSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' },
+      priceScaleId: '', // Default scale
+    });
+    
+    volSeries.setData(generateVolume(candles));
+    if (volSeriesRef) {
+      volSeriesRef.current = volSeries;
+    }
+
+    chart.timeScale().setVisibleLogicalRange({
+      from: candles.length - 100,
+      to: candles.length + 10,
+    });
+    
+    const onResize = () => {
+      chart.applyOptions({ width: chartRef.current.clientWidth, height: chartRef.current.clientHeight });
+    };
+    const ro = new ResizeObserver(onResize);
+    ro.observe(chartRef.current);
+    
+    return () => { 
+      if (volSeriesRef) volSeriesRef.current = null;
+      ro.disconnect(); 
+      chart.remove(); 
+    };
+  }, [candles, volSeriesRef]);
+
+  return <div ref={chartRef} style={{ width: '100%', height: '100%' }} />;
+}
 
 /* ─── Component ─── */
 export default function TradePage() {
   const { symbol } = useParams();
   const coin = symbol || 'BULL';
+
+  // Get logged-in user info from localStorage
+  const currentUser = useMemo(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || 'null');
+      if (u && u.fullName) {
+        const original = u.fullName;
+        u.fullName = u.fullName
+          .replace(/Quáº£n/g, 'Quản')
+          .replace(/trá»‹/g, 'trị')
+          .replace(/viÃªn/g, 'viên')
+          .replace(/HÃ¡»‡/g, 'Hệ')
+          .replace(/Há»‡/g, 'Hệ')
+          .replace(/thá»‘ng/g, 'thống')
+          .replace(/Tá»‘i/g, 'Tối')
+          .replace(/TiÃªu/g, 'Tiêu')
+          .replace(/chuáº©n/g, 'chuẩn');
+        if (u.fullName !== original) {
+          localStorage.setItem('user', JSON.stringify(u));
+        }
+      }
+      return u;
+    } catch { return null; }
+  }, []);
+  const userInitial = currentUser?.username?.charAt(0)?.toUpperCase() || currentUser?.email?.charAt(0)?.toUpperCase() || 'U';
 
   const chartRef     = useRef(null);
   const chartInst    = useRef(null);
@@ -96,11 +281,17 @@ export default function TradePage() {
   // Candle aggregation state (mutated in-place — no re-renders needed)
   const candleState  = useRef({ open: 0, high: 0, low: 0, minute: 0 });
 
-  // Use REAL coin price from context as the base for historical candles
-  const base = INITIAL_COIN_PRICES[coin] ?? coin.length * 50 + 10;
-
   // Live price driven entirely by global context
   const globalCoin = useCoinPrice(coin);
+  const btcCoin = useCoinPrice('BTC');
+  const ethCoin = useCoinPrice('ETH');
+
+  // Track symbol and isReal status used to initialize the chart
+  const chartInitRef = useRef({ symbol: coin, isReal: !!globalCoin?.isReal });
+
+  // Use REAL computed current coin price as the base for historical candles
+  const base = globalCoin?.price ?? computeCurrentCoinPrice(coin) ?? INITIAL_COIN_PRICES[coin] ?? 100;
+
   const [livePrice, setLivePrice] = useState(base);
   const [prevPrice, setPrevPrice] = useState(base);
   const [obData,    setObData]    = useState(() => genOrderBook(base));
@@ -110,6 +301,309 @@ export default function TradePage() {
   const [tf,        setTf]         = useState('1m');
   const [bottomTab, setBottomTab]  = useState('open');
   const [chartTopTab, setChartTopTab] = useState('chart');
+  const [historicalCandles, setHistoricalCandles] = useState([]);
+  const [showIndicatorsMenu, setShowIndicatorsMenu] = useState(false);
+
+  // Binary Options state
+  const [activeSubTab, setActiveSubTab] = useState('Alpha');
+  const [binaryAmount, setBinaryAmount] = useState('');
+  const [binaryBets, setBinaryBets] = useState([]);
+  const [binaryLoading, setBinaryLoading] = useState(false);
+  const [balance, setBalance] = useState(0);
+  const [showBalance, setShowBalance] = useState(true);
+  const [binaryDuration, setBinaryDuration] = useState(5);
+  const prevBetsRef = useRef([]);
+
+  // Fast Deposit state
+  const [showFastDepositModal, setShowFastDepositModal] = useState(false);
+  const [fastDepositAmount, setFastDepositAmount] = useState('');
+
+  // Notifications state
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const prevLatestNotificationId = useRef(null);
+
+  // Bank Transfer state
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferBankName, setTransferBankName] = useState('');
+  const [transferAccountNumber, setTransferAccountNumber] = useState('');
+  const [transferAccountHolder, setTransferAccountHolder] = useState('');
+  const [transferNote, setTransferNote] = useState('');
+
+  // Fetch balance
+  const fetchBalance = async () => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || 'null');
+      if (!u || !u.id) return;
+      const res = await axios.get(`http://localhost:5001/api/auth/balance/${u.id}`);
+      if (res.data && typeof res.data.balance === 'number') {
+        setBalance(res.data.balance);
+      }
+    } catch (err) {
+      console.error('Failed to fetch balance', err);
+    }
+  };
+
+  // Fetch binary history
+  const fetchBinaryHistory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await axios.get('http://localhost:5001/api/binary/history', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        const newOrders = res.data.orders;
+        
+        // Show notification toast if any pending order transitioned to WIN / LOSE / TIE
+        if (prevBetsRef.current && prevBetsRef.current.length > 0) {
+          newOrders.forEach(newOrder => {
+            const oldOrder = prevBetsRef.current.find(o => o.Id === newOrder.Id);
+            if (oldOrder && oldOrder.Status === 'PENDING' && newOrder.Status !== 'PENDING') {
+              if (newOrder.Status === 'WIN') {
+                const profit = newOrder.Payout - newOrder.BetAmount;
+                toast.success(
+                  <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>Thông báo kết toán lệnh</div>
+                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF' }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? 'Mua' : 'Bán'})</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Trạng thái: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>Thắng</span></div>
+                    <div style={{ color: '#848e9c' }}>Số dư thay đổi: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span> (Lợi nhuận: +{profit.toFixed(2)} USDT)</div>
+                  </div>,
+                  { theme: 'dark', autoClose: 6000 }
+                );
+              } else if (newOrder.Status === 'LOSE') {
+                toast.error(
+                  <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>Thông báo kết toán lệnh</div>
+                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF' }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? 'Mua' : 'Bán'})</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Trạng thái: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>Thua</span></div>
+                    <div style={{ color: '#848e9c' }}>Số dư thay đổi: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>-{newOrder.BetAmount} USDT</span></div>
+                  </div>,
+                  { theme: 'dark', autoClose: 6000 }
+                );
+              } else if (newOrder.Status === 'TIE') {
+                toast.info(
+                  <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>Thông báo kết toán lệnh</div>
+                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF' }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? 'Mua' : 'Bán'})</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Trạng thái: <span style={{ color: '#EAECEF', fontWeight: 'bold' }}>Hòa</span></div>
+                    <div style={{ color: '#848e9c' }}>Số dư thay đổi: <span style={{ color: '#EAECEF', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span> (Hoàn trả)</div>
+                  </div>,
+                  { theme: 'dark', autoClose: 6000 }
+                );
+              }
+            }
+          });
+        }
+        
+        prevBetsRef.current = newOrders;
+        setBinaryBets(newOrders);
+      }
+    } catch (err) {
+      console.error('Failed to fetch binary history', err);
+    }
+  };
+
+  const [tradeStats, setTradeStats] = useState({ upUsers: 0, upAmount: 0, downUsers: 0, downAmount: 0 });
+  const [adminTrend, setAdminTrend] = useState('neutral');
+
+  useEffect(() => {
+    fetchBinaryHistory();
+    fetchBalance();
+    const interval = setInterval(() => {
+      fetchBinaryHistory();
+      fetchBalance();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch notifications
+  useEffect(() => {
+    let intervalId;
+    const fetchNotifications = () => {
+      if (currentUser && currentUser.id) {
+        fetch(`http://localhost:5001/api/notifications/${currentUser.id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+              setNotifications(data);
+              
+              if (data.length > 0) {
+                const latestId = data[0].Id;
+                if (prevLatestNotificationId.current !== null && latestId !== prevLatestNotificationId.current) {
+                  // Toast new notification
+                  toast.info(data[0].Message, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                  });
+                }
+                prevLatestNotificationId.current = latestId;
+              }
+            }
+          })
+          .catch(console.error);
+      }
+    };
+    
+    if (currentUser && currentUser.id) {
+      fetchNotifications();
+      intervalId = setInterval(fetchNotifications, 5000);
+    }
+    return () => clearInterval(intervalId);
+  }, [currentUser]);
+
+  const unreadCount = notifications.filter(n => !n.IsRead).length;
+
+  const handleOpenNotifications = (e) => {
+    e.stopPropagation();
+    setShowNotifications(!showNotifications);
+    if (!showNotifications && unreadCount > 0 && currentUser && currentUser.id) {
+      // Mark as read
+      fetch(`http://localhost:5001/api/notifications/${currentUser.id}/read`, { method: 'POST' })
+        .then(() => {
+          setNotifications(prev => prev.map(n => ({ ...n, IsRead: true })));
+        })
+        .catch(console.error);
+    }
+  };
+
+  // Close notifications dropdown on click outside
+  useEffect(() => {
+    if (!showNotifications) return;
+    const handleClose = () => setShowNotifications(false);
+    document.addEventListener('click', handleClose);
+    return () => document.removeEventListener('click', handleClose);
+  }, [showNotifications]);
+
+  useEffect(() => {
+    if (currentUser?.isAdmin) {
+      const fetchAdminData = async () => {
+        try {
+          const statsRes = await axios.get(`http://localhost:5001/api/admin/trade-stats?symbol=${coin}`);
+          setTradeStats(statsRes.data);
+          const trendRes = await axios.get(`http://localhost:5001/api/prices/trend?symbol=${coin}`);
+          setAdminTrend(trendRes.data.trend);
+        } catch (e) { console.error('Error fetching admin data', e); }
+      };
+      fetchAdminData();
+      const id = setInterval(fetchAdminData, 2000);
+      return () => clearInterval(id);
+    }
+  }, [currentUser?.isAdmin, coin]);
+
+  const handleSetAdminTrend = async (newTrend) => {
+    try {
+      const res = await axios.post('http://localhost:5001/api/prices/trend', {
+        symbol: coin, trend: newTrend
+      });
+      if (res.data.success) setAdminTrend(newTrend);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleBinaryBet = async (type) => {
+    if (!binaryAmount || isNaN(binaryAmount) || Number(binaryAmount) <= 0) {
+      alert('Vui lòng nhập số tiền cược hợp lệ.');
+      return;
+    }
+    try {
+      setBinaryLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Vui lòng đăng nhập để đặt cược.');
+        return;
+      }
+      const res = await axios.post('http://localhost:5001/api/binary/place', {
+        symbol: coin,
+        betAmount: Number(binaryAmount),
+        betType: type,
+        duration: binaryDuration
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        alert('Đặt cược thành công!');
+        setBinaryAmount('');
+        fetchBinaryHistory();
+        fetchBalance();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Lỗi khi đặt cược.');
+    } finally {
+      setBinaryLoading(false);
+    }
+  };
+
+  const handlePercentClick = (pct) => {
+    if (balance <= 0) return;
+    const amount = ((balance * pct) / 100).toFixed(2);
+    setBinaryAmount(amount);
+  };
+
+  const handleFastDepositConfirm = () => {
+    const amountVal = parseFloat(fastDepositAmount);
+    if (!fastDepositAmount.trim() || isNaN(amountVal) || amountVal <= 0) {
+      toast.error('Vui lòng nhập số tiền nạp hợp lệ.');
+      return;
+    }
+    
+    // Construct message to send to admin chat
+    const userStr = localStorage.getItem('user');
+    let userDetails = '';
+    try {
+      const u = JSON.parse(userStr);
+      if (u) {
+        userDetails = ` (User: ${u.fullName || u.email || 'Khách'}, ID: ${u.id || 'N/A'}${u.accountCode ? `, UID: ${u.accountCode}` : ''})`;
+      }
+    } catch {}
+
+    const messageContent = `Yêu cầu nạp tiền nhanh: ${amountVal.toLocaleString('vi-VN')} USDT.${userDetails} Vui lòng hướng dẫn tôi cách thức thanh toán và phê duyệt giao dịch.`;
+    
+    // Dispatch the open-chat custom event to ChatWidget
+    window.dispatchEvent(new CustomEvent('open-chat', {
+      detail: { message: messageContent }
+    }));
+    
+    toast.success(`Đã gửi yêu cầu nạp tiền nhanh: ${amountVal.toLocaleString('vi-VN')} USDT!`);
+    setShowFastDepositModal(false);
+    setFastDepositAmount('');
+  };
+
+  const handleTransferConfirm = () => {
+    if (!transferBankName.trim() || !transferAccountNumber.trim() || !transferAccountHolder.trim() || !transferNote.trim()) {
+      toast.error('Vui lòng điền đầy đủ tất cả các trường thông tin.');
+      return;
+    }
+
+    // Construct message to send to admin chat
+    const userStr = localStorage.getItem('user');
+    let userDetails = '';
+    try {
+      const u = JSON.parse(userStr);
+      if (u) {
+        userDetails = ` (User: ${u.fullName || u.email || 'Khách'}, ID: ${u.id || 'N/A'}${u.accountCode ? `, UID: ${u.accountCode}` : ''})`;
+      }
+    } catch {}
+
+    const msg = `Yêu cầu chuyển khoản:${userDetails}\n- Ngân hàng: ${transferBankName.trim().toUpperCase()}\n- Số tài khoản: ${transferAccountNumber.trim()}\n- Tên chủ tài khoản: ${transferAccountHolder.trim().toUpperCase()}\n- Ghi chú: ${transferNote.trim().toUpperCase()}`;
+
+    // Dispatch the open-chat custom event to ChatWidget
+    window.dispatchEvent(new CustomEvent('open-chat', {
+      detail: { message: msg }
+    }));
+
+    toast.success('Đã gửi thông tin chuyển khoản đến hỗ trợ viên!');
+    setShowTransferModal(false);
+    setTransferBankName('');
+    setTransferAccountNumber('');
+    setTransferAccountHolder('');
+    setTransferNote('');
+  };
 
   /* ─── Build chart once ─── */
   useEffect(() => {
@@ -121,39 +615,76 @@ export default function TradePage() {
       grid:   { vertLines: { color: '#1a1e27' }, horzLines: { color: '#1a1e27' } },
       crosshair: { mode: 1 },
       rightPriceScale: { borderColor: '#1e2329' },
-      timeScale: { borderColor: '#1e2329', timeVisible: true, secondsVisible: false },
+      localization: {
+        timeFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+      },
+      timeScale: { 
+        borderColor: '#1e2329', 
+        timeVisible: true, 
+        secondsVisible: false,
+        tickMarkFormatter: (time, tickMarkType, locale) => {
+          const date = new Date(time * 1000);
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          return `${hours}:${minutes}`;
+        }
+      },
       width:  el.clientWidth,
       height: el.clientHeight,
     });
     chartInst.current = chart;
 
-    // Use the FIXED initial price as anchor so ALL browsers generate identical history
-    // (The live price feed will update the rightmost candle in real-time)
-    const { candles, lastPrice } = generateCandles(base, 800, coin);
-
     const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#00FFA3', downColor: '#F6465D',
       borderVisible: false,
       wickUpColor: '#00FFA3', wickDownColor: '#F6465D',
+      priceFormat: getPriceFormatOptions(base),
     });
-    candleSeries.setData(candles);
     candleSRef.current = candleSeries;
 
-    const volSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: 'volume' },
-      priceScaleId: 'vol',
-    });
-    chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
-    volSeries.setData(generateVolume(candles));
-    volSeriesRef.current = volSeries;
+    let isMounted = true;
 
-    chart.timeScale().fitContent();
+    // Fetch initial candles from the backend
+    const loadInitialCandles = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5001/api/prices/candles?symbol=${coin}`);
+        if (!isMounted) return;
+        const originalCandles = res.data;
+        if (originalCandles && originalCandles.length > 0) {
+          candleSeries.setData(originalCandles);
+          setHistoricalCandles(originalCandles);
 
-    // Seed candle aggregation state from end of historical data
-    const nowMin = Math.floor(Date.now() / 1000 / 60);
-    candleState.current = { open: lastPrice, high: lastPrice, low: lastPrice, minute: nowMin };
-    setLivePrice(lastPrice);
-    setPrevPrice(lastPrice);
+          // Update logical visible range to show the last 100 candles
+          chart.timeScale().setVisibleLogicalRange({
+            from: originalCandles.length - 100,
+            to: originalCandles.length + 10,
+          });
+
+          // Seed candle aggregation state from the last candle
+          const lastCandle = originalCandles[originalCandles.length - 1];
+          candleState.current = {
+            open: lastCandle.open,
+            high: lastCandle.high,
+            low: lastCandle.low,
+            minute: Math.floor(lastCandle.time / 60)
+          };
+          setLivePrice(lastCandle.close);
+          setPrevPrice(lastCandle.close);
+        } else {
+          console.warn('Backend returned no candles for', coin);
+        }
+      } catch (err) {
+        console.warn('Failed to load initial candles:', err);
+      }
+    };
+
+    loadInitialCandles();
+
+    // Save active state to chartInitRef
+    chartInitRef.current = { symbol: coin, isReal: !!globalCoin?.isReal, backendSynced: !!globalCoin?.backendSynced };
 
     const onResize = () => {
       chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
@@ -161,9 +692,51 @@ export default function TradePage() {
     const ro = new ResizeObserver(onResize);
     ro.observe(el);
 
-    return () => { ro.disconnect(); chart.remove(); };
+    return () => {
+      isMounted = false;
+      ro.disconnect();
+      chart.remove();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coin]);
+
+  // Update chart when transitioning from simulated to real price OR when backend syncs
+  useEffect(() => {
+    if (!globalCoin) return;
+    
+    const wasSimulated = !chartInitRef.current.isReal && chartInitRef.current.symbol === coin;
+    const justSyncedBackend = globalCoin.backendSynced && !chartInitRef.current.backendSynced;
+    
+    if ((globalCoin.isReal && wasSimulated) || (justSyncedBackend && chartInitRef.current.symbol === coin)) {
+      chartInitRef.current = { symbol: coin, isReal: !!globalCoin.isReal, backendSynced: !!globalCoin.backendSynced };
+      
+      const realBase = globalCoin.price;
+      const loadSyncCandles = async () => {
+        try {
+          const res = await axios.get(`http://localhost:5001/api/prices/candles?symbol=${coin}`);
+          const originalCandles = res.data;
+          if (originalCandles && originalCandles.length > 0 && candleSRef.current) {
+            candleSRef.current.applyOptions({
+              priceFormat: getPriceFormatOptions(realBase),
+            });
+            candleSRef.current.setData(originalCandles);
+            setHistoricalCandles(originalCandles);
+            
+            const lastCandle = originalCandles[originalCandles.length - 1];
+            candleState.current = {
+              open: lastCandle.open,
+              high: lastCandle.high,
+              low: lastCandle.low,
+              minute: Math.floor(lastCandle.time / 60)
+            };
+          }
+        } catch (e) {
+          console.warn('Failed to load sync candles:', e);
+        }
+      };
+      loadSyncCandles();
+    }
+  }, [globalCoin?.isReal, globalCoin?.backendSynced, coin]);
 
   /* ─── Sync chart with global price context ───
    * Runs every time PriceContext emits a new price for this coin.
@@ -222,73 +795,301 @@ export default function TradePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalCoin]);
 
-  const priceUp  = livePrice >= prevPrice;
+  const changePercent = globalCoin ? globalCoin.change : 0;
+  const priceUp  = changePercent >= 0;
   const priceCls = priceUp ? 'green' : 'red';
 
   const tabs = [
     { key: coin, label: coin, price: fmt(livePrice, 2), up: priceUp },
-    { key: 'BTC',  label: 'BTC/USDT',  price: '77,390.98', up: true  },
-    { key: 'ETH',  label: 'ETH/USDT',  price: '2,127.08',  up: true  },
+    { key: 'BTC',  label: 'BTC/USDT',  price: btcCoin ? fmt(btcCoin.price, 2) : '77,390.98', up: btcCoin ? btcCoin.isUp : true  },
+    { key: 'ETH',  label: 'ETH/USDT',  price: ethCoin ? fmt(ethCoin.price, 2) : '2,127.08',  up: ethCoin ? ethCoin.isUp : true  },
   ];
 
   const timeframes = ['1m', '3m', '5m', '15m', '1h', '4h', '1d', '1w'];
 
   return (
     <div className="trade-page">
+      <ToastContainer />
 
       {/* ═══════════ HEADER ═══════════ */}
-      <header className="trade-header">
-        <Link to="/markets/alpha" className="trade-logo">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M7.5 4L4 7.5V16.5L7.5 20H10.5L7 16.5V7.5L10.5 4H7.5Z" fill="#24DB9B"/>
-            <path d="M16.5 4L20 7.5V16.5L16.5 20H13.5L17 16.5V7.5L13.5 4H16.5Z" fill="#24DB9B"/>
-            <path d="M12 10L14 12L12 14L10 12L12 10Z" fill="#24DB9B"/>
-          </svg>
-          <span className="trade-logo-text">KUCOIN</span>
-        </Link>
-
-        <div className="trade-coin-tabs">
-          {tabs.map(t => (
-            <div
-              key={t.key}
-              className={`trade-coin-tab ${activeTab === t.key ? 'active' : ''}`}
-              onClick={() => setActiveCoinTab(t.key)}
-            >
-              <span>{t.label}</span>
-              <span className={`tab-price ${t.up ? '' : 'down'}`}>{t.price}</span>
-              <span className="close-btn">✕</span>
+      {/* ═══════════ NEW 3-ROW HEADER ═══════════ */}
+      <header className="trade-header-container">
+        
+        {/* ROW 1: Global Nav */}
+        <div className="th-global-nav">
+          <div className="th-gn-left">
+            <Link to="/" className="th-logo">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M7.5 4L4 7.5V16.5L7.5 20H10.5L7 16.5V7.5L10.5 4H7.5Z" fill="#24DB9B"/>
+                <path d="M16.5 4L20 7.5V16.5L16.5 20H13.5L17 16.5V7.5L13.5 4H16.5Z" fill="#24DB9B"/>
+                <path d="M12 10L14 12L12 14L10 12L12 10Z" fill="#24DB9B"/>
+              </svg>
+              <span className="th-logo-text">KUCOIN</span>
+            </Link>
+            
+            <div className="th-nav-switch">
+              <div className="th-switch-item active">Sàn giao dịch</div>
+              <div className="th-switch-item">Web3</div>
             </div>
-          ))}
-          <div className="trade-coin-tab">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+
+            <div className="th-nav-links">
+              <span>Mua tiền điện tử ▾</span>
+              <span>Thị trường</span>
+              <span>Giao dịch ▾</span>
+              <span>Phái sinh ▾</span>
+              <span>Trung tâm bộ phóng ▾</span>
+              <span>Kiếm tiền ▾</span>
+              <span>Tổ chức ▾</span>
+              <span>Xem thêm ▾</span>
+              <span>🎁</span>
+            </div>
+          </div>
+          <div className="th-gn-right">
+            <Link to="/support/deposit" className="th-deposit-btn" style={{ textDecoration: 'none' }}>↓ Thêm tiền</Link>
+            <div className="th-nav-links">
+              <div className="th-dropdown-wrapper">
+                <span>Tài sản ▾</span>
+                <div className="th-assets-dropdown">
+                  <div className="th-assets-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Tổng quan</span>
+                    <svg 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBalance(!showBalance); }} 
+                      style={{ cursor: 'pointer' }} 
+                      width="14" 
+                      height="14" 
+                      fill="none" 
+                      stroke="#848e9c" 
+                      strokeWidth="2" 
+                      viewBox="0 0 24 24"
+                    >
+                      {showBalance ? (
+                        <>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </>
+                      ) : (
+                        <>
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </>
+                      )}
+                    </svg>
+                  </div>
+                  <div className="th-assets-balance" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                      {showBalance ? (
+                        <>
+                          <span className="th-stars">{(balance / (btcCoin?.price || 77000)).toFixed(6)}</span>{' '}
+                          <span className="th-currency">BTC</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="th-stars">***</span> <span className="th-currency">BTC</span>
+                        </>
+                      )}
+                      <svg 
+                        className="th-copy-icon" 
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          e.stopPropagation(); 
+                          navigator.clipboard.writeText((balance / (btcCoin?.price || 77000)).toFixed(6));
+                          alert('Đã sao chép số dư BTC!');
+                        }}
+                        width="14" 
+                        height="14" 
+                        fill="none" 
+                        stroke="#848e9c" 
+                        strokeWidth="2" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                      </svg>
+                    </div>
+                    {showBalance && (
+                      <div style={{ fontSize: '11px', color: '#848e9c', marginTop: '2px' }}>
+                        ≈ {balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT
+                      </div>
+                    )}
+                  </div>
+                  <div className="th-assets-divider" />
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Tài khoản tài trợ</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản giao dịch</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Tài khoản Futures</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Tài khoản Ký quỹ</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản tài chính</a>
+                </div>
+              </div>
+              <div className="th-dropdown-wrapper">
+                <span>Lệnh ▾</span>
+              </div>
+            </div>
+
+            {/* User Avatar — shows first letter of logged-in username */}
+            <div className="th-icon-btn th-user-avatar" title={currentUser?.username || 'Tài khoản'}>
+              {userInitial}
+            </div>
+
+            {/* Search */}
+            <div className="th-icon-btn" title="Tìm kiếm">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+
+            {/* Bell — with active notification count badge & dropdown */}
+            <div 
+              className="th-icon-btn" 
+              title="Thông báo" 
+              style={{ position: 'relative' }} 
+              onClick={handleOpenNotifications}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              {unreadCount > 0 && (
+                <span style={{ 
+                  position: 'absolute', 
+                  top: '-2px', 
+                  right: '-2px', 
+                  background: '#f6465d', 
+                  color: 'white', 
+                  fontSize: '9px', 
+                  borderRadius: '50%', 
+                  width: '13px', 
+                  height: '13px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  fontWeight: 'bold',
+                  boxShadow: '0 0 4px rgba(246, 70, 93, 0.5)'
+                }}>
+                  {unreadCount}
+                </span>
+              )}
+
+              {showNotifications && (
+                <div 
+                  className="th-notifications-dropdown" 
+                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the dropdown
+                  style={{ 
+                    position: 'absolute', 
+                    top: '32px', 
+                    right: '-80px', 
+                    width: '320px', 
+                    background: '#151821', 
+                    borderRadius: '8px', 
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)', 
+                    zIndex: 1000, 
+                    border: '1px solid rgba(255, 255, 255, 0.08)', 
+                    padding: '10px 0',
+                    cursor: 'default',
+                    textAlign: 'left'
+                  }}
+                >
+                  <div style={{ padding: '10px 20px', fontWeight: '600', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#eaecef', fontSize: '13px' }}>Thông báo</div>
+                  <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: '20px', textAlign: 'center', color: '#848e9c', fontSize: '13px' }}>Không có thông báo nào</div>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n.Id} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: n.IsRead ? '#848e9c' : '#eaecef', background: n.IsRead ? 'transparent' : 'rgba(36, 219, 155, 0.05)', fontSize: '12px' }}>
+                          <div style={{ marginBottom: '4px', lineHeight: '1.4' }}>{n.Message}</div>
+                          <div style={{ fontSize: '10px', color: '#848e9c' }}>{new Date(n.CreatedAt.replace('Z', '')).toLocaleString('vi-VN')}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Download */}
+            <div className="th-icon-btn" title="Tải xuống">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+
+            {/* Globe */}
+            <div className="th-icon-btn" title="Ngôn ngữ">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+
+            {/* Dark Mode */}
+            <div className="th-icon-btn" title="Chế độ tối">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
           </div>
         </div>
 
-        <div className="trade-header-stats">
-          <div className="trade-stat">
-            <span className="trade-stat-label">Giá Cuối cùng</span>
-            <span className={`trade-stat-value ${priceCls}`}>{fmt(livePrice, 2)}</span>
+        {/* ROW 2: Coin Info */}
+        <div className="th-coin-info">
+          <div className="th-ci-left">
+            <div className="th-coin-identity">
+              <div className="th-coin-logo-circle" style={{background: '#ff9800', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff'}}>
+                <span className="th-coin-logo-char">{coin.charAt(0)}</span>
+              </div>
+              <div className="th-coin-names">
+                <div className="th-coin-main-name">
+                  {coin} <span style={{fontSize:'12px', color:'#848e9c', marginLeft:'4px'}}>▾</span>
+                </div>
+                <div className="th-coin-contract">
+                  Fmj...pump <span>📋</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="th-ci-price-block">
+              <div className={`th-ci-price ${priceUp ? 'text-green' : 'text-red'}`}>{fmt(livePrice, 2)}</div>
+              <div className={`th-ci-change ${priceUp ? 'text-green' : 'text-red'}`}>{changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%</div>
+            </div>
+
+            <div className="th-ci-stats-list">
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Trần 24H</div>
+                <div className="th-ci-val">{fmt(livePrice*1.3, 2)}</div>
+              </div>
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Sàn 24H</div>
+                <div className="th-ci-val">{fmt(livePrice*0.7, 2)}</div>
+              </div>
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Khối lượng 24 giờ</div>
+                <div className="th-ci-val">81.47M</div>
+              </div>
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Giao dịch 24 giờ</div>
+                <div className="th-ci-val">28.7K</div>
+              </div>
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Vốn hóa thị trường</div>
+                <div className="th-ci-val">81.80M</div>
+              </div>
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Nguồn cung lưu hành</div>
+                <div className="th-ci-val">50B</div>
+              </div>
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Người nắm giữ</div>
+                <div className="th-ci-val">24.89K</div>
+              </div>
+              <div className="th-ci-stat">
+                <div className="th-ci-label">Rủi ro {'>'}</div>
+                <div className="th-ci-val text-green">✓</div>
+              </div>
+            </div>
           </div>
-          <div className="trade-stat">
-            <span className="trade-stat-label">24h Thay đổi</span>
-            <span className="trade-stat-value green">+2.39 (+0.11%)</span>
+          
+          <div className="th-ci-right">
+            <div className="th-ci-action">
+              <span>📄 Thông tin giao dịch</span>
+            </div>
+            <div className="th-ci-action"><span>❓</span></div>
+            <div className="th-ci-action"><span>⚙️</span></div>
           </div>
-          <div className="trade-stat">
-            <span className="trade-stat-label">24h Cao</span>
-            <span className="trade-stat-value">{fmt(livePrice * 1.05, 2)}</span>
-          </div>
-          <div className="trade-stat">
-            <span className="trade-stat-label">24h Thấp</span>
-            <span className="trade-stat-value">{fmt(livePrice * 0.95, 2)}</span>
-          </div>
-          <div className="trade-stat">
-            <span className="trade-stat-label">Khối lượng 24h ({coin})</span>
-            <span className="trade-stat-value">25.64</span>
-          </div>
-          <div className="trade-stat">
-            <span className="trade-stat-label">Khối lượng 24h (USDT)</span>
-            <span className="trade-stat-value">{fmt(livePrice * 25.64, 0)}</span>
-          </div>
+        </div>
+
+        {/* ROW 3: Favorites / Sub nav */}
+        <div className="th-favorites-nav">
+          <div className="th-fav-item">⭐ Mục yêu thích ▾</div>
         </div>
       </header>
 
@@ -320,6 +1121,23 @@ export default function TradePage() {
               {[{k:'chart',l:'Biểu đồ'},{k:'depth',l:'Nguồn cấp dữ liệu'},{k:'info',l:'Thông tin Coin'}].map(t=>(
                 <div key={t.k} className={`chart-top-tab ${chartTopTab===t.k?'active':''}`} onClick={()=>setChartTopTab(t.k)}>{t.l}</div>
               ))}
+              
+              {/* New Dropdown for Indicators */}
+              <div 
+                className={`chart-top-tab ${chartTopTab==='volume'?'active':''}`} 
+                onMouseEnter={() => setShowIndicatorsMenu(true)}
+                onMouseLeave={() => setShowIndicatorsMenu(false)}
+                style={{ position: 'relative' }}
+              >
+                Chỉ báo ▾
+                {showIndicatorsMenu && (
+                  <div className="dropdown-menu">
+                    <div className="dropdown-item" onClick={() => setChartTopTab('volume')}>
+                      Khối lượng (Volume)
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:'8px'}}>
               <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
@@ -350,69 +1168,145 @@ export default function TradePage() {
             </div>
           </div>
 
-          <div className="chart-container">
+          <div className="chart-container" style={{ display: chartTopTab === 'chart' ? 'block' : 'none' }}>
             <div ref={chartRef} className="chart-inner"/>
           </div>
+          {chartTopTab === 'depth' && (
+            <div className="chart-container" style={{ padding: '20px' }}>
+              <DepthChartSVG obData={obData} />
+            </div>
+          )}
+          {chartTopTab === 'volume' && (
+            <div className="chart-container">
+              <VolumeChartComponent candles={historicalCandles} volSeriesRef={volSeriesRef} />
+            </div>
+          )}
         </div>
 
-        {/* ─── Order Book ─── */}
+        {/* ─── Market Trades (Replaces Order Book for Alpha) ─── */}
         <div className="trade-orderbook-panel">
           <div className="ob-header">
-            <div className={`ob-tab ${true?'active':''}`}>Sổ lệnh</div>
-            <div className="ob-tab">Giao dịch mới</div>
+            <div className={`ob-tab ${true?'active':''}`}>Giao dịch thị trường</div>
+            <div className="ob-tab">Thanh khoản</div>
           </div>
           <div className="ob-col-header">
-            <span>Tỷ lệ</span>
-            <span>Số tiền</span>
-            <span>Tổng</span>
+            <span style={{flex: 1}}>Tỷ lệ</span>
+            <span style={{flex: 1, textAlign: 'right'}}>Số tiền ({coin})</span>
+            <span style={{flex: 1, textAlign: 'right'}}>Time</span>
           </div>
-          <div className="ob-list">
-            <div className="ob-asks">
-              {obData.asks.map((row, i) => (
-                <div key={i} className="ob-row ask">
-                  <div className="ob-row-bar" style={{width:`${20+i*5}%`}}/>
-                  <span className="ob-price-ask">{fmtP(row.price)}</span>
-                  <span className="ob-amount">{row.amount}</span>
-                  <span className="ob-total">{Number(row.total).toLocaleString()}</span>
+          <div className="ob-list" style={{ overflowY: 'auto' }}>
+            {/* Generate some fake recent trades based on the live price */}
+            {Array.from({ length: 40 }).map((_, i) => {
+              const isBuy = Math.random() > 0.5;
+              const tradePrice = livePrice * (1 + (Math.random() * 0.002 - 0.001));
+              const amount = Math.floor(Math.random() * 500000 + 1000);
+              // Create a fake time descending from now
+              const d = new Date(Date.now() - i * 4000);
+              const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+              
+              return (
+                <div key={i} className="ob-row" style={{ padding: '4px 8px' }}>
+                  <span className={isBuy ? 'ob-price-bid' : 'ob-price-ask'} style={{flex: 1}}>{fmtP(tradePrice)}</span>
+                  <span className="ob-amount" style={{flex: 1, textAlign: 'right'}}>{amount.toLocaleString()}</span>
+                  <span className="ob-total" style={{flex: 1, textAlign: 'right'}}>{timeStr}</span>
                 </div>
-              ))}
-            </div>
-
-            <div className={`ob-current-price ${priceCls}`}>
-              <span style={{fontSize:'15px', fontWeight:'bold'}}>{fmt(livePrice, 2)}</span>
-              {priceUp
-                ? <svg width="12" height="12" fill="#00FFA3" viewBox="0 0 24 24"><path d="M12 5l7 7H5z"/></svg>
-                : <svg width="12" height="12" fill="#F6465D" viewBox="0 0 24 24"><path d="M12 19l7-7H5z"/></svg>}
-              <span className="mark">${fmt(livePrice, 2)}</span>
-            </div>
-
-            <div className="ob-bids">
-              {obData.bids.map((row, i) => (
-                <div key={i} className="ob-row bid">
-                  <div className="ob-row-bar" style={{width:`${20+(11-i)*5}%`}}/>
-                  <span className="ob-price-bid">{fmtP(row.price)}</span>
-                  <span className="ob-amount">{row.amount}</span>
-                  <span className="ob-total">{Number(row.total).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{padding:'6px 8px', fontSize:'11px', color:'#848e9c', textAlign:'right', borderTop:'1px solid #1e2329'}}>
-            <span>25 75%</span>
+              );
+            })}
           </div>
         </div>
 
         {/* ─── Right Trading Panel ─── */}
         <div className="trade-right-panel">
           <div className="rp-tab-bar">
-            <div className={`rp-tab ${true?'active':''}`}>Thị trường</div>
+            <div className={`rp-tab ${true?'active':''}`}>Thủ công</div>
             <div className="rp-tab">Bot</div>
           </div>
           <div className="rp-body">
+            {currentUser?.isAdmin ? (
+              <div className="admin-trade-controls" style={{ padding: '20px 0' }}>
+                <h3 style={{ color: '#eaecef', fontSize: '15px', marginBottom: '16px' }}>Điều khiển Biểu đồ</h3>
+                
+                <div style={{ marginBottom: '16px', background: '#1a1e27', padding: '12px', borderRadius: '8px' }}>
+                  <h4 style={{ color: '#00FFA3', fontSize: '13px', margin: '0 0 8px 0' }}>Cược TĂNG</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#848e9c' }}>Số người: <span style={{ color: '#eaecef' }}>{tradeStats.upUsers}</span></span>
+                    <span style={{ color: '#848e9c' }}>Tổng: <span style={{ color: '#00FFA3' }}>${Number(tradeStats.upAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></span>
+                  </div>
+                </div>
+                
+                <div style={{ marginBottom: '24px', background: '#1a1e27', padding: '12px', borderRadius: '8px' }}>
+                  <h4 style={{ color: '#F6465D', fontSize: '13px', margin: '0 0 8px 0' }}>Cược GIẢM</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#848e9c' }}>Số người: <span style={{ color: '#eaecef' }}>{tradeStats.downUsers}</span></span>
+                    <span style={{ color: '#848e9c' }}>Tổng: <span style={{ color: '#F6465D' }}>${Number(tradeStats.downAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <button 
+                    onClick={() => handleSetAdminTrend('up')}
+                    style={{ flex: 1, padding: '12px', background: adminTrend === 'up' ? '#00FFA3' : '#1e2329', color: adminTrend === 'up' ? '#000' : '#848e9c', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                  >
+                    TĂNG
+                  </button>
+                  <button 
+                    onClick={() => handleSetAdminTrend('down')}
+                    style={{ flex: 1, padding: '12px', background: adminTrend === 'down' ? '#F6465D' : '#1e2329', color: adminTrend === 'down' ? '#fff' : '#848e9c', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                  >
+                    GIẢM
+                  </button>
+                </div>
+                <button 
+                  onClick={() => handleSetAdminTrend('neutral')}
+                  style={{ width: '100%', padding: '12px', background: adminTrend === 'neutral' ? '#eaecef' : '#1e2329', color: adminTrend === 'neutral' ? '#000' : '#848e9c', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                >
+                  NGẪU NHIÊN
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* New Sub-tabs from screenshot */}
+            <div className="rp-sub-tabs" style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#848e9c', marginBottom: '8px' }}>
+              <span style={{ cursor: 'pointer' }}>Giao ngay</span>
+              <span style={{ cursor: 'pointer' }}>Ký quỹ Độc lập ▾</span>
+              <span style={{ cursor: 'pointer', color: '#eaecef', borderBottom: '2px solid #eaecef', paddingBottom: '4px' }}>Alpha</span>
+              <span style={{ cursor: 'pointer' }}>Hợp đồng ▾</span>
+            </div>
 
             <div className="rp-buy-sell">
-              <button className={`rp-bs-btn buy ${tradeTab==='buy'?'active':''}`} onClick={()=>setTradeTab('buy')}>Chào</button>
-              <button className={`rp-bs-btn sell ${tradeTab==='sell'?'active':''}`} onClick={()=>setTradeTab('sell')}>Chào +</button>
+              <button className={`rp-bs-btn buy ${tradeTab==='buy'?'active':''}`} onClick={()=>setTradeTab('buy')}>Mua</button>
+              <button className={`rp-bs-btn sell ${tradeTab==='sell'?'active':''}`} onClick={()=>setTradeTab('sell')}>Bán</button>
+            </div>
+
+            {/* Time Expiration Selector */}
+            <div className="rp-time-selector" style={{ margin: '12px 0 16px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#848e9c', marginBottom: '8px' }}>
+                <span>Thời gian kết toán</span>
+                <span style={{ color: '#EAECEF', fontWeight: '500' }}>{binaryDuration} phút</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+                {[5, 10, 15, 20, 25, 30].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setBinaryDuration(d)}
+                    style={{
+                      padding: '6px 0',
+                      background: binaryDuration === d ? '#1e2329' : 'transparent',
+                      border: `1px solid ${binaryDuration === d ? '#EAECEF' : '#2b3139'}`,
+                      borderRadius: '4px',
+                      color: binaryDuration === d ? '#EAECEF' : '#848e9c',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      textAlign: 'center'
+                    }}
+                  >
+                    {d}p
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="rp-order-type">
@@ -437,58 +1331,153 @@ export default function TradePage() {
 
             <div className="rp-input-row">
               <div className="rp-label">
-                <span>Mở vị thế (TTG)</span>
-                <span style={{color:'#848e9c'}}>Khả dụng 0 USDT</span>
+                <span>Khả dụng</span>
+                <span style={{color:'#848e9c'}}>{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT</span>
               </div>
               <div className="rp-input-wrap">
-                <span className="rp-input-label-left">0,00</span>
-                <input type="number" placeholder="0.00"/>
-                <span className="rp-input-unit">USDT</span>
-              </div>
-            </div>
-
-            <div className="rp-input-row">
-              <div className="rp-input-wrap">
-                <span className="rp-input-label-left">0,00</span>
-                <input type="number" placeholder="0.00"/>
+                <span className="rp-input-label-left">Số lượng</span>
+                <input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={binaryAmount}
+                  onChange={(e) => setBinaryAmount(e.target.value)}
+                />
                 <span className="rp-input-unit">{coin}</span>
               </div>
             </div>
 
             <div>
-              <input type="range" className="rp-slider" min="0" max="100" defaultValue="0"/>
+              <input 
+                type="range" 
+                className="rp-slider" 
+                min="0" 
+                max="100" 
+                value={balance > 0 ? Math.min(100, Math.max(0, Math.round((Number(binaryAmount) || 0) / balance * 100))) : 0} 
+                onChange={(e) => {
+                  const pct = Number(e.target.value);
+                  const amount = ((balance * pct) / 100).toFixed(2);
+                  setBinaryAmount(amount);
+                }}
+              />
               <div className="rp-pct-labels">
-                <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(0)}>0%</span>
+                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(25)}>25%</span>
+                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(50)}>50%</span>
+                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(75)}>75%</span>
+                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(100)}>100%</span>
               </div>
             </div>
 
-            <button className={`rp-submit-btn ${tradeTab==='sell'?'sell-btn':''}`}>
-              Kích hoạt Giao dịch Futures
+            <button 
+              className={`rp-submit-btn ${tradeTab==='sell'?'sell-btn':''}`}
+              onClick={() => handleBinaryBet(tradeTab === 'buy' ? 'UP' : 'DOWN')}
+              disabled={binaryLoading}
+            >
+              {tradeTab === 'buy' ? `Mua ${coin}` : `Bán ${coin}`}
             </button>
 
             <div className="rp-info-box">
               <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>Kiếm tiền tự động. Không lo kiến, giao dịch tốt đẹp ở tốc nào.</span>
+              <span>Kiếm tiền tự động. Không lo kiến, giao dịch tốt đẹp ở tốc nào. (Lệnh sẽ kết toán sau {binaryDuration} phút)</span>
             </div>
+            </>
+            )}
           </div>
 
-          <div className="rp-overview">
-            <div className="rp-overview-title">Tổng quan</div>
-            {[
-              ['Hợp đồng', 'ETH/USDT Vĩnh Viễn'],
-              ['Tỷ giá tài trợ', '0.01%'],
-              ['Tỷ lệ Mở', '—'],
-              ['GÙN M', '—'],
-              ['Số lý đủ bộ', '— JSDT'],
-              ['Bộ tiêu đó thống', '0 —USDT'],
-              ['Số lý giải thưởng', '0 —USDT'],
-              ['Tỷ lệ PNL thực', '—'],
-            ].map(([k,v]) => (
-              <div className="rp-overview-row" key={k}>
-                <span className="rp-overview-key">{k}</span>
-                <span className="rp-overview-val">{v}</span>
-              </div>
-            ))}
+          <div className="rp-overview" style={{ borderTop: '1px solid #1e2329', padding: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '13px', color: '#eaecef', fontWeight: '500', borderBottom: '2px solid #eaecef', paddingBottom: '4px' }}>Tổng quan</span>
+              <span style={{ color: '#848e9c', cursor: 'pointer', fontSize: '14px' }}>⋮</span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0 4px 0', fontSize: '11px', color: '#848e9c' }}>
+              <span>Tài khoản Giao dịch</span>
+              <span 
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} 
+                onClick={() => setShowBalance(!showBalance)}
+              >
+                {showBalance ? (
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                ) : (
+                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                )}
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+              <span style={{ color: '#eaecef' }}>BTC</span>
+              <span style={{ color: '#eaecef', fontWeight: 'bold' }}>
+                {showBalance ? `${(balance / (btcCoin?.price || 77000)).toFixed(6)}` : '******'} BTC
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '12px' }}>
+              <span style={{ color: '#eaecef' }}>USDT</span>
+              <span style={{ color: '#eaecef', fontWeight: 'bold' }}>
+                {showBalance ? `${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '******'} USDT
+              </span>
+            </div>
+
+            <div style={{ fontSize: '11px', color: '#848e9c', margin: '8px 0 4px 0' }}>
+              Tài khoản tài trợ
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+              <span style={{ color: '#eaecef' }}>BTC</span>
+              <span style={{ color: '#eaecef', fontWeight: 'bold' }}>
+                {showBalance ? '0.000000' : '******'} BTC
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '16px' }}>
+              <span style={{ color: '#eaecef' }}>USDT</span>
+              <span style={{ color: '#eaecef', fontWeight: 'bold' }}>
+                {showBalance ? '0.00' : '******'} USDT
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                type="button"
+                onClick={() => setShowFastDepositModal(true)}
+                style={{ 
+                  flex: 1, 
+                  padding: '8px 0', 
+                  background: '#1e2329', 
+                  color: '#eaecef', 
+                  border: 'none', 
+                  borderRadius: '16px', 
+                  fontSize: '12px', 
+                  fontWeight: '500', 
+                  cursor: 'pointer', 
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  display: 'block',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#2b3139'}
+                onMouseOut={(e) => e.target.style.background = '#1e2329'}
+              >
+                Nạp tiền nhanh
+              </button>
+              <button 
+                type="button"
+                onClick={() => setShowTransferModal(true)}
+                style={{ 
+                  flex: 1, 
+                  padding: '8px 0', 
+                  background: '#1e2329', 
+                  color: '#eaecef', 
+                  border: 'none', 
+                  borderRadius: '16px', 
+                  fontSize: '12px', 
+                  fontWeight: '500', 
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#2b3139'}
+                onMouseOut={(e) => e.target.style.background = '#1e2329'}
+              >
+                Chuyển khoản
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -501,6 +1490,7 @@ export default function TradePage() {
             {k:'pos',  l:'Vị thế (3)'},
             {k:'asset',l:'Tài sản'},
             {k:'hist', l:'Lịch sử đặt lệnh'},
+            {k:'binary', l:`Lịch sử Quyền chọn (${binaryBets.length})`},
             {k:'trade',l:'Lịch sử giao dịch'},
             {k:'algo', l:'Thuật toán giao dịch (0)'},
             {k:'cond', l:'Lệnh có điều kiện (0)'},
@@ -514,12 +1504,441 @@ export default function TradePage() {
           </div>
         </div>
         <div className="bp-content">
-          <svg width="40" height="40" fill="none" stroke="#5e6673" strokeWidth="1" viewBox="0 0 24 24">
-            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-          <span>Sổ đặt Khai dụng — JSDT</span>
+          {bottomTab === 'binary' ? (
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', color: '#EAECEF', fontSize: '12px', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ color: '#848e9c', borderBottom: '1px solid #2B3139' }}>
+                    <th style={{ padding: '8px' }}>Thời gian vào</th>
+                    <th style={{ padding: '8px' }}>Thời gian kết toán</th>
+                    <th style={{ padding: '8px' }}>Cặp giao dịch</th>
+                    <th style={{ padding: '8px' }}>Loại cược</th>
+                    <th style={{ padding: '8px' }}>Giá vào</th>
+                    <th style={{ padding: '8px' }}>Giá kết toán</th>
+                    <th style={{ padding: '8px' }}>Số tiền (USDT)</th>
+                    <th style={{ padding: '8px' }}>Thanh toán</th>
+                    <th style={{ padding: '8px' }}>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {binaryBets.map((bet) => (
+                    <tr key={bet.Id} style={{ borderBottom: '1px solid #1e2329' }}>
+                      <td style={{ padding: '8px' }}>{new Date(bet.StartTime).toLocaleString()}</td>
+                      <td style={{ padding: '8px' }}>{new Date(bet.EndTime).toLocaleString()}</td>
+                      <td style={{ padding: '8px' }}>{bet.Symbol}</td>
+                      <td style={{ padding: '8px', color: bet.BetType === 'UP' ? '#00FFA3' : '#F6465D' }}>{bet.BetType}</td>
+                      <td style={{ padding: '8px' }}>{fmtP(bet.StartPrice)}</td>
+                      <td style={{ padding: '8px' }}>{bet.EndPrice ? fmtP(bet.EndPrice) : '--'}</td>
+                      <td style={{ padding: '8px' }}>{fmtP(bet.BetAmount)}</td>
+                      <td style={{ padding: '8px' }}>{bet.Payout > 0 ? `+${fmtP(bet.Payout)}` : '--'}</td>
+                      <td style={{ padding: '8px' }}>
+                        {bet.Status === 'PENDING' && <span style={{ color: '#FCD535' }}>Đang chờ</span>}
+                        {bet.Status === 'WIN' && <span style={{ color: '#00FFA3' }}>Thắng</span>}
+                        {bet.Status === 'LOSE' && <span style={{ color: '#F6465D' }}>Thua</span>}
+                        {bet.Status === 'TIE' && <span style={{ color: '#EAECEF' }}>Hòa</span>}
+                      </td>
+                    </tr>
+                  ))}
+                  {binaryBets.length === 0 && (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '20px', color: '#848e9c' }}>Chưa có lệnh quyền chọn nào</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <>
+              <svg width="40" height="40" fill="none" stroke="#5e6673" strokeWidth="1" viewBox="0 0 24 24">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+              <span>Sổ đặt Khai dụng — JSDT</span>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Custom Fast Deposit Modal */}
+      {showFastDepositModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #1e222d 0%, #151821 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '16px',
+            width: '90%',
+            maxWidth: '400px',
+            padding: '24px',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
+            color: '#eaecef',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#24DB9B', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>⚡</span> Nạp tiền nhanh
+              </h3>
+              <button 
+                onClick={() => setShowFastDepositModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#848e9c',
+                  cursor: 'pointer',
+                  fontSize: '24px',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'color 0.2s',
+                  lineHeight: '1'
+                }}
+                onMouseOver={(e) => e.target.style.color = '#eaecef'}
+                onMouseOut={(e) => e.target.style.color = '#848e9c'}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Input field */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#848e9c', marginBottom: '8px' }}>
+                Số tiền muốn nạp (USDT)
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type="number"
+                  placeholder="Nhập số tiền..."
+                  value={fastDepositAmount}
+                  onChange={(e) => setFastDepositAmount(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    paddingRight: '60px',
+                    background: '#1a1e26',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    color: '#eaecef',
+                    fontSize: '16px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#24DB9B'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+                />
+                <span style={{
+                  position: 'absolute',
+                  right: '16px',
+                  color: '#848e9c',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  pointerEvents: 'none'
+                }}>
+                  USDT
+                </span>
+              </div>
+            </div>
+
+            {/* Preset Amounts */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#848e9c', marginBottom: '8px' }}>
+                Chọn nhanh số tiền
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                {[50, 100, 200, 500, 1000, 2000, 5000, 10000].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setFastDepositAmount(String(amt))}
+                    style={{
+                      background: '#1a1e26',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '6px',
+                      padding: '8px 0',
+                      color: '#eaecef',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      fontWeight: '500'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.background = 'rgba(36, 219, 155, 0.1)';
+                      e.target.style.borderColor = '#24DB9B';
+                      e.target.style.color = '#24DB9B';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.background = '#1a1e26';
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                      e.target.style.color = '#eaecef';
+                    }}
+                  >
+                    {amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowFastDepositModal(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px 0',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#eaecef',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+                onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={handleFastDepositConfirm}
+                style={{
+                  flex: 1,
+                  padding: '12px 0',
+                  background: '#24DB9B',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#000',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#1fc489'}
+                onMouseOut={(e) => e.target.style.background = '#24DB9B'}
+              >
+                Gửi yêu cầu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Bank Transfer Modal */}
+      {showTransferModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #1e222d 0%, #151821 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '16px',
+            width: '90%',
+            maxWidth: '650px',
+            padding: '28px',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
+            color: '#eaecef',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#24DB9B', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '22px' }}>🏦</span> Chuyển khoản ngân hàng
+              </h3>
+              <button 
+                onClick={() => setShowTransferModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#848e9c',
+                  cursor: 'pointer',
+                  fontSize: '26px',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'color 0.2s',
+                  lineHeight: '1'
+                }}
+                onMouseOver={(e) => e.target.style.color = '#eaecef'}
+                onMouseOut={(e) => e.target.style.color = '#848e9c'}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Two Column Layout */}
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '24px' }}>
+              {/* Left Column - Bank Info */}
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#848e9c', marginBottom: '6px' }}>
+                    Tên ngân hàng
+                  </label>
+                  <input 
+                    type="text"
+                    placeholder="Ví dụ: VIETCOMBANK, TECHCOMBANK..."
+                    value={transferBankName}
+                    onChange={(e) => setTransferBankName(e.target.value.toUpperCase())}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: '#1a1e26',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: '#eaecef',
+                      fontSize: '14px',
+                      outline: 'none',
+                      textTransform: 'uppercase'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#848e9c', marginBottom: '6px' }}>
+                    Số tài khoản
+                  </label>
+                  <input 
+                    type="text"
+                    placeholder="Nhập số tài khoản..."
+                    value={transferAccountNumber}
+                    onChange={(e) => setTransferAccountNumber(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: '#1a1e26',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: '#eaecef',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#848e9c', marginBottom: '6px' }}>
+                    Tên chủ tài khoản
+                  </label>
+                  <input 
+                    type="text"
+                    placeholder="Nhập tên viết hoa không dấu..."
+                    value={transferAccountHolder}
+                    onChange={(e) => setTransferAccountHolder(e.target.value.toUpperCase())}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: '#1a1e26',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: '#eaecef',
+                      fontSize: '14px',
+                      outline: 'none',
+                      textTransform: 'uppercase'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Right Column - Note */}
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#848e9c', marginBottom: '6px' }}>
+                  Ghi chú
+                </label>
+                <textarea 
+                  placeholder="Nhập ghi chú chuyển khoản..."
+                  value={transferNote}
+                  onChange={(e) => setTransferNote(e.target.value.toUpperCase())}
+                  rows={6}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: '#1a1e26',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    color: '#eaecef',
+                    fontSize: '14px',
+                    outline: 'none',
+                    resize: 'none',
+                    textTransform: 'uppercase',
+                    flexGrow: 1
+                  }}
+                />
+                <div style={{
+                  marginTop: '10px',
+                  fontSize: '11px',
+                  color: '#f6465d',
+                  fontWeight: '600',
+                  letterSpacing: '0.5px'
+                }}>
+                  ⚠️ LƯU Ý: GHI CHÚ PHẢI VIẾT HOA TOÀN BỘ
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowTransferModal(false)}
+                style={{
+                  padding: '12px 24px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#eaecef',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  minWidth: '100px'
+                }}
+                onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+                onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={handleTransferConfirm}
+                style={{
+                  padding: '12px 32px',
+                  background: '#24DB9B',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#000',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  minWidth: '120px'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#1fc489'}
+                onMouseOut={(e) => e.target.style.background = '#24DB9B'}
+              >
+                Gửi yêu cầu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

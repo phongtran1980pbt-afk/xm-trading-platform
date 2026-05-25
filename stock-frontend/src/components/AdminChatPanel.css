@@ -5,30 +5,35 @@
   position: fixed;
   bottom: 28px;
   right: 28px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  height: 56px;
+  padding: 0 22px;
+  border-radius: 28px;
   background: linear-gradient(135deg, #F6465D, #c0392b);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   z-index: 9999;
-  box-shadow: 0 4px 24px rgba(246,70,93,0.45);
-  transition: transform 0.2s, box-shadow 0.2s;
-  flex-direction: column;
-  gap: 2px;
+  box-shadow: 0 4px 24px rgba(246, 70, 93, 0.4);
+  transition: all 0.2s ease;
 }
 .admin-panel-fab:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 32px rgba(246,70,93,0.6);
+  transform: scale(1.05);
+  box-shadow: 0 6px 30px rgba(246, 70, 93, 0.6);
 }
-.admin-panel-fab .fab-label {
-  font-size: 9px;
+.admin-panel-fab.open {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 50%;
+}
+.admin-panel-fab .fab-text {
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 .admin-panel-fab .fab-badge {
   position: absolute;
@@ -309,3 +314,58 @@
 }
 .afp-send-btn:hover { opacity: 0.85; }
 .afp-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ===================== MOBILE RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  /* Làm cho nút FAB nhỏ hơn một chút và dịch vào sát góc */
+  .admin-panel-fab {
+    bottom: 16px;
+    right: 16px;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 24px;
+  }
+  .admin-panel-fab.open {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+  }
+  .admin-panel-fab .fab-text {
+    font-size: 11px;
+  }
+
+  /* Khung chat admin chiếm trọn phần dưới màn hình di động */
+  .admin-float-panel {
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    width: auto !important;
+    max-width: none !important;
+    height: calc(100vh - 160px) !important;
+    border-radius: 12px;
+  }
+
+  /* Khi chưa chọn chat: hiện danh sách, ẩn nội dung chat */
+  .afp-sidebar {
+    width: 100% !important;
+    display: flex !important;
+    border-right: none !important;
+  }
+  .afp-main {
+    display: none !important;
+  }
+
+  /* Khi đã chọn chat (has-active-chat): ẩn danh sách, hiện nội dung chat */
+  .admin-float-panel.has-active-chat .afp-sidebar {
+    display: none !important;
+  }
+  .admin-float-panel.has-active-chat .afp-main {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  /* Hiện nút Back trên mobile */
+  .afp-back-btn {
+    display: flex !important;
+  }
+}

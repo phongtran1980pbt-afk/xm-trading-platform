@@ -25,9 +25,48 @@ export default function ChatWidget() {
   const [unread, setUnread] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef(null);
-  const sessionId = getSessionId();
+  const fileInputRef = useRef(null);
+
+  // Get dynamic session ID
+  const getDynamicSessionId = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user && user.id) return `auth_user_${user.id}`;
+    } catch (e) {}
+    return getSessionId();
+  };
+  
+  const [sessionId, setSessionId] = useState(getDynamicSessionId());
+
+  // Update session ID if localStorage changes (e.g. login/logout)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const current = getDynamicSessionId();
+      if (current !== sessionId) {
+        setSessionId(current);
+        setMessages([]); // clear messages on user switch
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [sessionId]);
 
   // Poll for new messages every 2 seconds
+  const handleSendRef = useRef(null);
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  });
+
+  useEffect(() => {
+    const handleOpenChat = (e) => {
+      setOpen(true);
+      if (e.detail?.message && handleSendRef.current) {
+        handleSendRef.current(e.detail.message);
+      }
+    };
+    window.addEventListener('open-chat', handleOpenChat);
+    return () => window.removeEventListener('open-chat', handleOpenChat);
+  }, []);
+
   useEffect(() => {
     async function refresh() {
       const msgs = await getMessages(sessionId);
@@ -39,8 +78,7 @@ export default function ChatWidget() {
         // A simpler way: we just poll the sessions API, or skip it for now and only show badge if needed.
         // Let's just fetch all sessions (not ideal for perf, but okay for prototype)
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-          const res = await fetch(`${apiUrl}/api/chat/sessions`);
+          const res = await fetch('http://localhost:5001/api/chat/sessions');
           const data = await res.json();
           setUnread(data[sessionId]?.unreadUser || 0);
         } catch (e) {}
@@ -73,7 +111,23 @@ export default function ChatWidget() {
     let username = 'Khách hàng';
     try { 
       const u = JSON.parse(userStr);
-      username = u?.fullName || u?.email || 'Khách hàng'; 
+      let name = u?.fullName || u?.email || 'Khách hàng';
+      if (name) {
+        name = name
+          .replace(/Quáº£n/g, 'Quản')
+          .replace(/trá»‹/g, 'trị')
+          .replace(/viÃªn/g, 'viên')
+          .replace(/HÃ¡»‡/g, 'Hệ')
+          .replace(/Há»‡/g, 'Hệ')
+          .replace(/thá»‘ng/g, 'thống')
+          .replace(/Tá»‘i/g, 'Tối')
+          .replace(/TiÃªu/g, 'Tiêu')
+          .replace(/chuáº©n/g, 'chuẩn');
+      }
+      if (u?.accountCode) {
+        name = name + ` - UID: ${u.accountCode}`;
+      }
+      username = name;
     } catch {}
     
     await sendMessage(sessionId, 'customer', content, username);
@@ -85,6 +139,17 @@ export default function ChatWidget() {
     setIsTyping(true);
     setTimeout(() => setIsTyping(false), 800);
   }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      handleSend(`[IMAGE]:${ev.target.result}`);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset
+  };
 
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -137,7 +202,7 @@ export default function ChatWidget() {
 
           {/* Welcome */}
           <div className="chat-welcome">
-            <h3>👋 Xin chào! Chúng tôi có thể giúp gì cho bạn?</h3>
+            <h3>Xin chào! Chúng tôi có thể giúp gì cho bạn?</h3>
             <p>Thời gian phản hồi thường dưới 5 phút</p>
           </div>
 
@@ -157,7 +222,13 @@ export default function ChatWidget() {
                 {msg.from === 'admin' && (
                   <span className="chat-sender-label">Hỗ trợ viên</span>
                 )}
-                <div className={`chat-bubble ${msg.from}`}>{msg.text}</div>
+                <div className={`chat-bubble ${msg.from}`}>
+                  {msg.text.startsWith('[IMAGE]:') ? (
+                    <img src={msg.text.substring(8)} alt="attachment" style={{ maxWidth: '100%', borderRadius: '8px', display: 'block', maxHeight: '200px', objectFit: 'contain' }} />
+                  ) : (
+                    msg.text
+                  )}
+                </div>
                 <span className="chat-time">{formatTime(msg.timestamp)}</span>
               </div>
             ))}
@@ -184,6 +255,23 @@ export default function ChatWidget() {
 
           {/* Input */}
           <div className="chat-input-area">
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handleFileChange} 
+            />
+            <button 
+              className="chat-attach-btn" 
+              onClick={() => fileInputRef.current?.click()}
+              title="Gửi hình ảnh"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}
+            >
+              <svg width="20" height="20" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </button>
             <textarea
               className="chat-input"
               placeholder="Nhập tin nhắn..."
