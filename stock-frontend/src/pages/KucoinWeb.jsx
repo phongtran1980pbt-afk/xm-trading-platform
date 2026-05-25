@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import LanguageSelector from '../components/LanguageSelector';
-import { BuyCryptoMenu, TradeMenu, DerivativesMenu, EarnMenu, MoreMenu } from './MegaMenus';
+import { BuyCryptoMenu, TradeMenu, DerivativesMenu, EarnMenu, MoreMenu, LaunchpadMenu, InstitutionalMenu } from './MegaMenus';
 import './KucoinWeb.css';
 
 function KucoinWeb() {
@@ -233,6 +233,7 @@ function KucoinWeb() {
               <div className="k-nav-item dropdown">
                 <span>Trung tâm bệ phóng</span>
                 <span className="k-nav-arrow">▼</span>
+                <LaunchpadMenu />
               </div>
               <div className="k-nav-item dropdown">
                 <span>Kiếm tiền</span>
@@ -242,6 +243,7 @@ function KucoinWeb() {
               <div className="k-nav-item dropdown">
                 <span>Tổ chức</span>
                 <span className="k-nav-arrow">▼</span>
+                <InstitutionalMenu />
               </div>
               <div className="k-nav-item dropdown">
                 <span>Xem thêm</span>

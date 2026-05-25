@@ -11,6 +11,7 @@ import AllMarkets from './pages/AllMarkets';
 import TradePage from './pages/TradePage';
 import AdminDashboard from './pages/AdminDashboard';
 import SupportPage from './pages/SupportPage';
+import ArticlesPage from './pages/ArticlesPage';
 import ChatWidget from './components/ChatWidget';
 import AdminChatPanel from './components/AdminChatPanel';
 import { PriceProvider } from './contexts/PriceContext';
@@ -76,6 +77,8 @@ function App() {
             <Route path="/trade/:symbol" element={<TradePage />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/support/deposit" element={<SupportPage />} />
+            <Route path="/articles/category/:cat" element={<ArticlesPage />} />
+            <Route path="/articles/:slug" element={<ArticlesPage />} />
           </Routes>
           {/* Tự động chọn: Admin Panel hoặc Chat Widget dựa theo tài khoản */}
           <ChatOrAdmin />
