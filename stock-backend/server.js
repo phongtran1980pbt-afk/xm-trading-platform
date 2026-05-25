@@ -15,8 +15,8 @@ import { startBinaryOrderJob } from './services/binaryOrderJob.js';
 const app = express();
 app.use(cors({
   origin: [
-    'https://kucoin.io.vn',
-    'https://www.kucoin.io.vn',
+    'https://kanet.io.vn',
+    'https://www.kanet.io.vn',
     /\.vercel\.app$/,
     'http://localhost:5173',
     'http://localhost:3000',
