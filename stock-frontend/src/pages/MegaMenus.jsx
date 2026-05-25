@@ -164,7 +164,7 @@ export function TradeMenu() {
           <div>
             <a href="#" className="mega-coin-item">
                <div className="mega-coin-left">
-                  <div className="mega-coin-icon" style={{ backgroundColor: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)' }}>B</div>
+                  <div className="mega-coin-icon" style={{ backgroundColor: '#F7931A', color: '#fff' }}>B</div>
                   <div>
                     <span className="mega-coin-name">BTC</span><span className="mega-coin-pair">/USDT</span> <span className="mega-coin-badge">10X</span>
                   </div>
@@ -176,7 +176,7 @@ export function TradeMenu() {
             </a>
             <a href="#" className="mega-coin-item">
                <div className="mega-coin-left">
-                  <div className="mega-coin-icon" style={{ backgroundColor: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)' }}>E</div>
+                  <div className="mega-coin-icon" style={{ backgroundColor: '#627EEA', color: '#fff' }}>E</div>
                   <div>
                     <span className="mega-coin-name">ETH</span><span className="mega-coin-pair">/USDT</span> <span className="mega-coin-badge">10X</span>
                   </div>
@@ -188,7 +188,7 @@ export function TradeMenu() {
             </a>
             <a href="#" className="mega-coin-item">
                <div className="mega-coin-left">
-                  <div className="mega-coin-icon" style={{ backgroundColor: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)' }}>X</div>
+                  <div className="mega-coin-icon" style={{ backgroundColor: '#23292F', color: '#fff' }}>X</div>
                   <div>
                     <span className="mega-coin-name">XRP</span><span className="mega-coin-pair">/USDT</span> <span className="mega-coin-badge">10X</span>
                   </div>
@@ -200,7 +200,7 @@ export function TradeMenu() {
             </a>
             <a href="#" className="mega-coin-item">
                <div className="mega-coin-left">
-                  <div className="mega-coin-icon" style={{ backgroundColor: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)' }}>S</div>
+                  <div className="mega-coin-icon" style={{ backgroundColor: '#9945FF', color: '#fff' }}>S</div>
                   <div>
                     <span className="mega-coin-name">SOL</span><span className="mega-coin-pair">/USDT</span> <span className="mega-coin-badge">10X</span>
                   </div>
@@ -290,7 +290,7 @@ export function DerivativesMenu() {
           <div>
             <a href="#" className="mega-coin-item">
                <div className="mega-coin-left">
-                  <div className="mega-coin-icon" style={{ backgroundColor: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)' }}>B</div>
+                  <div className="mega-coin-icon" style={{ backgroundColor: '#F7931A', color: '#fff' }}>B</div>
                   <div>
                      <span className="mega-coin-name">BTCUSDT</span><span className="mega-coin-pair"> Vĩnh cửu</span>
                   </div>
@@ -302,7 +302,7 @@ export function DerivativesMenu() {
             </a>
             <a href="#" className="mega-coin-item">
                <div className="mega-coin-left">
-                  <div className="mega-coin-icon" style={{ backgroundColor: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)' }}>E</div>
+                  <div className="mega-coin-icon" style={{ backgroundColor: '#627EEA', color: '#fff' }}>E</div>
                   <div>
                      <span className="mega-coin-name">ETHUSDT</span><span className="mega-coin-pair"> Vĩnh cửu</span>
                   </div>
@@ -314,7 +314,7 @@ export function DerivativesMenu() {
             </a>
             <a href="#" className="mega-coin-item">
                <div className="mega-coin-left">
-                  <div className="mega-coin-icon" style={{ backgroundColor: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)' }}>S</div>
+                  <div className="mega-coin-icon" style={{ backgroundColor: '#9945FF', color: '#fff' }}>S</div>
                   <div>
                      <span className="mega-coin-name">SOLUSDT</span><span className="mega-coin-pair"> Vĩnh cửu</span>
                   </div>

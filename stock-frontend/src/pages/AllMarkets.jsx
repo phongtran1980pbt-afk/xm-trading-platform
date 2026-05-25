@@ -72,7 +72,7 @@ const Sparkline = ({ isUp }) => {
     <svg width="60" height="24" viewBox="0 0 60 24">
       <polyline 
         fill="none" 
-        stroke={isUp ? "#6b7280" : "#4b5563"} 
+        stroke={isUp ? "#00FFA3" : "#F6465D"} 
         strokeWidth="1.5" 
         points={points.join(' ')} 
       />
@@ -181,7 +181,7 @@ function AllMarkets() {
                   </td>
                   <td style={{textAlign: 'left'}}>
                     <div className="alpha-coin-cell">
-                      <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>{coin.name[0]}</div>
+                      <div className="alpha-coin-icon" style={{background: index % 2 === 0 ? '#F7931A' : '#4169e1', color: '#fff'}}>{coin.name[0]}</div>
                       <div>
                         <div className="alpha-coin-symbol-large">{coin.name}</div>
                         <div className="alpha-coin-address">{coin.sub}</div>

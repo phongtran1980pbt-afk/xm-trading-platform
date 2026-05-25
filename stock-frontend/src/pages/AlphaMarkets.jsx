@@ -83,7 +83,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>B</div>
+                <div className="alpha-coin-icon" style={{background: '#F7931A', color: '#fff'}}>B</div>
                 <span className="alpha-coin-symbol">BTC</span>
               </div>
               <div className="alpha-price-info">
@@ -93,7 +93,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>X</div>
+                <div className="alpha-coin-icon" style={{background: '#FFD700', color: '#000'}}>X</div>
                 <span className="alpha-coin-symbol">XAUT</span>
               </div>
               <div className="alpha-price-info">
@@ -103,7 +103,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>K</div>
+                <div className="alpha-coin-icon" style={{background: '#24DB9B', color: '#fff'}}>K</div>
                 <span className="alpha-coin-symbol">KCS</span>
               </div>
               <div className="alpha-price-info">
@@ -121,13 +121,13 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>N</div>
+                <div className="alpha-coin-icon" style={{background: '#2b2b2b', color: '#fff'}}>N</div>
                 <span className="alpha-coin-symbol">NEX</span>
               </div>
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>Z</div>
+                <div className="alpha-coin-icon" style={{background: '#FF4500', color: '#fff'}}>Z</div>
                 <span className="alpha-coin-symbol">ZEST</span>
               </div>
               <div className="alpha-price-info">
@@ -137,7 +137,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>A</div>
+                <div className="alpha-coin-icon" style={{background: '#FF8C00', color: '#fff'}}>A</div>
                 <span className="alpha-coin-symbol">ATWO</span>
               </div>
               <div className="alpha-price-info">
@@ -154,7 +154,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>Z</div>
+                <div className="alpha-coin-icon" style={{background: '#FF4500', color: '#fff'}}>Z</div>
                 <span className="alpha-coin-symbol">ZEST</span>
               </div>
               <div className="alpha-price-info">
@@ -164,7 +164,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>L</div>
+                <div className="alpha-coin-icon" style={{background: '#FF1493', color: '#fff'}}>L</div>
                 <span className="alpha-coin-symbol">LYX</span>
               </div>
               <div className="alpha-price-info">
@@ -174,7 +174,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item">
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>N</div>
+                <div className="alpha-coin-icon" style={{background: '#4B0082', color: '#fff'}}>N</div>
                 <span className="alpha-coin-symbol">NUMI</span>
               </div>
               <div className="alpha-price-info">
@@ -244,7 +244,7 @@ function AlphaMarkets() {
                   </td>
                   <td>
                     <div className="alpha-coin-cell">
-                      <div className="alpha-coin-icon" style={{background: '#252b36', color: '#9aa4b2', border: '1px solid rgba(255,255,255,0.08)'}}>{coin.name[0]}</div>
+                      <div className="alpha-coin-icon" style={{background: index % 2 === 0 ? '#F7931A' : '#627EEA', color: '#fff'}}>{coin.name[0]}</div>
                       <div>
                         <div className="alpha-coin-symbol-large">{coin.name}</div>
                         <div className="alpha-coin-address">
