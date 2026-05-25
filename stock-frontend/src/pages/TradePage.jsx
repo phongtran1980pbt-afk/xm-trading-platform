@@ -657,28 +657,39 @@ export default function TradePage() {
         if (!isMounted) return;
         const originalCandles = res.data;
         if (originalCandles && originalCandles.length > 0) {
-          candleSeries.setData(originalCandles);
-          setHistoricalCandles(originalCandles);
+          const lastCandle = originalCandles[originalCandles.length - 1];
+          const ratio = base / lastCandle.close;
+          const scaledCandles = originalCandles.map(c => ({
+            time: c.time,
+            open: c.open * ratio,
+            high: c.high * ratio,
+            low: c.low * ratio,
+            close: c.close * ratio,
+            _seed4: c._seed4
+          }));
+
+          candleSeries.setData(scaledCandles);
+          setHistoricalCandles(scaledCandles);
 
           // Update logical visible range to show the last 100 candles
           chart.timeScale().setVisibleLogicalRange({
-            from: originalCandles.length - 100,
-            to: originalCandles.length + 10,
+            from: scaledCandles.length - 100,
+            to: scaledCandles.length + 10,
           });
 
           // Seed candle aggregation state from the last candle
-          const lastCandle = originalCandles[originalCandles.length - 1];
-          const serverLastMin = Math.floor(lastCandle.time / 60);
+          const lastScaledCandle = scaledCandles[scaledCandles.length - 1];
+          const serverLastMin = Math.floor(lastScaledCandle.time / 60);
           const localNowMin = Math.floor(Date.now() / 1000 / 60);
           clockOffsetRef.current = serverLastMin - localNowMin;
           candleState.current = {
-            open: lastCandle.open,
-            high: lastCandle.high,
-            low: lastCandle.low,
+            open: lastScaledCandle.open,
+            high: lastScaledCandle.high,
+            low: lastScaledCandle.low,
             minute: serverLastMin
           };
-          setLivePrice(lastCandle.close);
-          setPrevPrice(lastCandle.close);
+          setLivePrice(lastScaledCandle.close);
+          setPrevPrice(lastScaledCandle.close);
         } else {
           console.warn('Backend returned no candles for', coin);
         }
@@ -722,20 +733,31 @@ export default function TradePage() {
           const res = await axios.get(`${API_BASE_URL}/api/prices/candles?symbol=${coin}`);
           const originalCandles = res.data;
           if (originalCandles && originalCandles.length > 0 && candleSRef.current) {
+            const lastCandle = originalCandles[originalCandles.length - 1];
+            const ratio = realBase / lastCandle.close;
+            const scaledCandles = originalCandles.map(c => ({
+              time: c.time,
+              open: c.open * ratio,
+              high: c.high * ratio,
+              low: c.low * ratio,
+              close: c.close * ratio,
+              _seed4: c._seed4
+            }));
+
             candleSRef.current.applyOptions({
               priceFormat: getPriceFormatOptions(realBase),
             });
-            candleSRef.current.setData(originalCandles);
-            setHistoricalCandles(originalCandles);
+            candleSRef.current.setData(scaledCandles);
+            setHistoricalCandles(scaledCandles);
             
-            const lastCandle = originalCandles[originalCandles.length - 1];
-            const serverLastMin = Math.floor(lastCandle.time / 60);
+            const lastScaledCandle = scaledCandles[scaledCandles.length - 1];
+            const serverLastMin = Math.floor(lastScaledCandle.time / 60);
             const localNowMin = Math.floor(Date.now() / 1000 / 60);
             clockOffsetRef.current = serverLastMin - localNowMin;
             candleState.current = {
-              open: lastCandle.open,
-              high: lastCandle.high,
-              low: lastCandle.low,
+              open: lastScaledCandle.open,
+              high: lastScaledCandle.high,
+              low: lastScaledCandle.low,
               minute: serverLastMin
             };
           }
