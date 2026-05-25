@@ -112,6 +112,40 @@ BEGIN
 END
 GO
 
+-- 10. Tạo bảng Notifications (Lưu trữ thông báo khách hàng)
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Notifications]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Notifications (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        UserId INT NOT NULL,
+        Message NVARCHAR(MAX) NOT NULL,
+        IsRead BIT DEFAULT 0,
+        CreatedAt DATETIME DEFAULT GETDATE(),
+        FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+    );
+END
+GO
+
+-- 11. Tạo bảng BinaryOrders (Lưu trữ lệnh quyền chọn nhị phân)
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BinaryOrders]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE BinaryOrders (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        UserId INT NOT NULL,
+        Symbol NVARCHAR(20) NOT NULL,
+        BetAmount DECIMAL(18,2) NOT NULL,
+        BetType NVARCHAR(10) NOT NULL, -- 'UP' or 'DOWN'
+        StartPrice DECIMAL(18,6) NOT NULL,
+        EndPrice DECIMAL(18,6),
+        StartTime DATETIME DEFAULT GETDATE(),
+        EndTime DATETIME NOT NULL,
+        Status NVARCHAR(20) DEFAULT 'PENDING', -- 'PENDING', 'WIN', 'LOSE', 'TIE'
+        Payout DECIMAL(18,2) DEFAULT 0,
+        FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+    );
+END
+GO
+
 -- ====================================================
 -- DỮ LIỆU MẪU & TÀI KHOẢN MẶC ĐỊNH (SEED DATA)
 -- ====================================================

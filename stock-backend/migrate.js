@@ -1,4 +1,4 @@
-import sql from 'mssql/msnodesqlv8.js';
+import sql from 'mssql';
 import { poolPromise } from './config/db.js';
 
 async function migrate() {
@@ -8,6 +8,23 @@ async function migrate() {
         console.log("Connected to SQL Server");
         
         const query = `
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Notifications]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE Notifications (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    UserId INT NOT NULL,
+                    Message NVARCHAR(MAX) NOT NULL,
+                    IsRead BIT DEFAULT 0,
+                    CreatedAt DATETIME DEFAULT GETDATE(),
+                    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                );
+                PRINT 'Notifications table created.';
+            END
+            ELSE
+            BEGIN
+                PRINT 'Notifications table already exists.';
+            END
+
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[BinaryOrders]') AND type in (N'U'))
             BEGIN
                 CREATE TABLE BinaryOrders (

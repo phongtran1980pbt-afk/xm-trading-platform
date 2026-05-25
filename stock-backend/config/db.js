@@ -1,14 +1,15 @@
-import sql from 'mssql/msnodesqlv8.js';
+import sql from 'mssql';
 
 // ==========================================
-// CẤU HÌNH KẾT NỐI SQL SERVER (SSMS)
+// CẤU HÌNH KẾT NỐI SQL SERVER (SSMS) - PURE JS TEDIOUS
 // ==========================================
 const dbConfig = {
-    server: 'localhost',    
+    user: 'sa',
+    password: 'SaPassword123!',
+    server: 'localhost',
+    port: 1433,
     database: 'StockTradingDB',
-    driver: 'ODBC Driver 17 for SQL Server',
     options: {
-        trustedConnection: true,
         encrypt: false, 
         trustServerCertificate: true
     },

@@ -1,4 +1,4 @@
-import sql from 'mssql/msnodesqlv8.js';
+import sql from 'mssql';
 import { poolPromise } from '../config/db.js';
 import { getPricesData } from './priceController.js';
 
