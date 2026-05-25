@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 import './Login.css'; // Mới tạo file CSS riêng cho Login
 
 function Login() {
@@ -16,7 +17,7 @@ function Login() {
     if (!identifier) return;
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5001/api/auth/check-user', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/check-user`, {
         email: identifier
       });
       if (response.data.exists) {
@@ -33,7 +34,7 @@ function Login() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:5001/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email: identifier,
         password: password
       });

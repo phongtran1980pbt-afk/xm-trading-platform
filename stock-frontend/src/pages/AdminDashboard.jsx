@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import {
   getAllSessions, getMessages, sendMessage,
   markAdminRead, totalAdminUnread,
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
 
     async function fetchLogs() {
       try {
-        const res = await fetch('http://localhost:5001/api/admin/audit-logs');
+        const res = await fetch(`${API_BASE_URL}/api/admin/audit-logs`);
         const data = await res.json();
         setAuditLogs(data);
 
@@ -155,7 +156,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (view === 'deposit' || view === 'trade') {
       const fetchUsers = () => {
-        fetch('http://localhost:5001/api/admin/users')
+        fetch(`${API_BASE_URL}/api/admin/users`)
           .then(res => res.json())
           .then(data => setUsers(data))
           .catch(console.error);
@@ -171,12 +172,12 @@ export default function AdminDashboard() {
     if (view === 'trade') {
       const fetchTradeData = async () => {
         try {
-          const statsRes = await fetch('http://localhost:5001/api/admin/trade-stats');
+          const statsRes = await fetch(`${API_BASE_URL}/api/admin/trade-stats`);
           if (statsRes.ok) {
             const stats = await statsRes.json();
             setTradeStats(stats);
           }
-          const trendRes = await fetch('http://localhost:5001/api/prices/trend');
+          const trendRes = await fetch(`${API_BASE_URL}/api/prices/trend`);
           if (trendRes.ok) {
             const trendData = await trendRes.json();
             setTrend(trendData.trend);
@@ -191,7 +192,7 @@ export default function AdminDashboard() {
 
   async function handleSetTrend(newTrend) {
     try {
-      const res = await fetch('http://localhost:5001/api/prices/trend', {
+      const res = await fetch(`${API_BASE_URL}/api/prices/trend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trend: newTrend })
@@ -215,7 +216,7 @@ export default function AdminDashboard() {
     }
     
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/deposit`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/deposit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount })
@@ -224,7 +225,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         toast.success(data.message);
         // Refresh users
-        const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+        const updatedRes = await fetch(`${API_BASE_URL}/api/admin/users`);
         const updatedData = await updatedRes.json();
         setUsers(updatedData);
       } else {
@@ -254,7 +255,7 @@ export default function AdminDashboard() {
     const userId = activeId.replace('auth_user_', '');
     
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/withdraw`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/withdraw`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount })
@@ -269,7 +270,7 @@ export default function AdminDashboard() {
         setMessages(newMsgs);
         // Refresh danh sách users nếu cần
         if (view === 'deposit' || view === 'trade') {
-          const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+          const updatedRes = await fetch(`${API_BASE_URL}/api/admin/users`);
           const updatedData = await updatedRes.json();
           setUsers(updatedData);
         }
@@ -289,7 +290,7 @@ export default function AdminDashboard() {
     if (isNaN(amount) || amount <= 0) return toast.error('Số tiền không hợp lệ!');
     
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/users/deposit-by-code`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/deposit-by-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accountCode: uidInput, amount })
@@ -300,7 +301,7 @@ export default function AdminDashboard() {
         setUidInput('');
         setAmountInput('');
         // Refresh users
-        const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+        const updatedRes = await fetch(`${API_BASE_URL}/api/admin/users`);
         const updatedData = await updatedRes.json();
         setUsers(updatedData);
       } else {
@@ -314,7 +315,7 @@ export default function AdminDashboard() {
 
   const handleToggleStatus = async (userId) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}/toggle-status`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/toggle-status`, {
         method: 'POST'
       });
       const data = await res.json();
@@ -335,7 +336,7 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
         method: 'DELETE'
       });
       const data = await res.json();
@@ -356,13 +357,13 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/users/cleanup`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/cleanup`, {
         method: 'DELETE'
       });
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success(data.message || 'Đã dọn dẹp danh sách tài khoản khách!');
-        const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+        const updatedRes = await fetch(`${API_BASE_URL}/api/admin/users`);
         const updatedData = await updatedRes.json();
         setUsers(updatedData);
       } else {
@@ -379,7 +380,7 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/api/admin/chat/cleanup`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/chat/cleanup`, {
         method: 'DELETE'
       });
       const data = await res.json();

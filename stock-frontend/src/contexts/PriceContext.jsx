@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../config';
 
 /* ── Danh sách tất cả coin với giá khởi đầu ── */
 const INITIAL_COINS = {
@@ -339,7 +340,7 @@ export function PriceProvider({ children }) {
   useEffect(() => {
     const fetchBackendPrices = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/prices');
+        const res = await fetch(`${API_BASE_URL}/api/prices`);
         if (!res.ok) throw new Error('Failed to fetch backend prices');
         const data = await res.json();
         const serverPrices = data.prices || data;

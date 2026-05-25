@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import LanguageSelector from '../components/LanguageSelector';
 import { BuyCryptoMenu, TradeMenu, DerivativesMenu, EarnMenu, MoreMenu, LaunchpadMenu, InstitutionalMenu } from './MegaMenus';
 import './KucoinWeb.css';
@@ -60,7 +61,7 @@ function KucoinWeb() {
     let intervalId;
     function fetchNotifications() {
       if (user && user.id) {
-        fetch(`http://localhost:5001/api/notifications/${user.id}`)
+        fetch(`${API_BASE_URL}/api/notifications/${user.id}`)
           .then(res => res.json())
           .then(data => {
             if (Array.isArray(data)) {
@@ -97,7 +98,7 @@ function KucoinWeb() {
     setShowNotifications(!showNotifications);
     if (!showNotifications && unreadCount > 0 && user && user.id) {
       // Mark as read
-      fetch(`http://localhost:5001/api/notifications/${user.id}/read`, { method: 'POST' })
+      fetch(`${API_BASE_URL}/api/notifications/${user.id}/read`, { method: 'POST' })
         .then(() => {
           setNotifications(prev => prev.map(n => ({ ...n, IsRead: true })));
         })
@@ -111,7 +112,7 @@ function KucoinWeb() {
     
     function fetchBalance() {
       if (user && user.id) {
-        fetch(`http://localhost:5001/api/auth/balance/${user.id}`)
+        fetch(`${API_BASE_URL}/api/auth/balance/${user.id}`)
           .then(res => res.json())
           .then(data => {
             if (data && typeof data.balance === 'number') {

@@ -1,17 +1,20 @@
 import sql from 'mssql';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // ==========================================
 // CẤU HÌNH KẾT NỐI SQL SERVER (SSMS) - PURE JS TEDIOUS
 // ==========================================
 const dbConfig = {
-    user: 'sa',
-    password: 'SaPassword123!',
-    server: 'localhost',
-    port: 1433,
-    database: 'StockTradingDB',
+    user: process.env.DB_USER || 'sa',
+    password: process.env.DB_PASSWORD || 'SaPassword123!',
+    server: process.env.DB_SERVER || 'localhost',
+    port: parseInt(process.env.DB_PORT) || 1433,
+    database: process.env.DB_DATABASE || 'StockTradingDB',
     options: {
-        encrypt: false, 
-        trustServerCertificate: true
+        encrypt: process.env.DB_ENCRYPT === 'true', 
+        trustServerCertificate: process.env.DB_TRUST_CERT === 'true'
     },
     connectionTimeout: 10000 
 };
@@ -44,7 +47,7 @@ const connectDB = async () => {
 };
 
 export const poolPromise = connectDB();
-export const SECRET_KEY = 'KHOA_BAO_MAT_CUA_BAN_123';
+export const SECRET_KEY = process.env.JWT_SECRET || 'KHOA_BAO_MAT_CUA_BAN_123';
 
 // Mock items data (nếu cần dùng)
 export const items = [

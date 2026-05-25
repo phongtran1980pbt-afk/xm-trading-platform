@@ -1,12 +1,15 @@
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Cấu hình Email Transporter
-// ĐỂ GỬI ĐƯỢC MAIL THẬT: Bạn cần thay 2 dòng dưới đây
+// ĐỂ GỬI ĐƯỢC MAIL THẬT: Bạn cần thay các biến môi trường tương ứng
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'volehoangnha2005@gmail.com', // 1. Thay bằng Gmail của bạn
-    pass: 'your-app-password'           // 2. Thay bằng "Mật khẩu ứng dụng" (App Password)
+    user: process.env.EMAIL_USER || 'volehoangnha2005@gmail.com', // Thay bằng Gmail của bạn
+    pass: process.env.EMAIL_PASS || 'your-app-password'           // Thay bằng "Mật khẩu ứng dụng" (App Password)
   }
 });
 
@@ -34,7 +37,7 @@ export const sendWelcomeEmail = async (userEmail, fullName) => {
           </p>
           
           <div style="margin: 35px 0;">
-            <a href="http://localhost:5173/login" style="background-color: #00b050; color: white; padding: 14px 35px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px; display: inline-block;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="background-color: #00b050; color: white; padding: 14px 35px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px; display: inline-block;">
               Xác nhận email của bạn
             </a>
           </div>

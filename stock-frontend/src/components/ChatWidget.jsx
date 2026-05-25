@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../config';
 import {
   getSessionId, getMessages, sendMessage,
   markUserRead,
@@ -78,7 +79,7 @@ export default function ChatWidget() {
         // A simpler way: we just poll the sessions API, or skip it for now and only show badge if needed.
         // Let's just fetch all sessions (not ideal for perf, but okay for prototype)
         try {
-          const res = await fetch('http://localhost:5001/api/chat/sessions');
+          const res = await fetch(`${API_BASE_URL}/api/chat/sessions`);
           const data = await res.json();
           setUnread(data[sessionId]?.unreadUser || 0);
         } catch (e) {}

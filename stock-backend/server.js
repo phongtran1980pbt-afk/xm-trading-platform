@@ -16,7 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '200mb' }));
 app.use(express.urlencoded({ limit: '200mb', extended: true }));
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 
 // Cấu hình Swagger
 const swaggerOptions = {
@@ -27,7 +27,9 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'API Documentation for Stock App',
     },
-    servers: [{ url: `http://localhost:${PORT}` }],
+    servers: [
+      { url: process.env.BACKEND_URL || `http://localhost:${PORT}` }
+    ],
   },
   apis: ['./routes/*.js'], // Quét routes để tạo docs
 };

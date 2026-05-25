@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { createChart, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
 import { useCoinPrice, INITIAL_COIN_PRICES, computeCurrentCoinPrice } from '../contexts/PriceContext';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './TradePage.css';
@@ -336,7 +337,7 @@ export default function TradePage() {
     try {
       const u = JSON.parse(localStorage.getItem('user') || 'null');
       if (!u || !u.id) return;
-      const res = await axios.get(`http://localhost:5001/api/auth/balance/${u.id}`);
+      const res = await axios.get(`${API_BASE_URL}/api/auth/balance/${u.id}`);
       if (res.data && typeof res.data.balance === 'number') {
         setBalance(res.data.balance);
       }
@@ -350,7 +351,7 @@ export default function TradePage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const res = await axios.get('http://localhost:5001/api/binary/history', {
+      const res = await axios.get(`${API_BASE_URL}/api/binary/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -423,7 +424,7 @@ export default function TradePage() {
     let intervalId;
     const fetchNotifications = () => {
       if (currentUser && currentUser.id) {
-        fetch(`http://localhost:5001/api/notifications/${currentUser.id}`)
+        fetch(`${API_BASE_URL}/api/notifications/${currentUser.id}`)
           .then(res => res.json())
           .then(data => {
             if (Array.isArray(data)) {
@@ -464,7 +465,7 @@ export default function TradePage() {
     setShowNotifications(!showNotifications);
     if (!showNotifications && unreadCount > 0 && currentUser && currentUser.id) {
       // Mark as read
-      fetch(`http://localhost:5001/api/notifications/${currentUser.id}/read`, { method: 'POST' })
+      fetch(`${API_BASE_URL}/api/notifications/${currentUser.id}/read`, { method: 'POST' })
         .then(() => {
           setNotifications(prev => prev.map(n => ({ ...n, IsRead: true })));
         })
@@ -484,9 +485,9 @@ export default function TradePage() {
     if (currentUser?.isAdmin) {
       const fetchAdminData = async () => {
         try {
-          const statsRes = await axios.get(`http://localhost:5001/api/admin/trade-stats?symbol=${coin}`);
+          const statsRes = await axios.get(`${API_BASE_URL}/api/admin/trade-stats?symbol=${coin}`);
           setTradeStats(statsRes.data);
-          const trendRes = await axios.get(`http://localhost:5001/api/prices/trend?symbol=${coin}`);
+          const trendRes = await axios.get(`${API_BASE_URL}/api/prices/trend?symbol=${coin}`);
           setAdminTrend(trendRes.data.trend);
         } catch (e) { console.error('Error fetching admin data', e); }
       };
@@ -498,7 +499,7 @@ export default function TradePage() {
 
   const handleSetAdminTrend = async (newTrend) => {
     try {
-      const res = await axios.post('http://localhost:5001/api/prices/trend', {
+      const res = await axios.post(`${API_BASE_URL}/api/prices/trend`, {
         symbol: coin, trend: newTrend
       });
       if (res.data.success) setAdminTrend(newTrend);
@@ -519,7 +520,7 @@ export default function TradePage() {
         alert('Vui lòng đăng nhập để đặt cược.');
         return;
       }
-      const res = await axios.post('http://localhost:5001/api/binary/place', {
+      const res = await axios.post(`${API_BASE_URL}/api/binary/place`, {
         symbol: coin,
         betAmount: Number(binaryAmount),
         betType: type,
@@ -651,7 +652,7 @@ export default function TradePage() {
     // Fetch initial candles from the backend
     const loadInitialCandles = async () => {
       try {
-        const res = await axios.get(`http://localhost:5001/api/prices/candles?symbol=${coin}`);
+        const res = await axios.get(`${API_BASE_URL}/api/prices/candles?symbol=${coin}`);
         if (!isMounted) return;
         const originalCandles = res.data;
         if (originalCandles && originalCandles.length > 0) {
@@ -714,7 +715,7 @@ export default function TradePage() {
       const realBase = globalCoin.price;
       const loadSyncCandles = async () => {
         try {
-          const res = await axios.get(`http://localhost:5001/api/prices/candles?symbol=${coin}`);
+          const res = await axios.get(`${API_BASE_URL}/api/prices/candles?symbol=${coin}`);
           const originalCandles = res.data;
           if (originalCandles && originalCandles.length > 0 && candleSRef.current) {
             candleSRef.current.applyOptions({

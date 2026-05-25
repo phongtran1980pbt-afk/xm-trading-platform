@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_BASE = 'http://localhost:5001/api/chat';
+const API_BASE = `${API_BASE_URL}/api/chat`;
 
 /** Get or create a session ID for this customer browser tab */
 export function getSessionId() {
