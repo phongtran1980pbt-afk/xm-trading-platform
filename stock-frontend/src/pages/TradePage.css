@@ -849,3 +849,53 @@
 .th-assets-dropdown a svg {
   color: #848e9c;
 }
+
+/* Nav Menu styles for MegaMenus */
+.k-nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.k-nav-item {
+  color: #cdd5e0;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.2s;
+  white-space: nowrap;
+  padding: 0 8px;
+  height: 64px;
+  border-bottom: 2px solid transparent;
+}
+
+.k-nav-item:hover {
+  color: #ffffff;
+  border-bottom-color: #24DB9B;
+}
+
+.k-nav-arrow {
+  font-size: 8px;
+  color: #7e8a9c;
+}
+
+.k-nav-gift {
+  color: #7e8a9c;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.k-nav-gift:hover {
+  color: #ffffff;
+}
+
+.k-nav-gift svg {
+  width: 16px;
+  height: 16px;
+}

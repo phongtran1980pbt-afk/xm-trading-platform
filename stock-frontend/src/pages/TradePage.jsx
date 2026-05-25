@@ -6,6 +6,7 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './TradePage.css';
+import { BuyCryptoMenu, TradeMenu, DerivativesMenu, EarnMenu, MoreMenu, LaunchpadMenu, InstitutionalMenu } from './MegaMenus';
 
 /* ─── Seeded PRNG (mulberry32) — same seed → same number always ─── */
 function seededRand(seed) {
@@ -832,17 +833,49 @@ export default function TradePage() {
               <div className="th-switch-item">Web3</div>
             </div>
 
-            <div className="th-nav-links">
-              <span>Mua tiền điện tử ▾</span>
-              <span>Thị trường</span>
-              <span>Giao dịch ▾</span>
-              <span>Phái sinh ▾</span>
-              <span>Trung tâm bộ phóng ▾</span>
-              <span>Kiếm tiền ▾</span>
-              <span>Tổ chức ▾</span>
-              <span>Xem thêm ▾</span>
-              <span>🎁</span>
-            </div>
+            <nav className="k-nav-menu">
+              <div className="k-nav-item dropdown">
+                <span>Mua tiền điện tử</span>
+                <span className="k-nav-arrow">▼</span>
+                <BuyCryptoMenu />
+              </div>
+              <a href="#" className="k-nav-item">Thị trường</a>
+              <div className="k-nav-item dropdown">
+                <span>Giao dịch</span>
+                <span className="k-nav-arrow">▼</span>
+                <TradeMenu />
+              </div>
+              <div className="k-nav-item dropdown">
+                <span>Phái sinh</span>
+                <span className="k-nav-arrow">▼</span>
+                <DerivativesMenu />
+              </div>
+              <div className="k-nav-item dropdown">
+                <span>Trung tâm bệ phóng</span>
+                <span className="k-nav-arrow">▼</span>
+                <LaunchpadMenu />
+              </div>
+              <div className="k-nav-item dropdown">
+                <span>Kiếm tiền</span>
+                <span className="k-nav-arrow">▼</span>
+                <EarnMenu />
+              </div>
+              <div className="k-nav-item dropdown">
+                <span>Tổ chức</span>
+                <span className="k-nav-arrow">▼</span>
+                <InstitutionalMenu />
+              </div>
+              <div className="k-nav-item dropdown">
+                <span>Xem thêm</span>
+                <span className="k-nav-arrow">▼</span>
+                <MoreMenu />
+              </div>
+              <div className="k-nav-gift">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 12V20H4V12H20ZM21 4H3C2.4 4 2 4.4 2 5V9C2 9.6 2.4 10 3 10H21C21.6 10 22 9.6 22 9V5C22 4.4 21.6 4 21 4ZM12 4C13.5 4 15 2 15 2H9C9 2 10.5 4 12 4Z" />
+                </svg>
+              </div>
+            </nav>
           </div>
           <div className="th-gn-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* Icons Group */}
