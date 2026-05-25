@@ -258,47 +258,9 @@ function KucoinWeb() {
             </nav>
           </div>
 
-          <div className="k-header-right">
-            <div className="k-header-assets-nav">
-              <Link to="/support/deposit" className="k-deposit-btn" style={{ textDecoration: 'none' }}>↓ Thêm tiền</Link>
-              <div className="k-dropdown-wrapper">
-                <span>Tài sản ▾</span>
-                <div className="k-assets-dropdown">
-                  <div className="k-assets-header">
-                    <span>Tổng quan</span>
-                  </div>
-                  <div className="k-assets-balance" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="k-currency" style={{ fontSize: '20px', fontWeight: 'bold' }}>
-                      {showBalance ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '******'}
-                    </span>
-                    <svg onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBalance(!showBalance); }} style={{ cursor: 'pointer', marginTop: '2px' }} width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24">
-                      {showBalance ? (
-                        <>
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </>
-                      ) : (
-                        <>
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                          <line x1="1" y1="1" x2="23" y2="23" />
-                        </>
-                      )}
-                    </svg>
-                  </div>
-                  <div className="k-assets-divider" />
-                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Tài khoản tài trợ</a>
-                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản giao dịch</a>
-                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Tài khoản Futures</a>
-                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Tài khoản Ký quỹ</a>
-                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản tài chính</a>
-                </div>
-              </div>
-              <div className="k-dropdown-wrapper">
-                <span>Lệnh ▾</span>
-              </div>
-            </div>
-            <div className="k-util-group">
-              <button className="k-util-btn">
+          <div className="k-header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className="k-util-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button className="k-util-btn" title="Tìm kiếm">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -352,7 +314,7 @@ function KucoinWeb() {
                 )}
               </div>
               
-              <button className="k-util-btn">
+              <button className="k-util-btn" title="Ngôn ngữ">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -360,24 +322,24 @@ function KucoinWeb() {
                 </svg>
               </button>
 
-              <button className="k-util-btn">
+              <button className="k-util-btn" title="Chế độ tối">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
               </button>
             </div>
 
-            <div className="k-header-divider"></div>
+            <div className="k-header-divider" style={{ width: '1px', height: '14px', background: '#2b3139', margin: '0 4px' }}></div>
             
             {user ? (
               <div className="k-user-menu">
                 {/* Avatar + name (always visible) */}
-                <div className="k-user-trigger">
-                  <div className="k-user-avatar">
+                <div className="k-user-trigger" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="k-user-avatar" style={{ width: '28px', height: '28px', fontSize: '14px', background: 'transparent', border: '1px solid #24DB9B', color: '#24DB9B' }}>
                     {(user.username || user.email || 'U').charAt(0).toUpperCase()}
                   </div>
-                  <span className="k-user-name">
-                    {user.username || user.fullName || user.email}
+                  <span className="k-user-name" style={{ fontSize: '12px', color: '#eaecef', fontWeight: '500' }}>
+                    {(user.username || user.fullName || user.email).length > 15 ? (user.username || user.fullName || user.email).substring(0, 15) + '...' : (user.username || user.fullName || user.email)}
                   </span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
@@ -418,9 +380,48 @@ function KucoinWeb() {
             ) : (
               <>
                 <Link to="/login" className="k-login-link">Đăng nhập</Link>
-                <Link to="/register" className="k-register-btn-white">Đăng ký</Link>
+                <Link to="/register" className="k-register-link">Đăng ký</Link>
               </>
             )}
+
+            <div className="k-header-assets-nav" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <Link to="/support/deposit" className="k-deposit-btn" style={{ textDecoration: 'none' }}>↓ Thêm tiền</Link>
+              <div className="k-dropdown-wrapper">
+                <span>Tài sản ▾</span>
+                <div className="k-assets-dropdown">
+                  <div className="k-assets-header">
+                    <span>Tổng quan</span>
+                  </div>
+                  <div className="k-assets-balance" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="k-currency" style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                      {showBalance ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '******'}
+                    </span>
+                    <svg onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBalance(!showBalance); }} style={{ cursor: 'pointer', marginTop: '2px' }} width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24">
+                      {showBalance ? (
+                        <>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </>
+                      ) : (
+                        <>
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </>
+                      )}
+                    </svg>
+                  </div>
+                  <div className="k-assets-divider" />
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Tài khoản tài trợ</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản giao dịch</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Tài khoản Futures</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Tài khoản Ký quỹ</a>
+                  <a href="#"><svg width="16" height="16" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Tài khoản tài chính</a>
+                </div>
+              </div>
+              <div className="k-dropdown-wrapper">
+                <span>Lệnh ▾</span>
+              </div>
+            </div>
           </div>
         </div>
       </header>

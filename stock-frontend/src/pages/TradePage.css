@@ -81,14 +81,17 @@
   color: #00FFA3;
 }
 .th-deposit-btn {
-  background: #00FFA3;
-  color: #000;
+  background: #2b3139;
+  color: #eaecef;
   border: none;
   padding: 6px 16px;
-  border-radius: 16px;
-  font-weight: bold;
+  border-radius: 6px;
+  font-weight: 500;
   font-size: 13px;
   cursor: pointer;
+}
+.th-deposit-btn:hover {
+  background: #3b424a;
 }
 .th-icon-btn {
   color: #848e9c;

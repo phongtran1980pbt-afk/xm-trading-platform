@@ -844,9 +844,114 @@ export default function TradePage() {
               <span>🎁</span>
             </div>
           </div>
-          <div className="th-gn-right">
-            <Link to="/support/deposit" className="th-deposit-btn" style={{ textDecoration: 'none' }}>↓ Thêm tiền</Link>
-            <div className="th-nav-links">
+          <div className="th-gn-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {/* Icons Group */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Search */}
+              <div className="th-icon-btn" title="Tìm kiếm">
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              </div>
+
+              {/* Download */}
+              <div className="th-icon-btn" title="Tải xuống">
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+
+              {/* Bell */}
+              <div 
+                className="th-icon-btn" 
+                title="Thông báo" 
+                style={{ position: 'relative' }} 
+                onClick={handleOpenNotifications}
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {unreadCount > 0 && (
+                  <span style={{ 
+                    position: 'absolute', 
+                    top: '-2px', 
+                    right: '-2px', 
+                    background: '#f6465d', 
+                    color: 'white', 
+                    fontSize: '9px', 
+                    borderRadius: '50%', 
+                    width: '13px', 
+                    height: '13px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    boxShadow: '0 0 4px rgba(246, 70, 93, 0.5)'
+                  }}>
+                    {unreadCount}
+                  </span>
+                )}
+
+                {showNotifications && (
+                  <div 
+                    className="th-notifications-dropdown" 
+                    onClick={(e) => e.stopPropagation()} 
+                    style={{ 
+                      position: 'absolute', 
+                      top: '32px', 
+                      right: '-140px', 
+                      width: '320px', 
+                      background: '#151821', 
+                      borderRadius: '8px', 
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.6)', 
+                      zIndex: 1000, 
+                      border: '1px solid rgba(255, 255, 255, 0.08)', 
+                      padding: '10px 0',
+                      cursor: 'default',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <div style={{ padding: '10px 20px', fontWeight: '600', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#eaecef', fontSize: '13px' }}>Thông báo</div>
+                    <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                      {notifications.length === 0 ? (
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#848e9c', fontSize: '13px' }}>Không có thông báo nào</div>
+                      ) : (
+                        notifications.map(n => (
+                          <div key={n.Id} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: n.IsRead ? '#848e9c' : '#eaecef', background: n.IsRead ? 'transparent' : 'rgba(36, 219, 155, 0.05)', fontSize: '12px' }}>
+                            <div style={{ marginBottom: '4px', lineHeight: '1.4' }}>{n.Message}</div>
+                            <div style={{ fontSize: '10px', color: '#848e9c' }}>{new Date(n.CreatedAt.replace('Z', '')).toLocaleString('vi-VN')}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Globe */}
+              <div className="th-icon-btn" title="Ngôn ngữ">
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+
+              {/* Dark Mode */}
+              <div className="th-icon-btn" title="Chế độ tối">
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              </div>
+            </div>
+
+            <div style={{ width: '1px', height: '14px', background: '#2b3139', margin: '0 4px' }}></div>
+
+            {/* User Avatar & Name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div className="th-icon-btn th-user-avatar" title={currentUser?.username || 'Tài khoản'} style={{ width: '28px', height: '28px', fontSize: '14px', background: 'transparent', border: '1px solid #24DB9B', color: '#24DB9B' }}>
+                {userInitial}
+              </div>
+              <span style={{ fontSize: '12px', color: '#eaecef', fontWeight: '500' }}>
+                {currentUser?.username ? (currentUser.username.length > 15 ? currentUser.username.substring(0, 15) + '...' : currentUser.username) : 'Nhà giao dịch...'} <span style={{ fontSize: '10px', color: '#848e9c', marginLeft: '2px' }}>▾</span>
+              </span>
+            </div>
+
+            {/* Deposit Button */}
+            <Link to="/support/deposit" className="th-deposit-btn">↓ Thêm tiền</Link>
+
+            <div className="th-nav-links" style={{ gap: '16px' }}>
               <div className="th-dropdown-wrapper">
                 <span>Tài sản ▾</span>
                 <div className="th-assets-dropdown">
@@ -923,99 +1028,6 @@ export default function TradePage() {
               <div className="th-dropdown-wrapper">
                 <span>Lệnh ▾</span>
               </div>
-            </div>
-
-            {/* User Avatar — shows first letter of logged-in username */}
-            <div className="th-icon-btn th-user-avatar" title={currentUser?.username || 'Tài khoản'}>
-              {userInitial}
-            </div>
-
-            {/* Search */}
-            <div className="th-icon-btn" title="Tìm kiếm">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            </div>
-
-            {/* Bell — with active notification count badge & dropdown */}
-            <div 
-              className="th-icon-btn" 
-              title="Thông báo" 
-              style={{ position: 'relative' }} 
-              onClick={handleOpenNotifications}
-            >
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
-              {unreadCount > 0 && (
-                <span style={{ 
-                  position: 'absolute', 
-                  top: '-2px', 
-                  right: '-2px', 
-                  background: '#f6465d', 
-                  color: 'white', 
-                  fontSize: '9px', 
-                  borderRadius: '50%', 
-                  width: '13px', 
-                  height: '13px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  boxShadow: '0 0 4px rgba(246, 70, 93, 0.5)'
-                }}>
-                  {unreadCount}
-                </span>
-              )}
-
-              {showNotifications && (
-                <div 
-                  className="th-notifications-dropdown" 
-                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the dropdown
-                  style={{ 
-                    position: 'absolute', 
-                    top: '32px', 
-                    right: '-80px', 
-                    width: '320px', 
-                    background: '#151821', 
-                    borderRadius: '8px', 
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)', 
-                    zIndex: 1000, 
-                    border: '1px solid rgba(255, 255, 255, 0.08)', 
-                    padding: '10px 0',
-                    cursor: 'default',
-                    textAlign: 'left'
-                  }}
-                >
-                  <div style={{ padding: '10px 20px', fontWeight: '600', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#eaecef', fontSize: '13px' }}>Thông báo</div>
-                  <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                    {notifications.length === 0 ? (
-                      <div style={{ padding: '20px', textAlign: 'center', color: '#848e9c', fontSize: '13px' }}>Không có thông báo nào</div>
-                    ) : (
-                      notifications.map(n => (
-                        <div key={n.Id} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: n.IsRead ? '#848e9c' : '#eaecef', background: n.IsRead ? 'transparent' : 'rgba(36, 219, 155, 0.05)', fontSize: '12px' }}>
-                          <div style={{ marginBottom: '4px', lineHeight: '1.4' }}>{n.Message}</div>
-                          <div style={{ fontSize: '10px', color: '#848e9c' }}>{new Date(n.CreatedAt.replace('Z', '')).toLocaleString('vi-VN')}</div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Download */}
-            <div className="th-icon-btn" title="Tải xuống">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </div>
-
-            {/* Globe */}
-            <div className="th-icon-btn" title="Ngôn ngữ">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            </div>
-
-            {/* Dark Mode */}
-            <div className="th-icon-btn" title="Chế độ tối">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </div>
           </div>
         </div>

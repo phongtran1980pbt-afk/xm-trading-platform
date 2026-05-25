@@ -1463,7 +1463,7 @@
   height: 100%;
 }
 .k-deposit-btn {
-  background: rgba(255,255,255,0.1);
+  background: #2b3139;
   color: #eaecef;
   padding: 6px 12px;
   border-radius: 4px;
@@ -1473,7 +1473,7 @@
   transition: all 0.2s;
 }
 .k-deposit-btn:hover {
-  background: rgba(255,255,255,0.2);
+  background: #3b424a;
   color: #fff;
 }
 .k-dropdown-wrapper {
