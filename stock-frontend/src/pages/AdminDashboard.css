@@ -29,11 +29,11 @@
 .admin-logo-text {
   font-weight: bold;
   font-size: 15px;
-  color: #00FFA3;
+  color: #cdd5e0;
 }
 .admin-badge-count {
   margin-left: auto;
-  background: #F6465D;
+  background: #f6465d;
   color: #fff;
   border-radius: 10px;
   padding: 2px 8px;
@@ -72,20 +72,21 @@
   position: relative;
 }
 .admin-session-item:hover { background: #1a1e27; }
-.admin-session-item.active { background: #1e2329; border-left: 3px solid #00FFA3; }
+.admin-session-item.active { background: #1e2329; border-left: 3px solid #4b5563; }
 .admin-session-item.unread .session-name { color: #fff; font-weight: 700; }
 
 .session-avatar {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4169e1, #7b5ea7);
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
-  color: #fff;
+  color: #9aa4b2;
   flex-shrink: 0;
 }
 .session-info { flex: 1; min-width: 0; }
@@ -103,7 +104,7 @@
   min-width: 20px;
   height: 20px;
   border-radius: 10px;
-  background: #F6465D;
+  background: #f6465d;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -140,14 +141,15 @@
 }
 .admin-chat-avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  background: linear-gradient(135deg, #4169e1, #7b5ea7);
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 15px; color: #fff;
+  font-weight: 700; font-size: 15px; color: #9aa4b2;
 }
 .admin-chat-name { font-weight: 600; font-size: 14px; color: #eaecef; }
 .admin-chat-meta {
   font-size: 11px;
-  color: #00FFA3;
+  color: #848e9c;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -156,12 +158,7 @@
   display: inline-block;
   width: 7px; height: 7px;
   border-radius: 50%;
-  background: #00FFA3;
-  animation: blink 2s infinite;
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  background: #52b788;
 }
 .admin-chat-session { font-size: 10px; color: #5e6673; margin-left: auto; }
 
@@ -190,7 +187,7 @@
   word-break: break-word;
 }
 .admin-bubble.customer { background: #1e2329; color: #eaecef; border-bottom-left-radius: 4px; }
-.admin-bubble.admin-msg { background: #00FFA3; color: #000; border-bottom-right-radius: 4px; }
+.admin-bubble.admin-msg { background: #252b36; color: #e2e8f0; border-bottom-right-radius: 4px; border: 1px solid rgba(255,255,255,0.06); }
 .admin-time { font-size: 10px; color: #5e6673; padding: 0 4px; }
 .admin-label { font-size: 10px; color: #848e9c; padding: 0 4px; }
 
@@ -219,9 +216,10 @@
 }
 .admin-input-avatar {
   width: 32px; height: 32px; border-radius: 50%;
-  background: linear-gradient(135deg, #00FFA3, #00c07c);
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; color: #000;
+  font-weight: 700; font-size: 13px; color: #9aa4b2;
   flex-shrink: 0;
 }
 .admin-input {
@@ -239,23 +237,23 @@
   font-family: inherit;
   transition: border-color 0.15s;
 }
-.admin-input:focus { border-color: #00FFA3; }
+.admin-input:focus { border-color: #4b5563; }
 .admin-input::placeholder { color: #5e6673; }
 .admin-send-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 10px 18px;
-  background: linear-gradient(135deg, #00FFA3, #00c07c);
-  color: #000;
-  border: none;
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #cdd5e0;
   border-radius: 10px;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.admin-send-btn:hover { opacity: 0.85; }
+.admin-send-btn:hover { background: #2e3540; color: #fff; }
 .admin-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* Quick reply templates */
@@ -271,17 +269,18 @@
 .admin-template-btn {
   padding: 4px 10px;
   border-radius: 10px;
-  border: 1px solid #1e2329;
+  border: 1px solid #2b3139;
   background: transparent;
-  color: #00FFA3;
+  color: #848e9c;
   font-size: 11px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
 }
 .admin-template-btn:hover {
-  background: rgba(0,255,163,0.1);
-  border-color: #00FFA3;
+  background: #1e2329;
+  border-color: #4b5563;
+  color: #eaecef;
 }
 
 /* Sidebar vertical menu */
@@ -312,23 +311,24 @@
 }
 .admin-menu-item.active {
   background: #1e2329;
-  color: #00FFA3;
+  color: #cdd5e0;
+  border-left: 2px solid #4b5563;
 }
 
 /* Deposit Button */
 .admin-deposit-btn {
   padding: 8px 16px;
-  background: #24DB9B;
-  color: #000;
-  border: none;
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #cdd5e0;
   border-radius: 6px;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 12px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s;
 }
 .admin-deposit-btn:hover {
-  opacity: 0.85;
+  background: #2e3540;
 }
 
 /* ===================== MOBILE RESPONSIVE ===================== */
@@ -406,7 +406,7 @@
   color: #eaecef;
 }
 .admin-log-tab-btn.active {
-  background: rgba(36, 219, 155, 0.1);
-  color: #24DB9B;
-  border-color: #24DB9B;
+  background: #1e2329;
+  color: #cdd5e0;
+  border-color: #4b5563;
 }

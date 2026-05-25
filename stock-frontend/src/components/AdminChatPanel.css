@@ -8,20 +8,21 @@
   height: 56px;
   padding: 0 22px;
   border-radius: 28px;
-  background: linear-gradient(135deg, #F6465D, #c0392b);
-  border: none;
+  background: #1a1f27;
+  border: 1px solid rgba(255,255,255,0.12);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   z-index: 9999;
-  box-shadow: 0 4px 24px rgba(246, 70, 93, 0.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   transition: all 0.2s ease;
 }
 .admin-panel-fab:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 30px rgba(246, 70, 93, 0.6);
+  background: #232930;
+  transform: scale(1.04);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.6);
 }
 .admin-panel-fab.open {
   width: 56px;
@@ -149,14 +150,9 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4169e1, #7b5ea7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-  color: #fff;
-  flex-shrink: 0;
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #9aa4b2;
 }
 .afp-sinfo { flex: 1; min-width: 0; }
 .afp-srow { display: flex; justify-content: space-between; align-items: center; }
@@ -211,17 +207,16 @@
 }
 .afp-chat-avatar {
   width: 32px; height: 32px; border-radius: 50%;
-  background: linear-gradient(135deg, #4169e1, #7b5ea7);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; color: #fff;
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #9aa4b2;
 }
 .afp-chat-name { font-weight: 600; font-size: 13px; color: #eaecef; }
-.afp-online { font-size: 10px; color: #00FFA3; display: flex; align-items: center; gap: 3px; }
+.afp-online { font-size: 10px; color: #848e9c; display: flex; align-items: center; gap: 3px; }
 .afp-online::before {
   content: '';
   width: 6px; height: 6px;
-  border-radius: 50%; background: #00FFA3; display: inline-block;
-  animation: blink 2s infinite;
+  border-radius: 50%; background: #52b788; display: inline-block;
 }
 @keyframes blink {
   0%, 100% { opacity: 1; }
@@ -249,7 +244,7 @@
   line-height: 1.5; word-break: break-word;
 }
 .afp-bubble.customer { background: #1e2329; color: #eaecef; border-bottom-left-radius: 4px; }
-.afp-bubble.admin    { background: #F6465D; color: #fff; border-bottom-right-radius: 4px; }
+.afp-bubble.admin    { background: #252b36; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.06); border-bottom-right-radius: 4px; }
 .afp-label { font-size: 10px; color: #848e9c; padding: 0 4px; }
 .afp-time  { font-size: 10px; color: #5e6673; padding: 0 4px; }
 
@@ -264,15 +259,15 @@
 .afp-tmpl-btn {
   padding: 4px 9px;
   border-radius: 10px;
-  border: 1px solid #1e2329;
+  border: 1px solid #2b3139;
   background: transparent;
-  color: #F6465D;
+  color: #848e9c;
   font-size: 10px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
 }
-.afp-tmpl-btn:hover { background: rgba(246,70,93,0.1); border-color: #F6465D; }
+.afp-tmpl-btn:hover { background: #1e2329; border-color: #4b5563; color: #eaecef; }
 
 .afp-input-area {
   padding: 10px 12px;
@@ -298,21 +293,21 @@
   font-family: inherit;
   transition: border-color 0.15s;
 }
-.afp-input:focus { border-color: #F6465D; }
+.afp-input:focus { border-color: #4b5563; }
 .afp-input::placeholder { color: #5e6673; }
 .afp-send-btn {
   padding: 8px 16px;
-  background: #F6465D;
-  color: #fff;
-  border: none;
+  background: #252b36;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #cdd5e0;
   border-radius: 8px;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
   flex-shrink: 0;
 }
-.afp-send-btn:hover { opacity: 0.85; }
+.afp-send-btn:hover { background: #2e3540; color: #fff; }
 .afp-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ===================== MOBILE RESPONSIVE ===================== */
