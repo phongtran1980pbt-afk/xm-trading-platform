@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePrices } from '../contexts/PriceContext';
 import './AlphaMarkets.css';
 
-// Mock data for the different tabs
 const ALL_MARKETS_DATA = {
   meme: [
     { id: 1, name: 'SHIB', sub: 'SHIBA INU', price: 0.00000574, change: 0.51, isUp: true, cap: '$3.38 T', vol: '$8.25 Tr' },
@@ -53,7 +52,6 @@ function formatPrice(val) {
   return '$' + str.replace('.', ',');
 }
 
-// Helper to draw random sparkline SVG
 const Sparkline = ({ isUp }) => {
   const points = [];
   let y = 10;
@@ -61,11 +59,11 @@ const Sparkline = ({ isUp }) => {
     points.push(`${x},${y}`);
     y += (Math.random() * 10 - 5);
   }
-  // Ensure the trend matches the color
+  
   if (isUp) {
-    points[points.length - 1] = `50,2`; // end high
+    points[points.length - 1] = `50,2`; 
   } else {
-    points[points.length - 1] = `50,18`; // end low
+    points[points.length - 1] = `50,18`; 
   }
   
   return (
@@ -80,9 +78,31 @@ const Sparkline = ({ isUp }) => {
   );
 };
 
+const SPOT_ALL_DATA = [
+  { id: 201, name: 'BTC', sub: 'Bitcoin', price: 77402.66, change: 0.56, isUp: true, cap: '$1.52 NT', vol: '$15.85 Tr' },
+  { id: 202, name: 'ETH', sub: 'Ethereum', price: 2185.27, change: -0.7, isUp: false, cap: '$256.3 T', vol: '$5.56 Tr' },
+  { id: 203, name: 'SOL', sub: 'Solana', price: 85.07, change: 0.41, isUp: true, cap: '$41.2 T', vol: '$1.82 Tr' },
+  { id: 204, name: 'BNB', sub: 'BNB', price: 615.42, change: 1.15, isUp: true, cap: '$94.6 T', vol: '$688.8 Tr' },
+  { id: 205, name: 'XRP', sub: 'Ripple', price: 1.3735, change: -0.14, isUp: false, cap: '$78.3 T', vol: '$4.67 Tr' },
+  { id: 206, name: 'ADA', sub: 'Cardano', price: 0.524, change: 2.14, isUp: true, cap: '$18.2 T', vol: '$628 Tr' },
+  { id: 207, name: 'LINK', sub: 'Chainlink', price: 18.25, change: -1.05, isUp: false, cap: '$10.8 T', vol: '$328 Tr' }
+];
+
+const FUTURES_ALL_DATA = [
+  { id: 301, name: 'BTCUSDT-M', sub: 'BTC Vĩnh cửu', price: 77612.4, change: 0.91, isUp: true, cap: '$194.2 B', vol: '$5.8 B' },
+  { id: 302, name: 'ETHUSDT-M', sub: 'ETH Vĩnh cửu', price: 2185.11, change: 0.68, isUp: true, cap: '$89.5 B', vol: '$2.6 B' },
+  { id: 303, name: 'SOLUSDT-M', sub: 'SOL Vĩnh cửu', price: 85.068, change: -0.4, isUp: false, cap: '$41.2 B', vol: '$1.2 B' },
+  { id: 304, name: 'DOGEUSDT-M', sub: 'DOGE Vĩnh cửu', price: 0.1038, change: -0.28, isUp: false, cap: '$15.9 B', vol: '$480M' },
+  { id: 305, name: 'PEPEUSDT-M', sub: 'PEPE Vĩnh cửu', price: 0.00000368, change: 0.96, isUp: true, cap: '$8.4 B', vol: '$230M' },
+  { id: 306, name: 'WIFUSDT-M', sub: 'WIF Vĩnh cửu', price: 0.1928, change: 1.26, isUp: true, cap: '$2.9 B', vol: '$85M' }
+];
+
 function AllMarkets() {
   const navigate = useNavigate();
   const [activeSubTab, setActiveSubTab] = useState('all');
+  const [mainTab, setMainTab] = useState('all'); // 'all' | 'favorites' | 'spot' | 'futures'
+  const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('favoriteCoins') || '[]'));
+  
   const globalPrices = usePrices();
 
   const tabs = [
@@ -96,8 +116,39 @@ function AllMarkets() {
     { key: 'other', label: 'Khác ▾' }
   ];
 
-  // Merge live global prices into each coin row
-  const currentData = (ALL_MARKETS_DATA[activeSubTab] || []).map(coin => {
+  const toggleFavorite = (e, coinName) => {
+    e.stopPropagation();
+    let newFavs = [...favorites];
+    if (newFavs.includes(coinName)) {
+      newFavs = newFavs.filter(c => c !== coinName);
+    } else {
+      newFavs.push(coinName);
+    }
+    setFavorites(newFavs);
+    localStorage.setItem('favoriteCoins', JSON.stringify(newFavs));
+  };
+  
+  let baseData = [];
+  if (mainTab === 'all') {
+    const raw = ALL_MARKETS_DATA[activeSubTab] || [];
+    baseData = [...raw];
+    if (baseData.length > 0 && baseData.length < 20) {
+      let expanded = [];
+      for(let i=0; i<3; i++) expanded = expanded.concat(baseData.map(c => ({...c, id: c.id + i*100})));
+      baseData = expanded;
+    }
+  } else if (mainTab === 'spot') {
+    baseData = [...SPOT_ALL_DATA];
+  } else if (mainTab === 'futures') {
+    baseData = [...FUTURES_ALL_DATA];
+  } else if (mainTab === 'favorites') {
+    let allCoins = [...SPOT_ALL_DATA, ...FUTURES_ALL_DATA];
+    Object.values(ALL_MARKETS_DATA).forEach(list => allCoins = allCoins.concat(list));
+    const uniqueCoins = Array.from(new Map(allCoins.map(item => [item.name, item])).values());
+    baseData = uniqueCoins.filter(c => favorites.includes(c.name));
+  }
+
+  const currentData = baseData.map(coin => {
     const live = globalPrices?.[coin.name];
     if (!live) return coin;
     return { ...coin, price: live.price, change: live.change, isUp: live.isUp };
@@ -105,7 +156,6 @@ function AllMarkets() {
 
   return (
     <div className="alpha-markets-page">
-      {/* HEADER */}
       <header className="alpha-header">
         <Link to="/" className="alpha-logo">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -117,48 +167,57 @@ function AllMarkets() {
         </Link>
       </header>
 
-      {/* MAIN CONTENT */}
       <div className="alpha-main-container">
         
-        {/* TOP LEVEL TABS */}
         <div className="alpha-tabs-container" style={{marginTop: '24px'}}>
-          <div className="alpha-tab">Yêu thích</div>
-          <Link to="/markets/all" className="alpha-tab active" style={{textDecoration:'none'}}>Tất cả</Link>
-          <div className="alpha-tab">Giao ngay</div>
-          <div className="alpha-tab">Giao sau</div>
-          <Link to="/markets/alpha" className="alpha-tab" style={{textDecoration:'none'}}>Alpha</Link>
+          <div className={"alpha-tab " + (mainTab === 'favorites' ? 'active' : '')} onClick={() => setMainTab('favorites')} style={{cursor: 'pointer'}}>Yêu thích</div>
+          <div className={"alpha-tab " + (mainTab === 'all' ? 'active' : '')} onClick={() => setMainTab('all')} style={{cursor: 'pointer'}}>Tất cả</div>
+          <div className={"alpha-tab " + (mainTab === 'spot' ? 'active' : '')} onClick={() => setMainTab('spot')} style={{cursor: 'pointer'}}>Giao ngay</div>
+          <div className={"alpha-tab " + (mainTab === 'futures' ? 'active' : '')} onClick={() => setMainTab('futures')} style={{cursor: 'pointer'}}>Giao sau</div>
+          <Link to="/markets/alpha" className="alpha-tab" style={{textDecoration:'none', color:'#848e9c'}}>Alpha</Link>
         </div>
 
-        {/* SUB TABS */}
-        <div className="alpha-sub-tabs" style={{borderBottom: 'none', marginBottom: '16px'}}>
-          <div className="alpha-pills">
-            {tabs.map(tab => (
-              <button 
-                key={tab.key}
-                className={`alpha-pill bordered ${activeSubTab === tab.key ? 'active' : ''}`}
-                onClick={() => setActiveSubTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="alpha-tools">
-            <div className="alpha-search-box">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" placeholder="Tìm kiếm" />
+        {mainTab === 'all' ? (
+          <>
+            <div className="alpha-sub-tabs" style={{borderBottom: 'none', marginBottom: '16px'}}>
+              <div className="alpha-pills">
+                {tabs.map(tab => (
+                  <button 
+                    key={tab.key}
+                    className={`alpha-pill bordered ${activeSubTab === tab.key ? 'active' : ''}`}
+                    onClick={() => setActiveSubTab(tab.key)}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="alpha-tools">
+                <div className="alpha-search-box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" placeholder="Tìm kiếm" />
+                </div>
+              </div>
+            </div>
+
+            <div style={{marginBottom: '24px', color: '#848e9c', fontSize: '12px'}}>
+              {activeSubTab === 'meme' && "Meme đề cập đến các khái niệm lan tỏa khắp các cộng đồng, tạo thành một nền văn hóa nhỏ..."}
+              {activeSubTab === 'storage' && "Lưu trữ phân tán có thể được sử dụng để truyền dữ liệu trên nhiều điểm nút mạng lưới..."}
+              {activeSubTab === 'supply' && "Tính minh bạch, tính công khai, khả năng phi tập trung hóa chống giả mạo..."}
+              {activeSubTab === 'media' && "Công nghệ blockchain có thể bù đắp cho những thiếu sót của nền tảng media truyền thống..."}
+              {activeSubTab === 'all' && "KuCoin Theo dõi Thị trường. Tìm kiếm coin triển vọng và những cơ hội tuyệt vời!"}
+            </div>
+          </>
+        ) : (
+          <div className="alpha-sub-tabs" style={{borderBottom: 'none', marginBottom: '24px', justifyContent: 'flex-end'}}>
+            <div className="alpha-tools">
+              <div className="alpha-search-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Tìm kiếm" />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div style={{marginBottom: '24px', color: '#848e9c', fontSize: '12px'}}>
-          {activeSubTab === 'meme' && "Meme đề cập đến các khái niệm lan tỏa khắp các cộng đồng, tạo thành một nền văn hóa nhỏ..."}
-          {activeSubTab === 'storage' && "Lưu trữ phân tán có thể được sử dụng để truyền dữ liệu trên nhiều điểm nút mạng lưới..."}
-          {activeSubTab === 'supply' && "Tính minh bạch, tính công khai, khả năng phi tập trung hóa chống giả mạo..."}
-          {activeSubTab === 'media' && "Công nghệ blockchain có thể bù đắp cho những thiếu sót của nền tảng media truyền thống..."}
-          {activeSubTab === 'all' && "KuCoin Theo dõi Thị trường. Tìm kiếm coin triển vọng và những cơ hội tuyệt vời!"}
-        </div>
-
-        {/* TABLE */}
         <div className="alpha-table-wrapper">
           <table className="alpha-table" style={{textAlign: 'right'}}>
             <thead>
@@ -177,7 +236,7 @@ function AllMarkets() {
               {currentData.map((coin, index) => (
                 <tr key={coin.id} style={{cursor: 'pointer'}} onClick={() => navigate(`/trade/${coin.name}`)}>
                   <td style={{textAlign: 'left'}}>
-                    <svg className="star-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg className="star-icon" onClick={(e) => toggleFavorite(e, coin.name)} width="16" height="16" viewBox="0 0 24 24" fill={favorites.includes(coin.name) ? '#F7931A' : 'none'} stroke={favorites.includes(coin.name) ? '#F7931A' : 'currentColor'} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   </td>
                   <td style={{textAlign: 'left'}}>
                     <div className="alpha-coin-cell">

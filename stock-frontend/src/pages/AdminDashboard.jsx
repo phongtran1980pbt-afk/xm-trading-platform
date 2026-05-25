@@ -330,6 +330,73 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xoá tài khoản này không? Tất cả lịch sử giao dịch và tin nhắn của user này sẽ bị xoá vĩnh viễn!')) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/users/${userId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Đã xoá tài khoản thành công!');
+        setUsers(prev => prev.filter(u => u.Id !== userId));
+      } else {
+        toast.error(data.message || 'Lỗi khi xoá tài khoản');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Lỗi kết nối server');
+    }
+  };
+
+  const handleCleanupUsers = async () => {
+    if (!window.confirm('CẢNH BÁO NGUY HIỂM: Bạn có chắc chắn muốn xoá TẤT CẢ tài khoản khách (chỉ giữ lại Admin) không? Hành động này không thể hoàn tác!')) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/users/cleanup`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Đã dọn dẹp danh sách tài khoản khách!');
+        const updatedRes = await fetch('http://localhost:5001/api/admin/users');
+        const updatedData = await updatedRes.json();
+        setUsers(updatedData);
+      } else {
+        toast.error(data.message || 'Lỗi khi dọn dẹp tài khoản');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Lỗi kết nối server');
+    }
+  };
+
+  const handleClearChats = async () => {
+    if (!window.confirm('CẢNH BÁO NGUY HIỂM: Bạn có chắc chắn muốn xoá TOÀN BỘ lịch sử tin nhắn và hội thoại không? Hành động này không thể hoàn tác!')) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5001/api/admin/chat/cleanup`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Đã xoá toàn bộ lịch sử tin nhắn thành công!');
+        setSessions({});
+        setMessages([]);
+        setActiveId(null);
+      } else {
+        toast.error(data.message || 'Lỗi khi xoá lịch sử tin nhắn');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Lỗi kết nối server');
+    }
+  };
+
   const prevMessagesLength = useRef(0);
   const prevActiveId = useRef(null);
 
@@ -520,6 +587,66 @@ export default function AdminDashboard() {
               <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Quản lý người dùng (Danh sách User)</h2>
             </div>
             
+            <div style={{ 
+              background: 'linear-gradient(135deg, rgba(246, 70, 93, 0.08) 0%, rgba(17, 20, 26, 0.95) 100%)', 
+              padding: '20px', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(246, 70, 93, 0.3)', 
+              marginBottom: '24px',
+              boxShadow: '0 4px 20px rgba(246, 70, 93, 0.08)'
+            }}>
+              <h3 style={{ color: '#F6465D', marginBottom: '16px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, marginTop: 0 }}>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Dọn dẹp hệ thống & Reset dữ liệu
+              </h3>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={handleCleanupUsers}
+                  style={{ 
+                    padding: '8px 16px', 
+                    background: 'rgba(246, 70, 93, 0.12)', 
+                    color: '#F6465D', 
+                    border: '1px solid rgba(246, 70, 93, 0.4)', 
+                    borderRadius: '8px', 
+                    fontWeight: 700, 
+                    cursor: 'pointer', 
+                    transition: 'all 0.3s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '12px'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = '#F6465D'; e.currentTarget.style.color = '#000'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(246, 70, 93, 0.12)'; e.currentTarget.style.color = '#F6465D'; }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  Xóa tất cả tài khoản khách (Reset người dùng)
+                </button>
+                <button 
+                  onClick={handleClearChats}
+                  style={{ 
+                    padding: '8px 16px', 
+                    background: 'rgba(246, 70, 93, 0.12)', 
+                    color: '#F6465D', 
+                    border: '1px solid rgba(246, 70, 93, 0.4)', 
+                    borderRadius: '8px', 
+                    fontWeight: 700, 
+                    cursor: 'pointer', 
+                    transition: 'all 0.3s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '12px'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = '#F6465D'; e.currentTarget.style.color = '#000'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(246, 70, 93, 0.12)'; e.currentTarget.style.color = '#F6465D'; }}
+                >
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                  Xóa toàn bộ lịch sử tin nhắn & chat
+                </button>
+              </div>
+            </div>
+            
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #1e2329', color: '#848e9c', textAlign: 'left' }}>
@@ -529,7 +656,7 @@ export default function AdminDashboard() {
                   <th style={{ padding: '12px' }}>Email</th>
                   <th style={{ padding: '12px' }}>Số dư ($)</th>
                   <th style={{ padding: '12px', width: '150px' }}>Trạng thái</th>
-                  <th style={{ padding: '12px', width: '120px', textAlign: 'right' }}>Thao tác</th>
+                  <th style={{ padding: '12px', width: '180px', textAlign: 'right' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -550,7 +677,11 @@ export default function AdminDashboard() {
                         ${Number(user.Balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td style={{ padding: '12px' }}>
-                        {user.IsActive ? (
+                        {user.IsAdmin === 1 ? (
+                          <span style={{ background: 'rgba(36, 219, 155, 0.15)', color: '#24DB9B', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                            Quản trị viên
+                          </span>
+                        ) : user.IsActive ? (
                           <span style={{ background: 'rgba(0, 255, 163, 0.1)', color: '#00FFA3', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
                             Đang hoạt động
                           </span>
@@ -561,32 +692,64 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'right' }}>
-                        <button
-                          onClick={() => handleToggleStatus(user.Id)}
-                          style={{
-                            padding: '6px 12px',
-                            background: user.IsActive ? 'rgba(246, 70, 93, 0.1)' : 'rgba(0, 255, 163, 0.1)',
-                            color: user.IsActive ? '#F6465D' : '#00FFA3',
-                            border: `1px solid ${user.IsActive ? '#F6465D' : '#00FFA3'}`,
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            width: '84px',
-                            textAlign: 'center'
-                          }}
-                          onMouseOver={(e) => {
-                            e.target.style.background = user.IsActive ? '#F6465D' : '#00FFA3';
-                            e.target.style.color = '#000';
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.background = user.IsActive ? 'rgba(246, 70, 93, 0.1)' : 'rgba(0, 255, 163, 0.1)';
-                            e.target.style.color = user.IsActive ? '#F6465D' : '#00FFA3';
-                          }}
-                        >
-                          {user.IsActive ? 'Khóa' : 'Mở khóa'}
-                        </button>
+                        {user.IsAdmin === 1 ? (
+                          <span style={{ color: '#848e9c', fontSize: '12px', fontWeight: 600, paddingRight: '8px' }}>Hệ thống</span>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => handleToggleStatus(user.Id)}
+                              style={{
+                                padding: '6px 10px',
+                                background: user.IsActive ? 'rgba(246, 70, 93, 0.1)' : 'rgba(0, 255, 163, 0.1)',
+                                color: user.IsActive ? '#F6465D' : '#00FFA3',
+                                border: `1px solid ${user.IsActive ? '#F6465D' : '#00FFA3'}`,
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                width: '80px',
+                                textAlign: 'center'
+                              }}
+                              onMouseOver={(e) => {
+                                e.target.style.background = user.IsActive ? '#F6465D' : '#00FFA3';
+                                e.target.style.color = '#000';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.background = user.IsActive ? 'rgba(246, 70, 93, 0.1)' : 'rgba(0, 255, 163, 0.1)';
+                                e.target.style.color = user.IsActive ? '#F6465D' : '#00FFA3';
+                              }}
+                            >
+                              {user.IsActive ? 'Khóa' : 'Mở khóa'}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.Id)}
+                              style={{
+                                padding: '6px 10px',
+                                background: 'rgba(246, 70, 93, 0.15)',
+                                color: '#F6465D',
+                                border: '1px solid rgba(246, 70, 93, 0.4)',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                width: '56px',
+                                textAlign: 'center'
+                              }}
+                              onMouseOver={(e) => {
+                                e.target.style.background = '#F6465D';
+                                e.target.style.color = '#000';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.background = 'rgba(246, 70, 93, 0.15)';
+                                e.target.style.color = '#F6465D';
+                              }}
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))

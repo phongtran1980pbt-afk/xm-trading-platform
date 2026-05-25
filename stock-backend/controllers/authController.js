@@ -138,3 +138,33 @@ export const getBalance = async (req, res) => {
   }
 };
 
+export const checkUserExists = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Vui lòng cung cấp email hoặc số điện thoại!' });
+  }
+  try {
+    const pool = await poolPromise;
+    if (!pool) {
+      return res.status(500).json({ message: 'Lỗi kết nối cơ sở dữ liệu' });
+    }
+    const result = await pool.request()
+      .input('email', sql.NVarChar, email)
+      .query('SELECT Id, IsActive FROM Users WHERE Email = @email');
+      
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ exists: false, message: 'Email hoặc số điện thoại chưa được đăng ký!' });
+    }
+    
+    const user = result.recordset[0];
+    if (!user.IsActive) {
+      return res.status(403).json({ exists: true, isActive: false, message: 'Tài khoản của bạn đã bị khóa' });
+    }
+    
+    res.json({ exists: true, isActive: true });
+  } catch (error) {
+    console.error('Lỗi kiểm tra user:', error);
+    res.status(500).json({ message: 'Lỗi hệ thống khi kiểm tra tài khoản!' });
+  }
+};
+

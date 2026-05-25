@@ -11,9 +11,22 @@ function Login() {
   const [step, setStep] = React.useState(1);
   const [password, setPassword] = React.useState('');
 
-  const handleNextStep = (e) => {
+  const handleNextStep = async (e) => {
     e.preventDefault();
-    if (identifier) setStep(2);
+    if (!identifier) return;
+    setIsLoading(true);
+    try {
+      const response = await axios.post('http://localhost:5001/api/auth/check-user', {
+        email: identifier
+      });
+      if (response.data.exists) {
+        setStep(2);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Tài khoản không tồn tại hoặc lỗi kết nối!');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogin = async (e) => {
@@ -111,15 +124,21 @@ function Login() {
                   />
                 </div>
               ) : (
-                <div className="k-input-group">
-                  <input 
-                    type="password" 
-                    placeholder="Nhập mật khẩu" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', fontSize: '13px' }}>
+                    <span style={{ color: '#848e9c' }}>Tài khoản: <strong style={{ color: '#eaecef' }}>{identifier}</strong></span>
+                    <span onClick={() => { setStep(1); setPassword(''); }} style={{ color: '#24DB9B', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}>Thay đổi</span>
+                  </div>
+                  <div className="k-input-group">
+                    <input 
+                      type="password" 
+                      placeholder="Nhập mật khẩu" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </>
               )}
 
               <button type="submit" className="k-btn-primary" disabled={isLoading}>

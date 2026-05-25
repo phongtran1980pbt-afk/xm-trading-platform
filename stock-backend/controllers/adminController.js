@@ -23,9 +23,14 @@ export const getUsers = async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
-      SELECT Id, Email, FullName, IsActive, Balance, AccountCode
-      FROM Users
-      ORDER BY Id ASC
+      SELECT u.Id, u.Email, u.FullName, u.IsActive, u.Balance, u.AccountCode,
+             CASE WHEN EXISTS (
+                 SELECT 1 FROM UserRoles ur 
+                 JOIN Roles r ON ur.RoleId = r.Id 
+                 WHERE ur.UserId = u.Id AND r.Name = 'Admin'
+             ) THEN 1 ELSE 0 END AS IsAdmin
+      FROM Users u
+      ORDER BY u.Id ASC
     `);
     res.json(result.recordset);
   } catch (error) {
@@ -192,13 +197,21 @@ export const toggleUserStatus = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy người dùng' });
     }
 
+    // Kiểm tra xem user có phải Admin không - nếu có thì không được khoá
+    const roleCheck = await pool.request()
+      .input('userId', id)
+      .query(`SELECT r.Name FROM UserRoles ur JOIN Roles r ON ur.RoleId = r.Id WHERE ur.UserId = @userId`);
+    const isAdmin = roleCheck.recordset.some(r => r.Name === 'Admin');
+    if (isAdmin) {
+      return res.status(403).json({ message: 'Không thể khoá tài khoản Admin!' });
+    }
+
     const newStatus = user.IsActive ? 0 : 1;
     await pool.request()
       .input('id', id)
       .input('newStatus', newStatus)
       .query('UPDATE Users SET IsActive = @newStatus WHERE Id = @id');
 
-    // Add audit log
     const actionText = newStatus ? 'UNLOCK_USER' : 'LOCK_USER';
     const detailText = `Admin thay đổi trạng thái user ${user.Email} thành ${newStatus ? 'Đang hoạt động' : 'Bị khóa'}`;
     const createdAt = new Date();
@@ -266,3 +279,123 @@ export const withdrawUser = async (req, res) => {
   }
 };
 
+// DELETE /api/admin/users/cleanup - Xoá tất cả user không phải Admin
+export const deleteNonAdminUsers = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Lấy danh sách ID admin
+    const adminIds = await pool.request().query(`
+      SELECT ur.UserId FROM UserRoles ur JOIN Roles r ON ur.RoleId = r.Id WHERE r.Name = 'Admin'
+    `);
+    const adminIdList = adminIds.recordset.map(r => r.UserId);
+    if (adminIdList.length === 0) {
+      return res.status(400).json({ message: 'Không tìm thấy tài khoản Admin nào' });
+    }
+
+    // Xoá BinaryOrders của non-admin
+    await pool.request().query(`
+      DELETE FROM BinaryOrders WHERE UserId NOT IN (SELECT ur.UserId FROM UserRoles ur JOIN Roles r ON ur.RoleId = r.Id WHERE r.Name = 'Admin')
+    `);
+
+    // Xoá Notifications của non-admin
+    await pool.request().query(`
+      DELETE FROM Notifications WHERE UserId NOT IN (SELECT ur.UserId FROM UserRoles ur JOIN Roles r ON ur.RoleId = r.Id WHERE r.Name = 'Admin')
+    `);
+
+    // Xoá UserRoles của non-admin
+    await pool.request().query(`
+      DELETE FROM UserRoles WHERE UserId NOT IN (SELECT ur2.UserId FROM (SELECT ur.UserId FROM UserRoles ur JOIN Roles r ON ur.RoleId = r.Id WHERE r.Name = 'Admin') ur2)
+    `);
+
+    // Xoá Users không phải admin
+    const delResult = await pool.request().query(`
+      DELETE FROM Users WHERE Id NOT IN (SELECT ur.UserId FROM UserRoles ur JOIN Roles r ON ur.RoleId = r.Id WHERE r.Name = 'Admin')
+    `);
+
+    // Ghi log
+    await pool.request()
+      .input('action', 'CLEANUP_USERS')
+      .input('details', `Đã xoá ${delResult.rowsAffected[0]} tài khoản không phải Admin`)
+      .input('createdAt', getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: `Đã xoá ${delResult.rowsAffected[0]} tài khoản thành công!` });
+  } catch (error) {
+    console.error('Lỗi xoá users:', error);
+    res.status(500).json({ message: 'Lỗi server khi xoá tài khoản: ' + error.message });
+  }
+};
+
+// DELETE /api/admin/chat/cleanup - Xoá toàn bộ lịch sử tin nhắn
+export const clearAllChats = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    // Xoá tin nhắn trước (vì có FK tới ChatSessions)
+    const msgResult = await pool.request().query('DELETE FROM ChatMessages');
+    // Xoá session
+    const sessResult = await pool.request().query('DELETE FROM ChatSessions');
+
+    // Ghi log
+    await pool.request()
+      .input('action', 'CLEANUP_CHATS')
+      .input('details', `Đã xoá ${msgResult.rowsAffected[0]} tin nhắn và ${sessResult.rowsAffected[0]} phiên chat`)
+      .input('createdAt', getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: `Đã xoá ${msgResult.rowsAffected[0]} tin nhắn và ${sessResult.rowsAffected[0]} phiên chat!` });
+  } catch (error) {
+    console.error('Lỗi xoá chat:', error);
+    res.status(500).json({ message: 'Lỗi server khi xoá chat: ' + error.message });
+  }
+};
+
+// DELETE /api/admin/users/:id - Xoá một user cụ thể
+export const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+
+    // Kiểm tra user có phải admin không
+    const roleCheck = await pool.request()
+      .input('userId', id)
+      .query(`SELECT r.Name FROM UserRoles ur JOIN Roles r ON ur.RoleId = r.Id WHERE ur.UserId = @userId`);
+    const isAdmin = roleCheck.recordset.some(r => r.Name === 'Admin');
+    if (isAdmin) {
+      return res.status(403).json({ message: 'Không thể xoá tài khoản Admin!' });
+    }
+
+    // Lấy email để ghi log
+    const userRes = await pool.request().input('id', id).query('SELECT Email FROM Users WHERE Id = @id');
+    if (userRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy user' });
+    }
+    const userEmail = userRes.recordset[0].Email;
+
+    // Xoá dữ liệu liên quan
+    await pool.request().input('id', id).query('DELETE FROM BinaryOrders WHERE UserId = @id');
+    await pool.request().input('id', id).query('DELETE FROM Notifications WHERE UserId = @id');
+    await pool.request().input('id', id).query('DELETE FROM UserRoles WHERE UserId = @id');
+
+    // Xoá chat sessions liên quan
+    const sessionId = 'auth_user_' + id;
+    await pool.request().input('sid', sessionId).query('DELETE FROM ChatMessages WHERE SessionId = @sid');
+    await pool.request().input('sid', sessionId).query('DELETE FROM ChatSessions WHERE SessionId = @sid');
+
+    // Xoá user
+    await pool.request().input('id', id).query('DELETE FROM Users WHERE Id = @id');
+
+    // Ghi log
+    await pool.request()
+      .input('action', 'DELETE_USER')
+      .input('details', `Đã xoá tài khoản ${userEmail}`)
+      .input('createdAt', getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: `Đã xoá tài khoản ${userEmail}!` });
+  } catch (error) {
+    console.error('Lỗi xoá user:', error);
+    res.status(500).json({ message: 'Lỗi server khi xoá user: ' + error.message });
+  }
+};

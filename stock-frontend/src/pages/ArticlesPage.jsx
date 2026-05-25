@@ -13,7 +13,7 @@ const ARTICLES = {
     category: 'Giao dịch',
     readMin: 8,
     date: '20/05/2026',
-    hero: '📈',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 3 3 21 21 21"></polyline><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg>,
     sections: [
       { heading: 'Giao dịch giao ngay là gì?', body: 'Giao dịch giao ngay (Spot Trading) là hình thức mua bán tài sản tại mức giá thị trường hiện tại, với việc thanh toán và chuyển giao tài sản diễn ra ngay lập tức hoặc trong vòng T+2 ngày làm việc. Đây là hình thức giao dịch cơ bản và phổ biến nhất trên các sàn tiền điện tử và thị trường tài chính truyền thống.' },
       { heading: 'Lợi ích của giao dịch giao ngay', body: 'Giao dịch giao ngay mang lại sự đơn giản và minh bạch: bạn biết chính xác mình mua bao nhiêu, ở mức giá nào. Không có rủi ro margin call, không bị ảnh hưởng bởi phí qua đêm (swap). Đây là lựa chọn lý tưởng cho người mới và nhà đầu tư dài hạn muốn sở hữu tài sản thực sự.' },
@@ -27,7 +27,7 @@ const ARTICLES = {
     category: 'Giao dịch',
     readMin: 10,
     date: '18/05/2026',
-    hero: '⚡',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>,
     sections: [
       { heading: 'Giao dịch ký quỹ là gì?', body: 'Giao dịch ký quỹ (Margin Trading) cho phép bạn vay vốn từ sàn để gia tăng sức mua, từ đó khuếch đại lợi nhuận tiềm năng. Với đòn bẩy 10x, bạn có thể kiểm soát vị thế 10.000 USDT chỉ với 1.000 USDT vốn thực. Tuy nhiên, mức lỗ cũng được khuếch đại tương ứng.' },
       { heading: 'Isolated vs Cross Margin', body: 'Isolated Margin giới hạn rủi ro trong một vị thế cụ thể – nếu bị thanh lý, chỉ số margin bạn phân bổ cho vị thế đó bị mất. Cross Margin sử dụng toàn bộ số dư tài khoản làm tài sản thế chấp, linh hoạt hơn nhưng rủi ro cao hơn.' },
@@ -40,7 +40,7 @@ const ARTICLES = {
     category: 'Giao dịch',
     readMin: 7,
     date: '15/05/2026',
-    hero: '🤖',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>,
     sections: [
       { heading: 'Bot giao dịch hoạt động như thế nào?', body: 'Bot giao dịch là phần mềm tự động thực hiện lệnh mua/bán dựa trên các tham số và chiến lược được lập trình sẵn. Bot kết nối với sàn qua API và hoạt động 24/7, loại bỏ yếu tố cảm xúc và đảm bảo thực hiện chiến lược một cách nhất quán.' },
       { heading: 'Các loại bot phổ biến trên KuCoin', body: 'Grid Bot đặt lưới lệnh mua/bán ở các mức giá cách đều nhau, lý tưởng cho thị trường sideway. DCA Bot tự động mua thêm khi giá giảm theo kế hoạch định sẵn. Smart Rebalance Bot duy trì tỷ trọng danh mục tối ưu theo thời gian thực.' },
@@ -55,7 +55,7 @@ const ARTICLES = {
     category: 'Phái sinh',
     readMin: 12,
     date: '22/05/2026',
-    hero: '🔮',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>,
     sections: [
       { heading: 'Hợp đồng tương lai là gì?', body: 'Hợp đồng tương lai (Futures) là thỏa thuận mua/bán một tài sản ở mức giá xác định trong tương lai. Trên thị trường tiền điện tử, phổ biến nhất là hợp đồng vĩnh cửu (perpetual futures) – không có ngày đáo hạn, với cơ chế funding rate để neo giá với thị trường giao ngay.' },
       { heading: 'Long và Short – Kiếm tiền cả hai chiều', body: 'Với futures, bạn có thể kiếm lời khi giá tăng (long/mua) và cả khi giá giảm (short/bán khống). Đây là lợi thế lớn so với giao dịch giao ngay truyền thống, cho phép bảo hiểm danh mục (hedging) hoặc đầu cơ trong mọi điều kiện thị trường.' },
@@ -69,7 +69,7 @@ const ARTICLES = {
     category: 'Phái sinh',
     readMin: 9,
     date: '19/05/2026',
-    hero: '🛡️',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
     sections: [
       { heading: 'Quyền chọn hoạt động như thế nào?', body: 'Quyền chọn (Options) cho người mua quyền (không phải nghĩa vụ) mua hoặc bán tài sản ở mức giá cố định (strike price) trong thời hạn nhất định. Người mua trả phí bảo hiểm (premium); người bán nhận phí nhưng chịu nghĩa vụ thực hiện hợp đồng.' },
       { heading: 'Call Option và Put Option', body: 'Call Option: quyền mua tài sản – có lợi khi giá tăng. Put Option: quyền bán tài sản – có lợi khi giá giảm. Chiến lược kết hợp như straddle (mua cả call và put cùng strike) cho phép kiếm lời khi biến động mạnh bất kể hướng.' },
@@ -84,7 +84,7 @@ const ARTICLES = {
     category: 'Trung tâm bệ phóng',
     readMin: 7,
     date: '23/05/2026',
-    hero: '🚀',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>,
     sections: [
       { heading: 'Launchpad là gì?', body: 'KuCoin Launchpad là nền tảng phát hành token cho phép người dùng tham gia mua token của các dự án blockchain mới trước khi chúng được niêm yết trên thị trường mở. Đây là cơ hội tiếp cận sớm các dự án có tiềm năng với giá ưu đãi.' },
       { heading: 'Cách tham gia Launchpad', body: 'Để tham gia, bạn cần nắm giữ một lượng KCS tối thiểu trong tài khoản trong suốt thời gian snapshot. Lượng token bạn được phân bổ tỉ lệ thuận với số KCS nắm giữ so với tổng pool. Hoàn thành KYC và đảm bảo tài khoản đã xác minh đầy đủ.' },
@@ -97,7 +97,7 @@ const ARTICLES = {
     category: 'Trung tâm bệ phóng',
     readMin: 8,
     date: '21/05/2026',
-    hero: '💎',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"></path><path d="M11 3 8 9l4 13 4-13-3-6"></path><path d="M2 9h20"></path></svg>,
     sections: [
       { heading: 'ICO – Người tiên phong', body: 'Initial Coin Offering (ICO) là hình thức gọi vốn đầu tiên trong không gian crypto, tương tự IPO nhưng phát hành token thay vì cổ phiếu. Sự bùng nổ ICO năm 2017-2018 tạo ra hàng nghìn dự án, nhưng cũng kéo theo nhiều dự án lừa đảo (exit scam).' },
       { heading: 'IEO – Gọi vốn qua sàn giao dịch', body: 'Initial Exchange Offering (IEO) được thực hiện trực tiếp trên sàn giao dịch như KuCoin, mang lại lớp bảo vệ bổ sung: sàn thực hiện due diligence trước khi chấp nhận dự án. IEO thường có uy tín cao hơn ICO và token thường được niêm yết ngay sau đó.' },
@@ -112,7 +112,7 @@ const ARTICLES = {
     category: 'Kiếm tiền',
     readMin: 6,
     date: '24/05/2026',
-    hero: '💰',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M11.5 8.5A2.5 2.5 0 0 0 9 11v0a2.5 2.5 0 0 0 2.5 2.5h1a2.5 2.5 0 0 1 2.5 2.5v0a2.5 2.5 0 0 1-2.5 2.5"></path></svg>,
     sections: [
       { heading: 'Staking là gì?', body: 'Staking là quá trình khóa tiền điện tử để hỗ trợ hoạt động của mạng blockchain (trong cơ chế Proof of Stake) và nhận phần thưởng. Tương tự gửi tiết kiệm ngân hàng, nhưng lãi suất thường cao hơn nhiều và thanh toán bằng chính đồng coin bạn staking.' },
       { heading: 'Tại sao APR của Staking lại cao?', body: 'Phần thưởng staking đến từ phí giao dịch trên mạng và token mới được phát hành theo cơ chế inflation. Mạng blockchain cần validator để xác nhận giao dịch và bảo mật mạng – staker là những validator này và được trả công xứng đáng.' },
@@ -125,7 +125,7 @@ const ARTICLES = {
     category: 'Kiếm tiền',
     readMin: 9,
     date: '17/05/2026',
-    hero: '🌾',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>,
     sections: [
       { heading: 'Yield Farming là gì?', body: 'Yield Farming (canh tác lợi suất) là chiến lược cung cấp thanh khoản cho các giao thức DeFi để nhận phần thưởng. Bạn gửi tài sản vào liquidity pool, nhận LP token và dùng LP token đó để farm thêm token thưởng. APY có thể lên đến vài trăm phần trăm trong giai đoạn đầu.' },
       { heading: 'Liquidity Pool và Impermanent Loss', body: 'Cung cấp thanh khoản đòi hỏi gửi cặp token (ví dụ: ETH/USDT) với tỷ lệ 50/50. Khi giá một trong hai token thay đổi mạnh, bạn có thể chịu "impermanent loss" – giá trị danh mục thấp hơn so với chỉ nắm giữ. Phí giao dịch nhận được cần bù đắp khoản này.' },
@@ -140,7 +140,7 @@ const ARTICLES = {
     category: 'Tổ chức',
     readMin: 11,
     date: '25/05/2026',
-    hero: '🏦',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M12 2v8"/><path d="m5 6 7-4 7 4"/></svg>,
     sections: [
       { heading: 'Làn sóng tổ chức tham gia thị trường crypto', body: 'Từ năm 2020, thị trường chứng kiến sự dịch chuyển lớn khi các tổ chức tài chính truyền thống (quỹ đầu tư, ngân hàng, công ty niêm yết) bắt đầu phân bổ tài sản vào Bitcoin và Ethereum. Sự ra đời của Bitcoin ETF tại Mỹ năm 2024 mở ra cơ hội tiếp cận mới cho dòng tiền tổ chức khổng lồ.' },
       { heading: 'Tại sao tổ chức chọn crypto?', body: 'Bitcoin được coi là "vàng kỹ thuật số" – kho lưu trữ giá trị chống lạm phát với nguồn cung giới hạn 21 triệu BTC. Thêm vào đó, tương quan thấp với tài sản truyền thống giúp crypto nâng cao hiệu suất điều chỉnh theo rủi ro của danh mục đầu tư tổng thể (portfolio optimization).' },
@@ -154,7 +154,7 @@ const ARTICLES = {
     category: 'Tổ chức',
     readMin: 7,
     date: '22/05/2026',
-    hero: '🤝',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
     sections: [
       { heading: 'OTC là gì và tại sao cần thiết?', body: 'Over-The-Counter (OTC) là giao dịch trực tiếp giữa hai bên mà không qua order book công khai. Khi mua/bán số lượng lớn qua sàn thông thường, lệnh sẽ "ăn" nhiều mức giá khác nhau (slippage), đẩy giá tăng/giảm mạnh và thiệt hại cho cả hai phía. OTC giải quyết vấn đề này.' },
       { heading: 'KuCoin OTC Desk hoạt động như thế nào?', body: 'Liên hệ đội ngũ OTC của KuCoin qua kênh chuyên biệt. Nhận báo giá tức thì cho toàn bộ khối lượng giao dịch. Thực hiện giao dịch ở một mức giá cố định, đảm bảo không slippage. Phù hợp cho giao dịch từ 50.000 USDT trở lên.' },
@@ -168,7 +168,7 @@ const ARTICLES = {
     category: 'Xem thêm',
     readMin: 6,
     date: '24/05/2026',
-    hero: '🔐',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
     sections: [
       { heading: 'Xác thực hai yếu tố (2FA) – Lớp bảo vệ đầu tiên', body: 'Luôn bật 2FA, ưu tiên sử dụng ứng dụng xác thực (Google Authenticator, Authy) thay vì SMS. SMS có thể bị tấn công SIM swapping – hacker thuyết phục nhà mạng chuyển số điện thoại của bạn sang SIM của chúng.' },
       { heading: 'Mật khẩu mạnh và quản lý mật khẩu', body: 'Sử dụng mật khẩu ngẫu nhiên độ dài ≥20 ký tự, khác nhau cho mỗi tài khoản. Dùng password manager (Bitwarden, 1Password) để quản lý. Không bao giờ tái sử dụng mật khẩu và thay đổi định kỳ mỗi 3-6 tháng.' },
@@ -182,7 +182,7 @@ const ARTICLES = {
     category: 'Xem thêm',
     readMin: 10,
     date: '20/05/2026',
-    hero: '⛓️',
+    hero: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>,
     sections: [
       { heading: 'Blockchain – Cuốn sổ cái bất biến', body: 'Blockchain là cơ sở dữ liệu phân tán, lưu trữ thông tin trong các "block" được liên kết với nhau theo chuỗi thời gian. Mỗi block chứa dữ liệu giao dịch, timestamp và hash của block trước. Một khi được ghi, dữ liệu không thể thay đổi mà không cần thay đổi toàn bộ chuỗi – điều này đòi hỏi sự đồng thuận của đa số mạng lưới.' },
       { heading: 'Proof of Work vs Proof of Stake', body: 'PoW (Bitcoin): máy tính giải bài toán phức tạp để xác nhận giao dịch và nhận thưởng – tốn nhiều điện năng nhưng bảo mật cao. PoS (Ethereum sau The Merge): validator đặt cược (stake) tiền để được quyền xác nhận – tiết kiệm năng lượng hơn 99% và tốc độ xử lý nhanh hơn.' },

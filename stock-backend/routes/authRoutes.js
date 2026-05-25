@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getBalance } from '../controllers/authController.js';
+import { register, login, getBalance, checkUserExists } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -39,6 +39,8 @@ router.post('/register', register);
  *               password: { type: string, example: "Password123!" }
  */
 router.post('/login', login);
+
+router.post('/check-user', checkUserExists);
 
 router.get('/balance/:id', getBalance);
 

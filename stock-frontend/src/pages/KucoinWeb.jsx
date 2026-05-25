@@ -245,16 +245,6 @@ function KucoinWeb() {
                 <span className="k-nav-arrow">▼</span>
                 <InstitutionalMenu />
               </div>
-              <div className="k-nav-item dropdown">
-                <span>Xem thêm</span>
-                <span className="k-nav-arrow">▼</span>
-                <MoreMenu />
-              </div>
-              <div className="k-nav-gift">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 12V20H4V12H20ZM21 4H3C2.4 4 2 4.4 2 5V9C2 9.6 2.4 10 3 10H21C21.6 10 22 9.6 22 9V5C22 4.4 21.6 4 21 4ZM12 4C13.5 4 15 2 15 2H9C9 2 10.5 4 12 4Z" />
-                </svg>
-              </div>
             </nav>
           </div>
 
@@ -432,7 +422,7 @@ function KucoinWeb() {
           <div className="k-mobile-menu-body">
             <div className="k-mobile-nav-item"><Link to="/" onClick={() => setShowMobileMenu(false)}>Trang chủ</Link></div>
             <div className="k-mobile-nav-item"><Link to="/markets/alpha" onClick={() => setShowMobileMenu(false)}>Thị trường</Link></div>
-            <div className="k-mobile-nav-item"><Link to="/trade/BULL" onClick={() => setShowMobileMenu(false)}>Giao dịch</Link></div>
+            <div className="k-mobile-nav-item"><Link to="/markets/alpha" onClick={() => setShowMobileMenu(false)}>Giao dịch</Link></div>
             <div className="k-mobile-nav-item"><Link to="/support/deposit" onClick={() => setShowMobileMenu(false)}>↓ Thêm tiền</Link></div>
             
             <div className="k-mobile-divider" />

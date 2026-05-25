@@ -32,6 +32,25 @@ const INITIAL_MOCK_DATA = [
   { id: 26, name: 'GME', address: '8wXtPe...HeB', price: 0.00082243, change: -1.10, isUp: false, vol: '329', volSub: '185/144', uniqueAddr: '130', holders: '17.183', totalVol: '$20.208,54', liquidity: '$1.37 Tỷ' }
 ];
 
+const SPOT_MOCK_DATA = [
+  { id: 201, name: 'BTC', address: 'SPOT-BTC/USDT', price: 77402.66, change: 0.56, isUp: true, vol: '156.85K', volSub: '80K/76K', uniqueAddr: '98K', holders: '15.2M', totalVol: '$12.14 B', liquidity: '$2.4 B' },
+  { id: 202, name: 'ETH', address: 'SPOT-ETH/USDT', price: 2185.27, change: -0.7, isUp: false, vol: '256.33K', volSub: '120K/136K', uniqueAddr: '84K', holders: '8.4M', totalVol: '$5.56 B', liquidity: '$1.1 B' },
+  { id: 203, name: 'SOL', address: 'SPOT-SOL/USDT', price: 85.07, change: 0.41, isUp: true, vol: '890K', volSub: '450K/440K', uniqueAddr: '45K', holders: '2.1M', totalVol: '$1.82 B', liquidity: '$350M' },
+  { id: 204, name: 'BNB', address: 'SPOT-BNB/USDT', price: 615.42, change: 1.15, isUp: true, vol: '112K', volSub: '60K/52K', uniqueAddr: '23K', holders: '4.8M', totalVol: '$688M', liquidity: '$180M' },
+  { id: 205, name: 'XRP', address: 'SPOT-XRP/USDT', price: 1.3735, change: -0.14, isUp: false, vol: '3.4M', volSub: '1.6M/1.8M', uniqueAddr: '150K', holders: '3.5M', totalVol: '$4.67 B', liquidity: '$850M' },
+  { id: 206, name: 'ADA', address: 'SPOT-ADA/USDT', price: 0.524, change: 2.14, isUp: true, vol: '1.2M', volSub: '700K/500K', uniqueAddr: '38K', holders: '1.8M', totalVol: '$628M', liquidity: '$120M' },
+  { id: 207, name: 'LINK', address: 'SPOT-LINK/USDT', price: 18.25, change: -1.05, isUp: false, vol: '450K', volSub: '200K/250K', uniqueAddr: '18K', holders: '650K', totalVol: '$328M', liquidity: '$75M' }
+];
+
+const FUTURES_MOCK_DATA = [
+  { id: 301, name: 'BTCUSDT-M', address: 'BTC Vĩnh cửu', price: 77612.4, change: 0.91, isUp: true, vol: '2.5M', volSub: '1.3M/1.2M', uniqueAddr: '120K', holders: 'N/A', totalVol: '$194.2 B', liquidity: '$5.8 B' },
+  { id: 302, name: 'ETHUSDT-M', address: 'ETH Vĩnh cửu', price: 2185.11, change: 0.68, isUp: true, vol: '4.1M', volSub: '2.1M/2.0M', uniqueAddr: '98K', holders: 'N/A', totalVol: '$89.5 B', liquidity: '$2.6 B' },
+  { id: 303, name: 'SOLUSDT-M', address: 'SOL Vĩnh cửu', price: 85.068, change: -0.4, isUp: false, vol: '12.4M', volSub: '6.0M/6.4M', uniqueAddr: '110K', holders: 'N/A', totalVol: '$41.2 B', liquidity: '$1.2 B' },
+  { id: 304, name: 'DOGEUSDT-M', address: 'DOGE Vĩnh cửu', price: 0.1038, change: -0.28, isUp: false, vol: '38.4M', volSub: '18M/20.4M', uniqueAddr: '78K', holders: 'N/A', totalVol: '$15.9 B', liquidity: '$480M' },
+  { id: 305, name: 'PEPEUSDT-M', address: 'PEPE Vĩnh cửu', price: 0.00000368, change: 0.96, isUp: true, vol: '120.5M', volSub: '65M/55.5M', uniqueAddr: '85K', holders: 'N/A', totalVol: '$8.4 B', liquidity: '$230M' },
+  { id: 306, name: 'WIFUSDT-M', address: 'WIF Vĩnh cửu', price: 0.1928, change: 1.26, isUp: true, vol: '15.2M', volSub: '8M/7.2M', uniqueAddr: '32K', holders: 'N/A', totalVol: '$2.9 B', liquidity: '$85M' }
+];
+
 function formatPrice(val) {
   let str = val.toString();
   if (str.includes('e')) {
@@ -43,9 +62,44 @@ function formatPrice(val) {
 function AlphaMarkets() {
   const navigate = useNavigate();
   const globalPrices = usePrices();
+  const [mainTab, setMainTab] = useState('alpha'); // 'alpha' | 'favorites' | 'spot' | 'futures'
+  const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('favoriteCoins') || '[]'));
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
-  // Merge global prices into each coin row
-  const data = INITIAL_MOCK_DATA.map(coin => {
+  const toggleFavorite = (e, coinName) => {
+    e.stopPropagation();
+    let newFavs = [...favorites];
+    if (newFavs.includes(coinName)) {
+      newFavs = newFavs.filter(c => c !== coinName);
+    } else {
+      newFavs.push(coinName);
+    }
+    setFavorites(newFavs);
+    localStorage.setItem('favoriteCoins', JSON.stringify(newFavs));
+  };
+
+  let baseData = [];
+  if (mainTab === 'alpha') {
+    const raw = [...INITIAL_MOCK_DATA];
+    let expanded = [];
+    for(let i=0; i<4; i++) {
+      expanded = expanded.concat(raw.map(c => ({...c, id: c.id + i*100})));
+    }
+    baseData = expanded;
+  } else if (mainTab === 'spot') {
+    baseData = [...SPOT_MOCK_DATA];
+  } else if (mainTab === 'futures') {
+    baseData = [...FUTURES_MOCK_DATA];
+  } else if (mainTab === 'favorites') {
+    const all = [...INITIAL_MOCK_DATA, ...SPOT_MOCK_DATA, ...FUTURES_MOCK_DATA];
+    const uniqueCoins = Array.from(new Map(all.map(item => [item.name, item])).values());
+    baseData = uniqueCoins.filter(c => favorites.includes(c.name));
+  }
+
+  const paginatedData = baseData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const data = paginatedData.map(coin => {
     const live = globalPrices?.[coin.name];
     if (!live) return coin;
     return {
@@ -55,10 +109,11 @@ function AlphaMarkets() {
       isUp:   live.isUp,
     };
   });
+  
+  const totalPages = Math.ceil(baseData.length / itemsPerPage) || 1;
 
   return (
     <div className="alpha-markets-page">
-      {/* HEADER */}
       <header className="alpha-header">
         <Link to="/" className="alpha-logo">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -70,13 +125,10 @@ function AlphaMarkets() {
         </Link>
       </header>
 
-      {/* MAIN CONTENT */}
       <div className="alpha-main-container">
         <h1 className="alpha-page-title">Tổng quan thị trường</h1>
 
-        {/* OVERVIEW GRID */}
         <div className="alpha-overview-grid">
-          {/* Box 1 */}
           <div className="alpha-card">
             <div className="alpha-card-header">
               <span>Xu hướng &gt;</span>
@@ -113,7 +165,6 @@ function AlphaMarkets() {
             </div>
           </div>
 
-          {/* Box 2 */}
           <div className="alpha-card">
             <div className="alpha-card-header">
               <span>Coin mới &gt;</span>
@@ -147,7 +198,6 @@ function AlphaMarkets() {
             </div>
           </div>
 
-          {/* Box 3 */}
           <div className="alpha-card">
             <div className="alpha-card-header">
               <span>Top tăng giá &gt;</span>
@@ -185,16 +235,14 @@ function AlphaMarkets() {
           </div>
         </div>
 
-        {/* TABS */}
         <div className="alpha-tabs-container">
-          <div className="alpha-tab">Yêu thích</div>
+          <div className={"alpha-tab " + (mainTab === 'favorites' ? 'active' : '')} onClick={() => { setMainTab('favorites'); setCurrentPage(1); }} style={{cursor: 'pointer'}}>Yêu thích</div>
           <Link to="/markets/all" className="alpha-tab" style={{textDecoration:'none', color:'#848e9c'}}>Tất cả</Link>
-          <div className="alpha-tab">Giao ngay</div>
-          <div className="alpha-tab">Giao sau</div>
-          <div className="alpha-tab active">Alpha</div>
+          <div className={"alpha-tab " + (mainTab === 'spot' ? 'active' : '')} onClick={() => { setMainTab('spot'); setCurrentPage(1); }} style={{cursor: 'pointer'}}>Giao ngay</div>
+          <div className={"alpha-tab " + (mainTab === 'futures' ? 'active' : '')} onClick={() => { setMainTab('futures'); setCurrentPage(1); }} style={{cursor: 'pointer'}}>Giao sau</div>
+          <div className={"alpha-tab " + (mainTab === 'alpha' ? 'active' : '')} onClick={() => { setMainTab('alpha'); setCurrentPage(1); }} style={{cursor: 'pointer'}}>Alpha</div>
         </div>
 
-        {/* SUB TABS & TOOLS */}
         <div className="alpha-sub-tabs">
           <div className="alpha-pills">
             <button className="alpha-pill">Đã chọn</button>
@@ -220,7 +268,6 @@ function AlphaMarkets() {
           </div>
         </div>
 
-        {/* TABLE */}
         <div className="alpha-table-wrapper">
           <table className="alpha-table">
             <thead>
@@ -240,7 +287,7 @@ function AlphaMarkets() {
               {data.map((coin, index) => (
                 <tr key={coin.id} style={{cursor: 'pointer'}} onClick={() => navigate(`/trade/${coin.name}`)}>
                   <td>
-                    <svg className="star-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg className="star-icon" onClick={(e) => toggleFavorite(e, coin.name)} width="16" height="16" viewBox="0 0 24 24" fill={favorites.includes(coin.name) ? '#F7931A' : 'none'} stroke={favorites.includes(coin.name) ? '#F7931A' : 'currentColor'} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   </td>
                   <td>
                     <div className="alpha-coin-cell">
@@ -274,19 +321,12 @@ function AlphaMarkets() {
           </table>
         </div>
 
-        {/* PAGINATION */}
         <div className="alpha-pagination">
-          <button className="alpha-page-btn">&lt;</button>
-          <button className="alpha-page-btn active">1</button>
-          <button className="alpha-page-btn">2</button>
-          <button className="alpha-page-btn">3</button>
-          <button className="alpha-page-btn">4</button>
-          <button className="alpha-page-btn">5</button>
-          <button className="alpha-page-btn">6</button>
-          <button className="alpha-page-btn">7</button>
-          <span style={{color: '#848e9c'}}>...</span>
-          <button className="alpha-page-btn">21</button>
-          <button className="alpha-page-btn">&gt;</button>
+          <button className="alpha-page-btn" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>&lt;</button>
+          {[...Array(totalPages)].map((_, i) => (
+            <button key={i+1} className={`alpha-page-btn ${currentPage === i + 1 ? 'active' : ''}`} onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
+          ))}
+          <button className="alpha-page-btn" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>&gt;</button>
         </div>
 
       </div>
