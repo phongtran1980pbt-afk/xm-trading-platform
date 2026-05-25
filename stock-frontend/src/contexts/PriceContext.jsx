@@ -369,16 +369,16 @@ export function PriceProvider({ children }) {
 
           Object.entries(serverPrices).forEach(([key, val]) => {
             const lastWsUpdate = lastWsUpdateRef.current[key] || 0;
-            const useBackendFallback = next[key]?.isReal && (Date.now() - lastWsUpdate > 6000);
+            const isWsActive = (Date.now() - lastWsUpdate < 6000);
 
-            if (next[key] && (!next[key].isReal || useBackendFallback)) {
+            if (next[key] && (!isWsActive || !next[key].isReal)) {
               const oldPrice = next[key].price;
               next[key] = {
                 price: val.price,
                 prev: oldPrice,
                 change: val.change,
                 isUp: val.price >= oldPrice,
-                isReal: !useBackendFallback,
+                isReal: isWsActive,
                 backendSynced: true
               };
               LATEST_REAL_PRICES[key] = next[key];
