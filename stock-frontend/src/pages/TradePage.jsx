@@ -282,6 +282,7 @@ export default function TradePage() {
   const volSeriesRef = useRef(null);
   // Candle aggregation state (mutated in-place — no re-renders needed)
   const candleState  = useRef({ open: 0, high: 0, low: 0, minute: 0 });
+  const clockOffsetRef = useRef(0);
 
   // Live price driven entirely by global context
   const globalCoin = useCoinPrice(coin);
@@ -667,11 +668,14 @@ export default function TradePage() {
 
           // Seed candle aggregation state from the last candle
           const lastCandle = originalCandles[originalCandles.length - 1];
+          const serverLastMin = Math.floor(lastCandle.time / 60);
+          const localNowMin = Math.floor(Date.now() / 1000 / 60);
+          clockOffsetRef.current = serverLastMin - localNowMin;
           candleState.current = {
             open: lastCandle.open,
             high: lastCandle.high,
             low: lastCandle.low,
-            minute: Math.floor(lastCandle.time / 60)
+            minute: serverLastMin
           };
           setLivePrice(lastCandle.close);
           setPrevPrice(lastCandle.close);
@@ -725,11 +729,14 @@ export default function TradePage() {
             setHistoricalCandles(originalCandles);
             
             const lastCandle = originalCandles[originalCandles.length - 1];
+            const serverLastMin = Math.floor(lastCandle.time / 60);
+            const localNowMin = Math.floor(Date.now() / 1000 / 60);
+            clockOffsetRef.current = serverLastMin - localNowMin;
             candleState.current = {
               open: lastCandle.open,
               high: lastCandle.high,
               low: lastCandle.low,
-              minute: Math.floor(lastCandle.time / 60)
+              minute: serverLastMin
             };
           }
         } catch (e) {
@@ -756,9 +763,14 @@ export default function TradePage() {
 
     // Update chart candle (1-minute aggregation)
     if (candleSRef.current) {
-      const nowMin   = Math.floor(Date.now() / 1000 / 60);
+      const localNowMin = Math.floor(Date.now() / 1000 / 60);
+      let nowMin = localNowMin + clockOffsetRef.current;
+      const cs = candleState.current;
+
+      if (nowMin < cs.minute) {
+        nowMin = cs.minute;
+      }
       const candleTs = nowMin * 60;
-      const cs       = candleState.current;
 
       if (nowMin !== cs.minute) {
         // New minute → close old candle, open new one
