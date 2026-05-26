@@ -378,32 +378,41 @@ export default function TradePage() {
                 const profit = newOrder.Payout - newOrder.BetAmount;
                 toast.success(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>Thông báo kết toán lệnh</div>
-                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF' }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? 'Mua' : 'Bán'})</span></div>
-                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Trạng thái: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>Thắng</span></div>
-                    <div style={{ color: '#848e9c' }}>Số dư thay đổi: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span> (Lợi nhuận: +{profit.toFixed(2)} USDT)</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                      <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
+                    </div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>🏆 Thắng</span></div>
+                    <div style={{ color: '#848e9c' }}>Nhận về: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span> <span style={{ color: '#848e9c', fontSize: '11px' }}>(Lợi nhuận: +{profit.toFixed(2)} USDT)</span></div>
                   </div>,
-                  { theme: 'dark', autoClose: 6000 }
+                  { theme: 'dark', autoClose: 6000, icon: false }
                 );
               } else if (newOrder.Status === 'LOSE') {
                 toast.error(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>Thông báo kết toán lệnh</div>
-                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF' }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? 'Mua' : 'Bán'})</span></div>
-                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Trạng thái: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>Thua</span></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                      <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
+                    </div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>❌ Thua</span></div>
                     <div style={{ color: '#848e9c' }}>Số dư thay đổi: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>-{newOrder.BetAmount} USDT</span></div>
                   </div>,
-                  { theme: 'dark', autoClose: 6000 }
+                  { theme: 'dark', autoClose: 6000, icon: false }
                 );
               } else if (newOrder.Status === 'TIE') {
                 toast.info(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '14px' }}>Thông báo kết toán lệnh</div>
-                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF' }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? 'Mua' : 'Bán'})</span></div>
-                    <div style={{ color: '#848e9c', marginBottom: '2px' }}>Trạng thái: <span style={{ color: '#EAECEF', fontWeight: 'bold' }}>Hòa</span></div>
-                    <div style={{ color: '#848e9c' }}>Số dư thay đổi: <span style={{ color: '#EAECEF', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span> (Hoàn trả)</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                      <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
+                    </div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#FCD535', fontWeight: 'bold' }}>⚖️ Hòa</span></div>
+                    <div style={{ color: '#848e9c' }}>Hoàn trả: <span style={{ color: '#FCD535', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span></div>
                   </div>,
-                  { theme: 'dark', autoClose: 6000 }
+                  { theme: 'dark', autoClose: 6000, icon: false }
                 );
               }
             }
@@ -808,7 +817,25 @@ export default function TradePage() {
 
   return (
     <div className="trade-page">
-      <ToastContainer />
+      <ToastContainer
+        position="top-right"
+        autoClose={6000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        toastStyle={{
+          background: '#1e2329',
+          border: '1px solid #2b3139',
+          borderRadius: '10px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          minWidth: '320px'
+        }}
+      />
 
       {/* ═══════════ MOBILE ONLY ELEMENTS (hidden on desktop via CSS) ═══════════ */}
 
