@@ -105,6 +105,12 @@ const fmt = (v, digits = 2) => {
 };
 const fmtP = (v) => fmt(v, 2);
 
+const formatDateTime = (dateStr) => {
+  if (!dateStr) return '-';
+  const cleanStr = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
+  return new Date(cleanStr).toLocaleString('vi-VN');
+};
+
 // ─── SVG Depth Chart Component ───
 function DepthChartSVG({ obData }) {
   if (!obData || !obData.bids.length) return null;
@@ -1577,8 +1583,8 @@ export default function TradePage() {
                 <tbody>
                   {binaryBets.map((bet) => (
                     <tr key={bet.Id} style={{ borderBottom: '1px solid #1e2329' }}>
-                      <td style={{ padding: '10px 16px' }}>{new Date(bet.StartTime).toLocaleString()}</td>
-                      <td style={{ padding: '10px 16px' }}>{new Date(bet.EndTime).toLocaleString()}</td>
+                      <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.StartTime)}</td>
+                      <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.EndTime)}</td>
                       <td style={{ padding: '10px 16px' }}>{bet.Symbol}</td>
                       <td style={{ padding: '10px 16px', color: bet.BetType === 'UP' ? '#00FFA3' : '#F6465D' }}>{bet.BetType}</td>
                       <td style={{ padding: '10px 16px' }}>{fmtP(bet.StartPrice)}</td>

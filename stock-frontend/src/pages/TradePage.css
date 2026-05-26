@@ -537,6 +537,8 @@
   outline: none;
   font-size: 13px;
   text-align: right;
+  min-width: 0;
+  width: 100%;
 }
 .rp-input-unit {
   color: #848e9c;
@@ -922,6 +924,8 @@
   /* Tăng cỡ chữ input lên 16px để iOS không tự động zoom vào ô nhập liệu khi nhấn */
   .rp-input-wrap input {
     font-size: 16px !important;
+    min-width: 0 !important;
+    width: 100% !important;
   }
 }
 .th-assets-dropdown a svg {
