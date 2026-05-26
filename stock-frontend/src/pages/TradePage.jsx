@@ -249,13 +249,7 @@ function VolumeChartComponent({ candles, volSeriesRef }) {
 /* ─── Component ─── */
 export default function TradePage() {
   const { symbol } = useParams();
-  const coin = useMemo(() => {
-    if (!symbol) return 'BULL';
-    const match = Object.keys(INITIAL_COIN_PRICES).find(
-      k => k.toLowerCase() === symbol.toLowerCase()
-    );
-    return match || symbol.toUpperCase();
-  }, [symbol]);
+  const coin = symbol || 'BULL';
 
   // Get logged-in user info from localStorage
   const currentUser = useMemo(() => {
@@ -620,7 +614,7 @@ export default function TradePage() {
     if (!el) return;
 
     // Wait for globalCoin to be loaded/synced from the API/WS first so we have the correct current price for scaling!
-    if (!globalCoin) {
+    if (!globalCoin || (!globalCoin.backendSynced && !globalCoin.isReal)) {
       return;
     }
 

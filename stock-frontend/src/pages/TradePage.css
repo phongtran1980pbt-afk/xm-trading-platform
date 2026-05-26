@@ -806,55 +806,58 @@
     padding: 0 12px !important;
   }
   
+  /* Cố định layout toàn bộ trang không cho cuộn cả trang */
   .trade-page {
-    height: auto !important;
-    overflow-y: auto !important;
-  }
-
-  /* Sắp xếp lại Trade Body */
-  .trade-body {
+    height: 100vh !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-  
-  /* Biểu đồ chiếm toàn bộ chiều ngang */
-  .trade-chart-area {
-    height: 320px !important;
-    width: 100% !important;
-    border-bottom: 1px solid #1e2329 !important;
-  }
-  
-  /* Sổ lệnh (Orderbook) */
-  .trade-orderbook-panel {
-    width: 100% !important;
-    height: auto !important;
-    min-height: 350px !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: 1px solid #1e2329 !important;
   }
 
-  .ob-list {
-    max-height: 300px !important;
+  /* Sắp xếp lại Trade Body thành Grid cố định */
+  .trade-body {
+    display: grid !important;
+    grid-template-rows: 220px 1fr !important;
+    grid-template-columns: 45% 55% !important;
+    height: calc(100vh - 250px) !important; /* 100vh - 100px (header) - 150px (bottom panel) */
+    overflow: hidden !important;
+  }
+  
+  /* Biểu đồ cố định ở trên */
+  .trade-chart-area {
+    grid-row: 1 !important;
+    grid-column: 1 / span 2 !important;
+    height: 100% !important;
+    width: 100% !important;
+    border-bottom: 1px solid #1e2329 !important;
+  }
+  
+  /* Sổ lệnh (Orderbook) cuộn nội bộ */
+  .trade-orderbook-panel {
+    grid-row: 2 !important;
+    grid-column: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    border-left: none !important;
+    border-right: 1px solid #1e2329 !important;
+  }
+  
+  /* Form đặt lệnh cuộn nội bộ */
+  .trade-right-panel {
+    grid-row: 2 !important;
+    grid-column: 2 !important;
+    width: 100% !important;
+    height: 100% !important;
     overflow-y: auto !important;
   }
   
-  /* Form đặt lệnh */
-  .trade-right-panel {
-    width: 100% !important;
-    height: auto !important;
-    overflow-y: visible !important;
-    border-bottom: 1px solid #1e2329 !important;
-  }
-  
-  /* Phần lịch sử lệnh ở dưới cùng */
+  /* Phần lịch sử lệnh ở dưới cùng cố định */
   .trade-bottom-panel {
-    width: 100% !important;
-    height: auto !important;
-    min-height: 250px !important;
+    height: 150px !important;
     border-top: 1px solid #1e2329 !important;
+    flex-shrink: 0 !important;
+    overflow-y: auto !important;
   }
 }
 .th-assets-dropdown a svg {
