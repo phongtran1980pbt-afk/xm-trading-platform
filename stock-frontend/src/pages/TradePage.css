@@ -817,6 +817,7 @@
   /* Cố định layout toàn bộ trang không cho cuộn cả trang */
   .trade-page {
     height: 100vh !important;
+    height: 100dvh !important;
     max-width: 100vw !important;
     width: 100vw !important;
     overflow: hidden !important;
@@ -829,9 +830,10 @@
   /* Sắp xếp lại Trade Body thành Grid cố định */
   .trade-body {
     display: grid !important;
-    grid-template-rows: 220px 1fr !important;
+    grid-template-rows: 280px 1fr !important;
     grid-template-columns: 45% 55% !important;
-    height: calc(100vh - 250px) !important; /* 100vh - 100px (header) - 150px (bottom panel) */
+    height: calc(100vh - 250px) !important;
+    height: calc(100dvh - 250px) !important; /* 100dvh - 100px (header) - 150px (bottom panel) */
     width: 100% !important;
     max-width: 100vw !important;
     overflow: hidden !important;

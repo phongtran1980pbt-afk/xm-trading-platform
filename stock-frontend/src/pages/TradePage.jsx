@@ -302,7 +302,7 @@ export default function TradePage() {
   const [orderType, setOrderType]  = useState('market');
   const [activeTab, setActiveCoinTab] = useState(coin);
   const [tf,        setTf]         = useState('1m');
-  const [bottomTab, setBottomTab]  = useState('open');
+  const [bottomTab, setBottomTab]  = useState('binary');
   const [chartTopTab, setChartTopTab] = useState('chart');
   const [historicalCandles, setHistoricalCandles] = useState([]);
   const [showIndicatorsMenu, setShowIndicatorsMenu] = useState(false);
@@ -657,39 +657,28 @@ export default function TradePage() {
         if (!isMounted) return;
         const originalCandles = res.data;
         if (originalCandles && originalCandles.length > 0) {
-          const lastCandle = originalCandles[originalCandles.length - 1];
-          const ratio = base / lastCandle.close;
-          const scaledCandles = originalCandles.map(c => ({
-            time: c.time,
-            open: c.open * ratio,
-            high: c.high * ratio,
-            low: c.low * ratio,
-            close: c.close * ratio,
-            _seed4: c._seed4
-          }));
-
-          candleSeries.setData(scaledCandles);
-          setHistoricalCandles(scaledCandles);
+          candleSeries.setData(originalCandles);
+          setHistoricalCandles(originalCandles);
 
           // Update logical visible range to show the last 100 candles
           chart.timeScale().setVisibleLogicalRange({
-            from: scaledCandles.length - 100,
-            to: scaledCandles.length + 10,
+            from: originalCandles.length - 100,
+            to: originalCandles.length + 10,
           });
 
           // Seed candle aggregation state from the last candle
-          const lastScaledCandle = scaledCandles[scaledCandles.length - 1];
-          const serverLastMin = Math.floor(lastScaledCandle.time / 60);
+          const lastCandle = originalCandles[originalCandles.length - 1];
+          const serverLastMin = Math.floor(lastCandle.time / 60);
           const localNowMin = Math.floor(Date.now() / 1000 / 60);
           clockOffsetRef.current = serverLastMin - localNowMin;
           candleState.current = {
-            open: lastScaledCandle.open,
-            high: lastScaledCandle.high,
-            low: lastScaledCandle.low,
+            open: lastCandle.open,
+            high: lastCandle.high,
+            low: lastCandle.low,
             minute: serverLastMin
           };
-          setLivePrice(lastScaledCandle.close);
-          setPrevPrice(lastScaledCandle.close);
+          setLivePrice(lastCandle.close);
+          setPrevPrice(lastCandle.close);
         } else {
           console.warn('Backend returned no candles for', coin);
         }
@@ -1549,22 +1538,10 @@ export default function TradePage() {
       <div className="trade-bottom-panel">
         <div className="bp-tab-bar">
           {[
-            {k:'open', l:'Lệnh giao dịch mở (0)'},
-            {k:'pos',  l:'Vị thế (3)'},
-            {k:'asset',l:'Tài sản'},
-            {k:'hist', l:'Lịch sử đặt lệnh'},
-            {k:'binary', l:`Lịch sử Quyền chọn (${binaryBets.length})`},
-            {k:'trade',l:'Lịch sử giao dịch'},
-            {k:'algo', l:'Thuật toán giao dịch (0)'},
-            {k:'cond', l:'Lệnh có điều kiện (0)'},
+            {k:'binary', l:`Lịch sử đặt lệnh (${binaryBets.length})`},
           ].map(t=>(
             <div key={t.k} className={`bp-tab ${bottomTab===t.k?'active':''}`} onClick={()=>setBottomTab(t.k)}>{t.l}</div>
           ))}
-          <div className="bp-controls">
-            <button className="bp-ctrl-btn">Hợp đồng điều kiện ▾</button>
-            <button className="bp-ctrl-btn">Điều kiện điều kiện 0x</button>
-            <button className="bp-ctrl-btn">Lệnh điều kiện 0x</button>
-          </div>
         </div>
         <div className="bp-content">
           {bottomTab === 'binary' ? (
