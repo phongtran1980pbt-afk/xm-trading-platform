@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { createChart, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
-import { useCoinPrice, INITIAL_COIN_PRICES, computeCurrentCoinPrice } from '../contexts/PriceContext';
+import { useCoinPrice, usePrices, INITIAL_COIN_PRICES, computeCurrentCoinPrice } from '../contexts/PriceContext';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { ToastContainer, toast } from 'react-toastify';
@@ -256,6 +256,7 @@ function VolumeChartComponent({ candles, volSeriesRef }) {
 export default function TradePage() {
   const { symbol } = useParams();
   const coin = symbol || 'BULL';
+  const navigate = useNavigate();
 
   // Get logged-in user info from localStorage
   const currentUser = useMemo(() => {
@@ -291,6 +292,7 @@ export default function TradePage() {
   const clockOffsetRef = useRef(0);
 
   // Live price driven entirely by global context
+  const prices = usePrices();
   const globalCoin = useCoinPrice(coin);
   const btcCoin = useCoinPrice('BTC');
   const ethCoin = useCoinPrice('ETH');
@@ -312,6 +314,7 @@ export default function TradePage() {
   const [chartTopTab, setChartTopTab] = useState('chart');
   const [historicalCandles, setHistoricalCandles] = useState([]);
   const [showIndicatorsMenu, setShowIndicatorsMenu] = useState(false);
+  const [showCoinSelector, setShowCoinSelector] = useState(false);
 
   // Binary Options state
   const [activeSubTab, setActiveSubTab] = useState('Alpha');
@@ -487,6 +490,14 @@ export default function TradePage() {
     document.addEventListener('click', handleClose);
     return () => document.removeEventListener('click', handleClose);
   }, [showNotifications]);
+
+  // Close coin selector dropdown on click outside
+  useEffect(() => {
+    if (!showCoinSelector) return;
+    const handleClose = () => setShowCoinSelector(false);
+    document.addEventListener('click', handleClose);
+    return () => document.removeEventListener('click', handleClose);
+  }, [showCoinSelector]);
 
   useEffect(() => {
     if (currentUser?.isAdmin) {
@@ -1099,13 +1110,78 @@ export default function TradePage() {
               <div className="th-coin-logo-circle" style={{background: '#ff9800', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff'}}>
                 <span className="th-coin-logo-char">{coin.charAt(0)}</span>
               </div>
-              <div className="th-coin-names">
-                <div className="th-coin-main-name">
+              <div 
+                className="th-coin-names" 
+                style={{ position: 'relative' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div 
+                  className="th-coin-main-name"
+                  onClick={() => setShowCoinSelector(!showCoinSelector)}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                >
                   {coin} <span style={{fontSize:'12px', color:'#848e9c', marginLeft:'4px'}}>▾</span>
                 </div>
                 <div className="th-coin-contract">
                   Fmj...pump <span>📋</span>
                 </div>
+
+                {showCoinSelector && (
+                  <div 
+                    className="th-coin-selector-dropdown"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      background: '#151821',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '8px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                      zIndex: 1005,
+                      width: '220px',
+                      maxHeight: '300px',
+                      overflowY: 'auto',
+                      padding: '6px 0',
+                    }}
+                  >
+                    <div style={{ padding: '8px 12px', fontSize: '11px', color: '#848e9c', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', fontWeight: 'bold' }}>
+                      Chọn loại tài sản
+                    </div>
+                    {Object.keys(INITIAL_COIN_PRICES).map((symbolKey) => {
+                      const liveCoinPrice = prices?.[symbolKey]?.price ?? INITIAL_COIN_PRICES[symbolKey];
+                      return (
+                        <div
+                          key={symbolKey}
+                          onClick={() => {
+                            setShowCoinSelector(false);
+                            navigate(`/trade/${symbolKey}`);
+                          }}
+                          style={{
+                            padding: '10px 12px',
+                            color: coin === symbolKey ? '#24DB9B' : '#eaecef',
+                            fontSize: '13px',
+                            fontWeight: coin === symbolKey ? 'bold' : 'normal',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            background: coin === symbolKey ? 'rgba(36, 219, 155, 0.05)' : 'transparent',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = coin === symbolKey ? 'rgba(36, 219, 155, 0.05)' : 'transparent'}
+                        >
+                          <span>{symbolKey}-USDT</span>
+                          <span style={{ fontSize: '11px', color: '#848e9c' }}>
+                            ${(liveCoinPrice < 1 
+                              ? liveCoinPrice.toFixed(6) 
+                              : liveCoinPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
