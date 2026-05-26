@@ -1664,57 +1664,16 @@
 
 /* End of second global mobile styles block */
 
-@media (min-width: 769px) {
-  body {
-    background-color: #080a0f !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    min-height: 100vh !important;
-    overflow: hidden !important;
-  }
-  .trade-page {
-    width: 480px !important;
-    max-width: 480px !important;
-    height: 100vh !important;
-    border-left: 1px solid #1e2329 !important;
-    border-right: 1px solid #1e2329 !important;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8) !important;
-    margin: 0 auto !important;
-    position: relative !important;
-  }
-  .trade-body {
-    max-width: 480px !important;
-    width: 100% !important;
-  }
-  .trade-bottom-panel {
-    max-width: 480px !important;
-    width: 100% !important;
-  }
-  /* Constrain the bottom bar inside the centered viewport */
-  .tp-m-bottom-bar {
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-  }
-  /* Constrain the modal overlays inside the centered viewport */
-  .tp-m-modal-overlay {
-    position: absolute !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-  }
-  .tp-m-deposit-modal-overlay {
-    position: absolute !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
+.tp-m-deposit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
