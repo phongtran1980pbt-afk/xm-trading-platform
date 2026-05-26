@@ -1725,6 +1725,29 @@ export default function TradePage() {
         </div>
       </div>
 
+      {/* ═══════════ MOBILE VOLUME STRIP (mobile only) ═══════════ */}
+      <div className="tp-m-vol-strip">
+        <div className="tp-m-vol-labels">
+          <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
+          <span style={{color:'#00c087'}}>MA5: {(livePrice * 0.00040).toFixed(2)}M</span>
+          <span style={{color:'#f0b90b'}}>MA10: {(livePrice * 0.00051).toFixed(3)}M</span>
+          <span style={{color:'#e85d7a'}}>MA20: {(livePrice * 0.00038).toFixed(3)}M</span>
+          <span style={{color:'#848e9c'}}>VOLUME: {(livePrice * 0.00022).toFixed(3)}M</span>
+        </div>
+        <div className="tp-m-vol-bars">
+          {Array.from({length: 50}).map((_, i) => {
+            const h = seededRand(hashStr(coin + i)) * 75 + 10;
+            const isUp = seededRand(hashStr(coin + i + 500)) > 0.48;
+            return (
+              <div key={i} className="tp-m-vol-bar" style={{
+                height: `${h}%`,
+                background: isUp ? 'rgba(0,192,135,0.55)' : 'rgba(246,70,93,0.55)'
+              }}/>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ═══════════ BOTTOM PANEL ═══════════ */}
       <div className="trade-bottom-panel">
         <div className="bp-tab-bar">
@@ -1786,29 +1809,6 @@ export default function TradePage() {
               <span>Sổ đặt Khai dụng — JSDT</span>
             </>
           )}
-        </div>
-      </div>
-
-      {/* ═══════════ MOBILE VOLUME STRIP (mobile only) ═══════════ */}
-      <div className="tp-m-vol-strip">
-        <div className="tp-m-vol-labels">
-          <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
-          <span style={{color:'#00c087'}}>MA5: {(livePrice * 0.00040).toFixed(2)}M</span>
-          <span style={{color:'#f0b90b'}}>MA10: {(livePrice * 0.00051).toFixed(3)}M</span>
-          <span style={{color:'#e85d7a'}}>MA20: {(livePrice * 0.00038).toFixed(3)}M</span>
-          <span style={{color:'#848e9c'}}>VOLUME: {(livePrice * 0.00022).toFixed(3)}M</span>
-        </div>
-        <div className="tp-m-vol-bars">
-          {Array.from({length: 50}).map((_, i) => {
-            const h = seededRand(hashStr(coin + i)) * 75 + 10;
-            const isUp = seededRand(hashStr(coin + i + 500)) > 0.48;
-            return (
-              <div key={i} className="tp-m-vol-bar" style={{
-                height: `${h}%`,
-                background: isUp ? 'rgba(0,192,135,0.55)' : 'rgba(246,70,93,0.55)'
-              }}/>
-            );
-          })}
         </div>
       </div>
 

@@ -837,57 +837,30 @@
     touch-action: pan-y !important;
   }
 
-  /* Sắp xếp lại Trade Body thành Grid cố định */
+  /* Tối ưu hóa Trade Body thành dạng Flex dọc trên di động (Ẩn toàn bộ Orderbook và Right Panel cũ) */
   .trade-body {
-    display: grid !important;
-    grid-template-rows: 280px 1fr !important;
-    grid-template-columns: 50% 50% !important; /* Đổi thành 50% 50% để cột trái rộng hơn */
-    height: calc(100vh - 250px) !important;
-    height: calc(100dvh - 250px) !important; /* 100dvh - 100px (header) - 150px (bottom panel) */
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    height: auto !important;
     width: 100% !important;
     max-width: 100vw !important;
     overflow: hidden !important;
-    overflow-x: hidden !important;
   }
   
-  /* Biểu đồ cố định ở trên */
+  /* Biểu đồ chiếm trọn không gian cơ thể */
   .trade-chart-area {
-    grid-row: 1 !important;
-    grid-column: 1 / span 2 !important;
+    flex: 1 !important;
     height: 100% !important;
     width: 100% !important;
-    border-bottom: 1px solid #1e2329 !important;
+    border-bottom: none !important;
     touch-action: auto !important;
   }
   
-  /* Sổ lệnh (Orderbook) cuộn nội bộ */
-  .trade-orderbook-panel {
-    grid-row: 2 !important;
-    grid-column: 1 !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    border-left: none !important;
-    border-right: 1px solid #1e2329 !important;
-  }
-
-  /* Định dạng lại danh sách giao dịch gần đây thành Grid để không bị đè chữ lên nhau */
-  .ob-col-header, .ob-row {
-    display: grid !important;
-    grid-template-columns: 38% 34% 28% !important;
-    padding: 4px 6px !important;
-    font-size: 10px !important;
-  }
-  
-  /* Form đặt lệnh cuộn nội bộ */
+  /* Ẩn hoàn toàn Sổ lệnh (Orderbook) và Bảng đặt lệnh cũ trên di động */
+  .trade-orderbook-panel,
   .trade-right-panel {
-    grid-row: 2 !important;
-    grid-column: 2 !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    display: none !important;
   }
 
   /* Tối ưu hóa kích thước form trên di động để hiển thị gọn trong khung hình */
