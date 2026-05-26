@@ -632,7 +632,93 @@ export default function AdminDashboard() {
               </button>
               <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Quản lý người dùng (Danh sách User)</h2>
             </div>
-            
+
+            {/* ═══ TRADE CONTROL PANEL ═══ */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(17,20,26,0.98) 0%, rgba(26,31,43,0.98) 100%)',
+              border: '1px solid #2b3139',
+              borderRadius: '14px',
+              padding: '20px',
+              marginBottom: '20px',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.4)'
+            }}>
+              <h3 style={{ color: '#eaecef', margin: '0 0 16px 0', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="16" height="16" fill="none" stroke="#00FFA3" strokeWidth="2" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                Điều khiển xu hướng biểu đồ
+              </h3>
+
+              {/* Stats row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ background: 'rgba(0,255,163,0.06)', border: '1px solid rgba(0,255,163,0.2)', borderRadius: '10px', padding: '14px' }}>
+                  <div style={{ color: '#00FFA3', fontSize: '12px', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="12" height="12" fill="#00FFA3" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    CƯỢC TĂNG
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#848e9c' }}>Số người: <strong style={{ color: '#eaecef' }}>{tradeStats.upUsers}</strong></span>
+                    <span style={{ color: '#00FFA3', fontWeight: 700 }}>${Number(tradeStats.upAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(246,70,93,0.06)', border: '1px solid rgba(246,70,93,0.2)', borderRadius: '10px', padding: '14px' }}>
+                  <div style={{ color: '#F6465D', fontSize: '12px', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="12" height="12" fill="#F6465D" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    CƯỢC GIẢM
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#848e9c' }}>Số người: <strong style={{ color: '#eaecef' }}>{tradeStats.downUsers}</strong></span>
+                    <span style={{ color: '#F6465D', fontWeight: 700 }}>${Number(tradeStats.downAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current trend indicator */}
+              <div style={{ marginBottom: '12px', fontSize: '12px', color: '#848e9c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Xu hướng hiện tại:
+                <span style={{
+                  padding: '3px 10px', borderRadius: '20px', fontWeight: 700, fontSize: '12px',
+                  background: trend === 'up' ? 'rgba(0,255,163,0.15)' : trend === 'down' ? 'rgba(246,70,93,0.15)' : 'rgba(234,236,239,0.1)',
+                  color: trend === 'up' ? '#00FFA3' : trend === 'down' ? '#F6465D' : '#eaecef',
+                  border: `1px solid ${trend === 'up' ? '#00FFA3' : trend === 'down' ? '#F6465D' : '#5e6673'}`
+                }}>
+                  {trend === 'up' ? '▲ TĂNG' : trend === 'down' ? '▼ GIẢM' : '⟳ NGẪU NHIÊN'}
+                </span>
+              </div>
+
+              {/* Control buttons */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => handleSetTrend('up')}
+                  style={{
+                    flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                    background: trend === 'up' ? 'linear-gradient(135deg,#00FFA3,#00c87a)' : 'rgba(0,255,163,0.08)',
+                    color: trend === 'up' ? '#000' : '#00FFA3',
+                    border: `1px solid ${trend === 'up' ? '#00FFA3' : 'rgba(0,255,163,0.3)'}`,
+                    boxShadow: trend === 'up' ? '0 4px 16px rgba(0,255,163,0.3)' : 'none'
+                  }}
+                >▲ TĂNG</button>
+                <button
+                  onClick={() => handleSetTrend('down')}
+                  style={{
+                    flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                    background: trend === 'down' ? 'linear-gradient(135deg,#F6465D,#d43a4e)' : 'rgba(246,70,93,0.08)',
+                    color: trend === 'down' ? '#fff' : '#F6465D',
+                    border: `1px solid ${trend === 'down' ? '#F6465D' : 'rgba(246,70,93,0.3)'}`,
+                    boxShadow: trend === 'down' ? '0 4px 16px rgba(246,70,93,0.3)' : 'none'
+                  }}
+                >▼ GIẢM</button>
+                <button
+                  onClick={() => handleSetTrend('neutral')}
+                  style={{
+                    flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                    background: trend === 'neutral' ? '#eaecef' : 'rgba(234,236,239,0.06)',
+                    color: trend === 'neutral' ? '#000' : '#eaecef',
+                    border: `1px solid ${trend === 'neutral' ? '#eaecef' : 'rgba(234,236,239,0.2)'}`,
+                    boxShadow: trend === 'neutral' ? '0 4px 16px rgba(234,236,239,0.15)' : 'none'
+                  }}
+                >⟳ NGẪU NHIÊN</button>
+              </div>
+            </div>
+
             <div style={{ 
               background: 'linear-gradient(135deg, rgba(246, 70, 93, 0.08) 0%, rgba(17, 20, 26, 0.95) 100%)', 
               padding: '20px', 
