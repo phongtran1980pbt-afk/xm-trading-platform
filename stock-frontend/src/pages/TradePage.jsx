@@ -807,7 +807,7 @@ export default function TradePage() {
   ];
 
   return (
-    <div className="trade-page" style={currentUser?.isAdmin ? { paddingBottom: '150px' } : {}}>
+    <div className="trade-page">
       <ToastContainer />
 
       {/* ═══════════ MOBILE ONLY ELEMENTS (hidden on desktop via CSS) ═══════════ */}
@@ -1717,176 +1717,175 @@ export default function TradePage() {
         </div>
       </div>
 
-      {/* ═══════════ MOBILE VOLUME STRIP (mobile only) ═══════════ */}
-      <div className="tp-m-vol-strip" style={currentUser?.isAdmin ? {display:'none'} : {}}>
-        <div className="tp-m-vol-labels">
-          <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
-          <span style={{color:'#00c087'}}>MA5: {(livePrice * 0.00040).toFixed(2)}M</span>
-          <span style={{color:'#f0b90b'}}>MA10: {(livePrice * 0.00051).toFixed(3)}M</span>
-          <span style={{color:'#e85d7a'}}>MA20: {(livePrice * 0.00038).toFixed(3)}M</span>
-          <span style={{color:'#848e9c'}}>VOLUME: {(livePrice * 0.00022).toFixed(3)}M</span>
-        </div>
-        <div className="tp-m-vol-bars">
-          {Array.from({length: 50}).map((_, i) => {
-            const h = seededRand(hashStr(coin + i)) * 75 + 10;
-            const isUp = seededRand(hashStr(coin + i + 500)) > 0.48;
-            return (
-              <div key={i} className="tp-m-vol-bar" style={{
-                height: `${h}%`,
-                background: isUp ? 'rgba(0,192,135,0.55)' : 'rgba(246,70,93,0.55)'
-              }}/>
-            );
-          })}
-        </div>
-      </div>
+      {/* ═══════════ MOBILE VOLUME STRIP (mobile only) OR ADMIN CONTROL PANEL ═══════════ */}
+      {currentUser?.isAdmin ? (
+        /* Admin: 3 nút xếp dọc bên trái & thông tin đặt cược bên phải (Thay thế hoàn toàn Volume Strip ngay dưới biểu đồ) */
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px 12px', background: '#0f1217', borderTop: '1px solid #1e2329', height: '150px' }}>
+          {/* Cột trái: 3 nút xếp dọc, to rõ ràng */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '160px', flexShrink: 0 }}>
+            <button
+              onClick={() => handleSetAdminTrend('up')}
+              style={{
+                height: '36px', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                background: adminTrend === 'up' ? 'linear-gradient(135deg,#00C087,#00a070)' : 'rgba(0,192,135,0.12)',
+                color: adminTrend === 'up' ? '#fff' : '#00C087',
+                border: `1.5px solid ${adminTrend === 'up' ? '#00C087' : 'rgba(0,192,135,0.35)'}`,
+                boxShadow: adminTrend === 'up' ? '0 4px 12px rgba(0,192,135,0.45)' : 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+              }}
+            >
+              <span>▲ Tăng</span>
+            </button>
+            <button
+              onClick={() => handleSetAdminTrend('down')}
+              style={{
+                height: '36px', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                background: adminTrend === 'down' ? 'linear-gradient(135deg,#F6465D,#d43a4e)' : 'rgba(246,70,93,0.12)',
+                color: adminTrend === 'down' ? '#fff' : '#F6465D',
+                border: `1.5px solid ${adminTrend === 'down' ? '#F6465D' : 'rgba(246,70,93,0.35)'}`,
+                boxShadow: adminTrend === 'down' ? '0 4px 12px rgba(246,70,93,0.45)' : 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+              }}
+            >
+              <span>▼ Giảm</span>
+            </button>
+            <button
+              onClick={() => handleSetAdminTrend('neutral')}
+              style={{
+                height: '36px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
+                background: adminTrend === 'neutral' ? 'linear-gradient(135deg,#FCD535,#e6c02e)' : 'rgba(252,213,53,0.1)',
+                color: adminTrend === 'neutral' ? '#000' : '#FCD535',
+                border: `1.5px solid ${adminTrend === 'neutral' ? '#FCD535' : 'rgba(252,213,53,0.3)'}`,
+                boxShadow: adminTrend === 'neutral' ? '0 4px 12px rgba(252,213,53,0.3)' : 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+              }}
+            >
+              <span>⟳ Ngẫu Nhiên</span>
+            </button>
+          </div>
 
-      {/* ═══════════ BOTTOM PANEL ═══════════ */}
-      <div className="trade-bottom-panel">
-        {currentUser?.isAdmin ? (
-          /* Admin View inside the bottom panel (filling the empty space) */
-          <div style={{ display: 'flex', flex: 1, gap: '16px', alignItems: 'center', height: '100%', padding: '16px 20px', background: '#0f1217' }}>
-            {/* Cột trái: 3 nút xếp dọc, to rõ ràng */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '160px', flexShrink: 0 }}>
-              <button
-                onClick={() => handleSetAdminTrend('up')}
-                style={{
-                  height: '48px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s',
-                  background: adminTrend === 'up' ? 'linear-gradient(135deg,#00C087,#00a070)' : 'rgba(0,192,135,0.12)',
-                  color: adminTrend === 'up' ? '#fff' : '#00C087',
-                  border: `1.5px solid ${adminTrend === 'up' ? '#00C087' : 'rgba(0,192,135,0.35)'}`,
-                  boxShadow: adminTrend === 'up' ? '0 4px 12px rgba(0,192,135,0.45)' : 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                }}
-              >
-                <span>▲ Tăng</span>
-              </button>
-              <button
-                onClick={() => handleSetAdminTrend('down')}
-                style={{
-                  height: '48px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s',
-                  background: adminTrend === 'down' ? 'linear-gradient(135deg,#F6465D,#d43a4e)' : 'rgba(246,70,93,0.12)',
-                  color: adminTrend === 'down' ? '#fff' : '#F6465D',
-                  border: `1.5px solid ${adminTrend === 'down' ? '#F6465D' : 'rgba(246,70,93,0.35)'}`,
-                  boxShadow: adminTrend === 'down' ? '0 4px 12px rgba(246,70,93,0.45)' : 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                }}
-              >
-                <span>▼ Giảm</span>
-              </button>
-              <button
-                onClick={() => handleSetAdminTrend('neutral')}
-                style={{
-                  height: '48px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
-                  background: adminTrend === 'neutral' ? 'linear-gradient(135deg,#FCD535,#e6c02e)' : 'rgba(252,213,53,0.1)',
-                  color: adminTrend === 'neutral' ? '#000' : '#FCD535',
-                  border: `1.5px solid ${adminTrend === 'neutral' ? '#FCD535' : 'rgba(252,213,53,0.3)'}`,
-                  boxShadow: adminTrend === 'neutral' ? '0 4px 12px rgba(252,213,53,0.3)' : 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                }}
-              >
-                <span>⟳ Ngẫu Nhiên</span>
-              </button>
+          {/* Cột phải: Thông tin đặt cược */}
+          <div style={{
+            flex: 1, height: '100%', background: 'rgba(255,255,255,0.02)', borderRadius: '10px',
+            padding: '12px 16px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex',
+            flexDirection: 'column', justifyContent: 'space-between'
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#848e9c', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '6px', letterSpacing: '0.5px' }}>
+              📊 THỐNG KÊ ĐẶT CƯỢC THỜI GIAN THỰC ({coin}/USDT)
             </div>
-
-            {/* Cột phải: Thông tin đặt cược */}
-            <div style={{
-              flex: 1, height: '100%', background: 'rgba(255,255,255,0.02)', borderRadius: '10px',
-              padding: '16px 20px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex',
-              flexDirection: 'column', justifyContent: 'space-between'
-            }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#848e9c', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '8px', letterSpacing: '0.5px' }}>
-                📊 THỐNG KÊ ĐẶT CƯỢC THỜI GIAN THỰC ({coin}/USDT)
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flex: 1, alignItems: 'center', marginTop: '6px' }}>
+              {/* UP side info */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ color: '#00C087', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '8px' }}>🟢</span> MUA LÊN (UP)
+                </div>
+                <div style={{ fontSize: '12px', color: '#848e9c' }}>Số người: <span style={{ color: '#fff', fontWeight: '700', fontSize: '13px' }}>{tradeStats.upUsers}</span></div>
+                <div style={{ fontSize: '12px', color: '#848e9c' }}>Tổng: <span style={{ color: '#00FFA3', fontWeight: '700', fontSize: '14px' }}>${Number(tradeStats.upAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', flex: 1, alignItems: 'center', marginTop: '12px' }}>
-                {/* UP side info */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ color: '#00C087', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '10px' }}>🟢</span> MUA LÊN (UP)
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#848e9c' }}>Số lượng người: <span style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>{tradeStats.upUsers}</span></div>
-                  <div style={{ fontSize: '13px', color: '#848e9c' }}>Tổng tiền: <span style={{ color: '#00FFA3', fontWeight: '700', fontSize: '16px' }}>${Number(tradeStats.upAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
-                </div>
 
-                {/* Vertical Divider */}
-                <div style={{ width: '1px', alignSelf: 'stretch', background: 'rgba(255,255,255,0.08)', margin: '0 10px' }} />
+              {/* Vertical Divider */}
+              <div style={{ width: '1px', alignSelf: 'stretch', background: 'rgba(255,255,255,0.08)', margin: '0 6px' }} />
 
-                {/* DOWN side info */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ color: '#F6465D', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '10px' }}>🔴</span> MUA XUỐNG (DOWN)
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#848e9c' }}>Số lượng người: <span style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>{tradeStats.downUsers}</span></div>
-                  <div style={{ fontSize: '13px', color: '#848e9c' }}>Tổng tiền: <span style={{ color: '#F6465D', fontWeight: '700', fontSize: '16px' }}>${Number(tradeStats.downAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+              {/* DOWN side info */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ color: '#F6465D', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '8px' }}>🔴</span> MUA XUỐNG (DOWN)
                 </div>
+                <div style={{ fontSize: '12px', color: '#848e9c' }}>Số người: <span style={{ color: '#fff', fontWeight: '700', fontSize: '13px' }}>{tradeStats.downUsers}</span></div>
+                <div style={{ fontSize: '12px', color: '#848e9c' }}>Tổng: <span style={{ color: '#F6465D', fontWeight: '700', fontSize: '14px' }}>${Number(tradeStats.downAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
               </div>
             </div>
           </div>
-        ) : (
-          /* Normal User View */
-          <>
-            <div className="bp-tab-bar">
-              {[
-                {k:'binary', l:`Lịch sử đặt lệnh (${binaryBets.length})`},
-              ].map(t=>(
-                <div key={t.k} className={`bp-tab ${bottomTab===t.k?'active':''}`} onClick={()=>setBottomTab(t.k)}>{t.l}</div>
-              ))}
-            </div>
-            <div className="bp-content">
-              {bottomTab === 'binary' ? (
-                <div style={{ width: '100%', overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', color: '#EAECEF', fontSize: '12px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                    <thead>
-                      <tr style={{ color: '#848e9c', borderBottom: '1px solid #2B3139' }}>
-                        <th style={{ padding: '10px 16px' }}>Thời gian vào</th>
-                        <th style={{ padding: '10px 16px' }}>Thời gian kết toán</th>
-                        <th style={{ padding: '10px 16px' }}>Cặp giao dịch</th>
-                        <th style={{ padding: '10px 16px' }}>Loại cược</th>
-                        <th style={{ padding: '10px 16px' }}>Giá vào</th>
-                        <th style={{ padding: '10px 16px' }}>Giá kết toán</th>
-                        <th style={{ padding: '10px 16px' }}>Số tiền (USDT)</th>
-                        <th style={{ padding: '10px 16px' }}>Thanh toán</th>
-                        <th style={{ padding: '10px 16px' }}>Trạng thái</th>
+        </div>
+      ) : (
+        <div className="tp-m-vol-strip">
+          <div className="tp-m-vol-labels">
+            <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
+            <span style={{color:'#00c087'}}>MA5: {(livePrice * 0.00040).toFixed(2)}M</span>
+            <span style={{color:'#f0b90b'}}>MA10: {(livePrice * 0.00051).toFixed(3)}M</span>
+            <span style={{color:'#e85d7a'}}>MA20: {(livePrice * 0.00038).toFixed(3)}M</span>
+            <span style={{color:'#848e9c'}}>VOLUME: {(livePrice * 0.00022).toFixed(3)}M</span>
+          </div>
+          <div className="tp-m-vol-bars">
+            {Array.from({length: 50}).map((_, i) => {
+              const h = seededRand(hashStr(coin + i)) * 75 + 10;
+              const isUp = seededRand(hashStr(coin + i + 500)) > 0.48;
+              return (
+                <div key={i} className="tp-m-vol-bar" style={{
+                  height: `${h}%`,
+                  background: isUp ? 'rgba(0,192,135,0.55)' : 'rgba(246,70,93,0.55)'
+                }}/>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ BOTTOM PANEL ═══════════ */}
+      {!currentUser?.isAdmin && (
+        <div className="trade-bottom-panel">
+          <div className="bp-tab-bar">
+            {[
+              {k:'binary', l:`Lịch sử đặt lệnh (${binaryBets.length})`},
+            ].map(t=>(
+              <div key={t.k} className={`bp-tab ${bottomTab===t.k?'active':''}`} onClick={()=>setBottomTab(t.k)}>{t.l}</div>
+            ))}
+          </div>
+          <div className="bp-content">
+            {bottomTab === 'binary' ? (
+              <div style={{ width: '100%', overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', color: '#EAECEF', fontSize: '12px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                  <thead>
+                    <tr style={{ color: '#848e9c', borderBottom: '1px solid #2B3139' }}>
+                      <th style={{ padding: '10px 16px' }}>Thời gian vào</th>
+                      <th style={{ padding: '10px 16px' }}>Thời gian kết toán</th>
+                      <th style={{ padding: '10px 16px' }}>Cặp giao dịch</th>
+                      <th style={{ padding: '10px 16px' }}>Loại cược</th>
+                      <th style={{ padding: '10px 16px' }}>Giá vào</th>
+                      <th style={{ padding: '10px 16px' }}>Giá kết toán</th>
+                      <th style={{ padding: '10px 16px' }}>Số tiền (USDT)</th>
+                      <th style={{ padding: '10px 16px' }}>Thanh toán</th>
+                      <th style={{ padding: '10px 16px' }}>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {binaryBets.map((bet) => (
+                      <tr key={bet.Id} style={{ borderBottom: '1px solid #1e2329' }}>
+                        <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.StartTime)}</td>
+                        <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.EndTime)}</td>
+                        <td style={{ padding: '10px 16px' }}>{bet.Symbol}</td>
+                        <td style={{ padding: '10px 16px', color: bet.BetType === 'UP' ? '#00FFA3' : '#F6465D' }}>{bet.BetType}</td>
+                        <td style={{ padding: '10px 16px' }}>{fmtP(bet.StartPrice)}</td>
+                        <td style={{ padding: '10px 16px' }}>{bet.EndPrice ? fmtP(bet.EndPrice) : '--'}</td>
+                        <td style={{ padding: '10px 16px' }}>{fmtP(bet.BetAmount)}</td>
+                        <td style={{ padding: '10px 16px' }}>{bet.Payout > 0 ? `+${fmtP(bet.Payout)}` : '--'}</td>
+                        <td style={{ padding: '10px 16px' }}>
+                          {bet.Status === 'PENDING' && <span style={{ color: '#FCD535' }}>Đang chờ</span>}
+                          {bet.Status === 'WIN' && <span style={{ color: '#00FFA3' }}>Thắng</span>}
+                          {bet.Status === 'LOSE' && <span style={{ color: '#F6465D' }}>Thua</span>}
+                          {bet.Status === 'TIE' && <span style={{ color: '#EAECEF' }}>Hòa</span>}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {binaryBets.map((bet) => (
-                        <tr key={bet.Id} style={{ borderBottom: '1px solid #1e2329' }}>
-                          <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.StartTime)}</td>
-                          <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.EndTime)}</td>
-                          <td style={{ padding: '10px 16px' }}>{bet.Symbol}</td>
-                          <td style={{ padding: '10px 16px', color: bet.BetType === 'UP' ? '#00FFA3' : '#F6465D' }}>{bet.BetType}</td>
-                          <td style={{ padding: '10px 16px' }}>{fmtP(bet.StartPrice)}</td>
-                          <td style={{ padding: '10px 16px' }}>{bet.EndPrice ? fmtP(bet.EndPrice) : '--'}</td>
-                          <td style={{ padding: '10px 16px' }}>{fmtP(bet.BetAmount)}</td>
-                          <td style={{ padding: '10px 16px' }}>{bet.Payout > 0 ? `+${fmtP(bet.Payout)}` : '--'}</td>
-                          <td style={{ padding: '10px 16px' }}>
-                            {bet.Status === 'PENDING' && <span style={{ color: '#FCD535' }}>Đang chờ</span>}
-                            {bet.Status === 'WIN' && <span style={{ color: '#00FFA3' }}>Thắng</span>}
-                            {bet.Status === 'LOSE' && <span style={{ color: '#F6465D' }}>Thua</span>}
-                            {bet.Status === 'TIE' && <span style={{ color: '#EAECEF' }}>Hòa</span>}
-                          </td>
-                        </tr>
-                      ))}
-                      {binaryBets.length === 0 && (
-                        <tr>
-                          <td colSpan="9" style={{ textAlign: 'center', padding: '20px', color: '#848e9c' }}>Chưa có lệnh quyền chọn nào</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <>
-                  <svg width="40" height="40" fill="none" stroke="#5e6673" strokeWidth="1" viewBox="0 0 24 24">
-                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-                  </svg>
-                  <span>Sổ đặt Khai dụng — JSDT</span>
-                </>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+                    ))}
+                    {binaryBets.length === 0 && (
+                      <tr>
+                        <td colSpan="9" style={{ textAlign: 'center', padding: '20px', color: '#848e9c' }}>Chưa có lệnh quyền chọn nào</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <>
+                <svg width="40" height="40" fill="none" stroke="#5e6673" strokeWidth="1" viewBox="0 0 24 24">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                <span>Sổ đặt Khai dụng — JSDT</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ═══════════ MOBILE BOTTOM ACTION BAR ═══════════ */}
       {!currentUser?.isAdmin && (
