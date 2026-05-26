@@ -1810,7 +1810,41 @@ export default function TradePage() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
           <span>Tiền điện tử</span>
         </button>
-        {!currentUser?.isAdmin && (
+        {currentUser?.isAdmin ? (
+          /* Admin: 3 nút điều khiển biểu đồ */
+          <div style={{ display: 'flex', flex: 1, gap: '6px', padding: '0 6px' }}>
+            <button
+              onClick={() => handleSetAdminTrend('up')}
+              style={{
+                flex: 1, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                background: adminTrend === 'up' ? 'linear-gradient(135deg,#00C087,#00a070)' : 'rgba(0,192,135,0.15)',
+                color: adminTrend === 'up' ? '#fff' : '#00C087',
+                border: `1.5px solid ${adminTrend === 'up' ? '#00C087' : 'rgba(0,192,135,0.4)'}`,
+                boxShadow: adminTrend === 'up' ? '0 2px 12px rgba(0,192,135,0.4)' : 'none'
+              }}
+            >▲ Tăng</button>
+            <button
+              onClick={() => handleSetAdminTrend('down')}
+              style={{
+                flex: 1, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                background: adminTrend === 'down' ? 'linear-gradient(135deg,#F6465D,#d43a4e)' : 'rgba(246,70,93,0.15)',
+                color: adminTrend === 'down' ? '#fff' : '#F6465D',
+                border: `1.5px solid ${adminTrend === 'down' ? '#F6465D' : 'rgba(246,70,93,0.4)'}`,
+                boxShadow: adminTrend === 'down' ? '0 2px 12px rgba(246,70,93,0.4)' : 'none'
+              }}
+            >▼ Giảm</button>
+            <button
+              onClick={() => handleSetAdminTrend('neutral')}
+              style={{
+                flex: 1, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
+                background: adminTrend === 'neutral' ? 'linear-gradient(135deg,#FCD535,#e6c02e)' : 'rgba(252,213,53,0.12)',
+                color: adminTrend === 'neutral' ? '#000' : '#FCD535',
+                border: `1.5px solid ${adminTrend === 'neutral' ? '#FCD535' : 'rgba(252,213,53,0.35)'}`,
+                boxShadow: adminTrend === 'neutral' ? '0 2px 12px rgba(252,213,53,0.35)' : 'none'
+              }}
+            >⟳ Ngẫu Nhiên</button>
+          </div>
+        ) : (
           <>
             <button className="tp-m-buy-up-btn" onClick={() => {
               if (!currentUser) { navigate('/login'); return; }
