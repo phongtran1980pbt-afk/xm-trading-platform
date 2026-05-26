@@ -537,16 +537,30 @@ export default function TradePage() {
     }
   };
 
+  const kuToast = (type, title, message) => {
+    const toastFn = type === 'success' ? toast.success : type === 'error' ? toast.error : toast.warning;
+    toastFn(
+      <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+          <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · {title}</span>
+        </div>
+        <div style={{ color: '#EAECEF' }}>{message}</div>
+      </div>,
+      { theme: 'dark', autoClose: 4000, icon: false }
+    );
+  };
+
   const handleBinaryBet = async (type) => {
     if (!binaryAmount || isNaN(binaryAmount) || Number(binaryAmount) <= 0) {
-      alert('Vui lòng nhập số tiền cược hợp lệ.');
+      kuToast('warning', 'Thông báo', 'Vui lòng nhập số tiền cược hợp lệ.');
       return;
     }
     try {
       setBinaryLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('Vui lòng đăng nhập để đặt cược.');
+        kuToast('warning', 'Thông báo', 'Vui lòng đăng nhập để đặt cược.');
         return;
       }
       const res = await axios.post(`${API_BASE_URL}/api/binary/place`, {
@@ -558,13 +572,13 @@ export default function TradePage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
-        alert('Đặt cược thành công!');
+        kuToast('success', 'Đặt lệnh thành công', `Đã đặt lệnh ${type === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'} ${Number(binaryAmount).toFixed(2)} USDT`);
         setBinaryAmount('');
         fetchBinaryHistory();
         fetchBalance();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Lỗi khi đặt cược.');
+      kuToast('error', 'Lỗi đặt lệnh', err.response?.data?.message || 'Lỗi khi đặt cược.');
     } finally {
       setBinaryLoading(false);
     }
