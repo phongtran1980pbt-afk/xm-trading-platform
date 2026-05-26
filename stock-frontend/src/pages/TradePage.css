@@ -806,17 +806,21 @@
     padding: 0 12px !important;
   }
   
+  .trade-page {
+    height: auto !important;
+    overflow-y: auto !important;
+  }
+
   /* Sắp xếp lại Trade Body */
   .trade-body {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    overflow-y: auto !important;
-    height: calc(100vh - 100px) !important; /* Trừ đi 100px của 2 hàng header */
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
   }
   
   /* Biểu đồ chiếm toàn bộ chiều ngang */
   .trade-chart-area {
-    grid-column: 1 / span 2 !important;
     height: 320px !important;
     width: 100% !important;
     border-bottom: 1px solid #1e2329 !important;
@@ -824,26 +828,33 @@
   
   /* Sổ lệnh (Orderbook) */
   .trade-orderbook-panel {
-    grid-column: 1 !important;
     width: 100% !important;
-    height: 420px !important;
+    height: auto !important;
+    min-height: 350px !important;
     border-left: none !important;
-    border-right: 1px solid #1e2329 !important;
+    border-right: none !important;
+    border-bottom: 1px solid #1e2329 !important;
+  }
+
+  .ob-list {
+    max-height: 300px !important;
+    overflow-y: auto !important;
   }
   
   /* Form đặt lệnh */
   .trade-right-panel {
-    grid-column: 2 !important;
     width: 100% !important;
-    height: 420px !important;
+    height: auto !important;
+    overflow-y: visible !important;
+    border-bottom: 1px solid #1e2329 !important;
   }
   
   /* Phần lịch sử lệnh ở dưới cùng */
   .trade-bottom-panel {
-    grid-column: 1 / span 2 !important;
-    height: 250px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 250px !important;
     border-top: 1px solid #1e2329 !important;
-    position: relative !important;
   }
 }
 .th-assets-dropdown a svg {
