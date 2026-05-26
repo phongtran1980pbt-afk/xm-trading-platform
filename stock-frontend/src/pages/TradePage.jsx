@@ -1718,8 +1718,7 @@ export default function TradePage() {
       </div>
 
       {/* ═══════════ MOBILE VOLUME STRIP (mobile only) ═══════════ */}
-      {!currentUser?.isAdmin && (
-      <div className="tp-m-vol-strip">
+      <div className="tp-m-vol-strip" style={currentUser?.isAdmin ? {visibility:'hidden', pointerEvents:'none'} : {}}>
         <div className="tp-m-vol-labels">
           <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
           <span style={{color:'#00c087'}}>MA5: {(livePrice * 0.00040).toFixed(2)}M</span>
@@ -1740,11 +1739,9 @@ export default function TradePage() {
           })}
         </div>
       </div>
-      )}
 
       {/* ═══════════ BOTTOM PANEL ═══════════ */}
-      {!currentUser?.isAdmin && (
-      <div className="trade-bottom-panel">
+      <div className="trade-bottom-panel" style={currentUser?.isAdmin ? {visibility:'hidden', pointerEvents:'none'} : {}}>
         <div className="bp-tab-bar">
           {[
             {k:'binary', l:`Lịch sử đặt lệnh (${binaryBets.length})`},
@@ -1806,7 +1803,6 @@ export default function TradePage() {
           )}
         </div>
       </div>
-      )}
 
       {/* ═══════════ MOBILE BOTTOM ACTION BAR ═══════════ */}
       <div className="tp-m-bottom-bar">
