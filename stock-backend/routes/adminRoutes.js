@@ -2,13 +2,14 @@ import express from 'express';
 import { 
   getAuditLogs, getUsers, depositUser, depositUserByCode, 
   getTradeStats, toggleUserStatus, withdrawUser, deleteNonAdminUsers, 
-  clearAllChats, deleteUser, clearAuditLogs, deleteChatSession 
+  clearAllChats, deleteUser, clearAuditLogs, deleteChatSession, deleteAuditLog 
 } from '../controllers/adminController.js';
 
 const router = express.Router();
 
 router.get('/audit-logs', getAuditLogs);
 router.delete('/audit-logs/cleanup', clearAuditLogs);
+router.delete('/audit-logs/:id', deleteAuditLog);
 router.get('/users', getUsers);
 router.post('/users/deposit-by-code', depositUserByCode);
 router.post('/users/:id/deposit', depositUser);

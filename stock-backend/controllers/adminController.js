@@ -8,13 +8,31 @@ export const getAuditLogs = async (req, res) => {
     const result = await pool.request().query(`
       SELECT Id, Action, Details, CreatedAt
       FROM AuditLogs
-      WHERE Action NOT IN ('PLACE_BINARY_ORDER', 'SETTLE_BINARY_ORDER')
+      WHERE Action NOT IN ('PLACE_BINARY_ORDER', 'SETTLE_BINARY_ORDER', 'CLEANUP_LOGS')
       ORDER BY CreatedAt DESC
     `);
     res.json(result.recordset);
   } catch (error) {
     console.error('Lỗi lấy Audit Logs:', error);
     res.status(500).json({ message: 'Lỗi server khi lấy Audit Logs' });
+  }
+};
+
+// DELETE /api/admin/audit-logs/:id - Xoá một bản ghi nhật ký cụ thể
+export const deleteAuditLog = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', id)
+      .query('DELETE FROM AuditLogs WHERE Id = @id');
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy nhật ký này' });
+    }
+    res.json({ success: true, message: 'Đã xoá nhật ký thành công!' });
+  } catch (error) {
+    console.error('Lỗi xoá nhật ký:', error);
+    res.status(500).json({ message: 'Lỗi server khi xoá nhật ký: ' + error.message });
   }
 };
 

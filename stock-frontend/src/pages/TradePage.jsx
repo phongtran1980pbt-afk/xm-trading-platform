@@ -325,6 +325,8 @@ export default function TradePage() {
   const [showBalance, setShowBalance] = useState(true);
   const [binaryDuration, setBinaryDuration] = useState(5);
   const prevBetsRef = useRef([]);
+  const [showMobileTradeModal, setShowMobileTradeModal] = useState(false);
+  const [mobileTradeType, setMobileTradeType] = useState('UP'); // 'UP' | 'DOWN'
 
   // Fast Deposit state
   const [showFastDepositModal, setShowFastDepositModal] = useState(false);
@@ -798,10 +800,95 @@ export default function TradePage() {
   ];
 
   const timeframes = ['1m', '3m', '5m', '15m', '1h', '4h', '1d', '1w'];
+  const mobileTimeframes = [
+    {k:'1m',l:'1phút'},{k:'5m',l:'5phút'},{k:'15m',l:'15phút'},
+    {k:'30m',l:'30phút'},{k:'1h',l:'1giờ'},{k:'4h',l:'4giờ'},
+    {k:'1d',l:'1ngày'},{k:'1w',l:'1tuần'},{k:'1M',l:'1Tháng'},
+  ];
 
   return (
     <div className="trade-page">
       <ToastContainer />
+
+      {/* ═══════════ MOBILE ONLY ELEMENTS (hidden on desktop via CSS) ═══════════ */}
+
+      {/* Mobile Top Navigation Bar */}
+      <div className="tp-m-topbar">
+        <button className="tp-m-nav-btn" onClick={() => navigate(-1)}>
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <button className="tp-m-nav-btn">
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><line x1="3" y1="5" x2="21" y2="5"/><polyline points="7 23 3 19 7 15"/><line x1="21" y1="19" x2="3" y2="19"/></svg>
+        </button>
+        <div className="tp-m-pair-selector" onClick={(e) => { e.stopPropagation(); setShowCoinSelector(!showCoinSelector); }} style={{ position: 'relative' }}>
+          <span className="tp-m-pair-name">{coin}USDT</span>
+          <span className="tp-m-pair-caret">▾</span>
+          {showCoinSelector && (
+            <div className="tp-m-coin-dropdown" onClick={(e) => e.stopPropagation()}>
+              {Object.keys(INITIAL_COIN_PRICES).map((sym) => (
+                <div key={sym} className={`tp-m-coin-item${coin === sym ? ' active' : ''}`}
+                  onClick={() => { setShowCoinSelector(false); navigate(`/trade/${sym}`); }}>
+                  <span>{sym}-USDT</span>
+                  <span className="tp-m-coin-item-price">
+                    ${(prices?.[sym]?.price ?? INITIAL_COIN_PRICES[sym]) < 1
+                      ? (prices?.[sym]?.price ?? INITIAL_COIN_PRICES[sym]).toFixed(6)
+                      : (prices?.[sym]?.price ?? INITIAL_COIN_PRICES[sym]).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={{ flex: 1 }} />
+        <button className="tp-m-nav-btn">
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
+      </div>
+
+      {/* Mobile Price Info Section */}
+      <div className="tp-m-price-section">
+        <div className="tp-m-price-top-row">
+          <div className="tp-m-big-price" style={{ color: priceUp ? '#00FFA3' : '#F6465D' }}>
+            {livePrice >= 100 ? Math.round(livePrice).toLocaleString() : fmt(livePrice, 4)}
+          </div>
+          <div className="tp-m-price-change" style={{ color: priceUp ? '#00FFA3' : '#F6465D' }}>
+            ≈ ${fmt(livePrice, 2)}&nbsp;&nbsp;{changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
+          </div>
+        </div>
+        <div className="tp-m-ref-price">Giá tham chiếu {fmt(livePrice * 0.9996, 2)}</div>
+        <div className="tp-m-stats-grid">
+          <div className="tp-m-stats-col">
+            <div className="tp-m-stat-item">
+              <span className="tp-m-stat-label">Cao 24h</span>
+              <span className="tp-m-stat-val">{fmt(livePrice * 1.021, 2)}</span>
+            </div>
+            <div className="tp-m-stat-item">
+              <span className="tp-m-stat-label">Thấp 24h</span>
+              <span className="tp-m-stat-val">{fmt(livePrice * 0.979, 2)}</span>
+            </div>
+          </div>
+          <div className="tp-m-stats-col">
+            <div className="tp-m-stat-item">
+              <span className="tp-m-stat-label">24h vol({coin})</span>
+              <span className="tp-m-stat-val">{(livePrice * 350).toFixed(3)}</span>
+            </div>
+            <div className="tp-m-stat-item">
+              <span className="tp-m-stat-label">24h vol(USDT)</span>
+              <span className="tp-m-stat-val">{(livePrice * livePrice * 350 / 1e6).toFixed(4)}M</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Timeframe Strip */}
+      <div className="tp-m-tf-strip">
+        <button className="tp-m-tf-item tp-m-tf-chart">Dây<br/>chứng<br/>khoán</button>
+        {mobileTimeframes.map(t => (
+          <button key={t.k} className={`tp-m-tf-item${tf === t.k ? ' active' : ''}`} onClick={() => setTf(t.k)}>
+            {t.l}
+          </button>
+        ))}
+      </div>
 
       {/* ═══════════ HEADER ═══════════ */}
       {/* ═══════════ NEW 3-ROW HEADER ═══════════ */}
@@ -1317,6 +1404,14 @@ export default function TradePage() {
           </div>
 
           <div className="chart-container" style={{ display: chartTopTab === 'chart' ? 'block' : 'none' }}>
+            {/* Mobile MA labels overlay (hidden on desktop) */}
+            <div className="tp-m-ma-strip">
+              <span className="tp-m-ma-tag">MA(5,10,30,60)</span>
+              <span className="tp-m-ma-5">MA5: {fmt(livePrice * 0.9992, 2)}</span>
+              <span className="tp-m-ma-10">MA10: {fmt(livePrice * 1.0008, 2)}</span>
+              <span className="tp-m-ma-30">MA30: {fmt(livePrice * 1.0004, 2)}</span>
+              <span className="tp-m-ma-60">MA60: {fmt(livePrice * 0.9996, 2)}</span>
+            </div>
             <div ref={chartRef} className="chart-inner"/>
           </div>
           {chartTopTab === 'depth' && (
@@ -1693,6 +1788,97 @@ export default function TradePage() {
           )}
         </div>
       </div>
+
+      {/* ═══════════ MOBILE VOLUME STRIP (mobile only) ═══════════ */}
+      <div className="tp-m-vol-strip">
+        <div className="tp-m-vol-labels">
+          <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
+          <span style={{color:'#00c087'}}>MA5: {(livePrice * 0.00040).toFixed(2)}M</span>
+          <span style={{color:'#f0b90b'}}>MA10: {(livePrice * 0.00051).toFixed(3)}M</span>
+          <span style={{color:'#e85d7a'}}>MA20: {(livePrice * 0.00038).toFixed(3)}M</span>
+          <span style={{color:'#848e9c'}}>VOLUME: {(livePrice * 0.00022).toFixed(3)}M</span>
+        </div>
+        <div className="tp-m-vol-bars">
+          {Array.from({length: 50}).map((_, i) => {
+            const h = seededRand(hashStr(coin + i)) * 75 + 10;
+            const isUp = seededRand(hashStr(coin + i + 500)) > 0.48;
+            return (
+              <div key={i} className="tp-m-vol-bar" style={{
+                height: `${h}%`,
+                background: isUp ? 'rgba(0,192,135,0.55)' : 'rgba(246,70,93,0.55)'
+              }}/>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ═══════════ MOBILE BOTTOM ACTION BAR ═══════════ */}
+      <div className="tp-m-bottom-bar">
+        <button className="tp-m-wallet-btn" onClick={() => setShowFastDepositModal(true)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          <span>Tiền điện tử</span>
+        </button>
+        <button className="tp-m-buy-up-btn" onClick={() => {
+          if (!currentUser) { navigate('/login'); return; }
+          setMobileTradeType('UP'); setShowMobileTradeModal(true);
+        }}>Mua lên</button>
+        <button className="tp-m-buy-down-btn" onClick={() => {
+          if (!currentUser) { navigate('/login'); return; }
+          setMobileTradeType('DOWN'); setShowMobileTradeModal(true);
+        }}>Mua xuống</button>
+      </div>
+
+      {/* ═══════════ MOBILE TRADE BOTTOM SHEET MODAL ═══════════ */}
+      {showMobileTradeModal && (
+        <div className="tp-m-modal-overlay" onClick={() => setShowMobileTradeModal(false)}>
+          <div className="tp-m-modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="tp-m-modal-handle"/>
+            <div className="tp-m-modal-header">
+              <div>
+                <span className="tp-m-modal-type" style={{color: mobileTradeType==='UP'?'#00C087':'#F6465D'}}>
+                  {mobileTradeType === 'UP' ? '▲ Mua lên' : '▼ Mua xuống'}
+                </span>
+                <span className="tp-m-modal-pair">{coin}USDT</span>
+              </div>
+              <button className="tp-m-modal-close-btn" onClick={() => setShowMobileTradeModal(false)}>✕</button>
+            </div>
+            <div className="tp-m-modal-row">
+              <span className="tp-m-modal-label">Giá hiện tại</span>
+              <span style={{color: priceUp?'#00C087':'#F6465D', fontWeight:700}}>{fmt(livePrice,2)} USDT</span>
+            </div>
+            <div className="tp-m-modal-row">
+              <span className="tp-m-modal-label">Khả dụng</span>
+              <span style={{color:'#eaecef',fontWeight:600}}>{balance.toLocaleString('en-US',{minimumFractionDigits:2})} USDT</span>
+            </div>
+            <div className="tp-m-modal-section-title">Thời gian kết toán</div>
+            <div className="tp-m-dur-grid">
+              {[5,10,15,20,25,30].map(d => (
+                <button key={d} className={`tp-m-dur-btn${binaryDuration===d?' active':''}`}
+                  onClick={() => setBinaryDuration(d)}>{d}p</button>
+              ))}
+            </div>
+            <div className="tp-m-modal-section-title">Số tiền đặt cược (USDT)</div>
+            <div className="tp-m-amount-row">
+              <button className="tp-m-amount-adj" onClick={() => setBinaryAmount(String(Math.max(0,(Number(binaryAmount)||0)-10).toFixed(2)))}>-</button>
+              <input type="number" className="tp-m-amount-input" placeholder="0.00"
+                value={binaryAmount} onChange={e => setBinaryAmount(e.target.value)}/>
+              <button className="tp-m-amount-adj" onClick={() => setBinaryAmount(String(((Number(binaryAmount)||0)+10).toFixed(2)))}>+</button>
+            </div>
+            <div className="tp-m-pct-row">
+              {[10,25,50,75,100].map(pct => (
+                <button key={pct} className="tp-m-pct-btn" onClick={() => handlePercentClick(pct)}>{pct}%</button>
+              ))}
+            </div>
+            <button
+              className={`tp-m-confirm-btn${mobileTradeType==='UP'?' up':' down'}`}
+              onClick={() => { handleBinaryBet(mobileTradeType); setShowMobileTradeModal(false); }}
+              disabled={binaryLoading}
+            >
+              {binaryLoading ? 'Đang xử lý...' : (mobileTradeType==='UP' ? '▲ Xác nhận Mua lên' : '▼ Xác nhận Mua xuống')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Custom Fast Deposit Modal */}
       {showFastDepositModal && (

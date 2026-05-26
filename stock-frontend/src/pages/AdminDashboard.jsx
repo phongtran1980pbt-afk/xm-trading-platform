@@ -424,23 +424,18 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleClearAuditLogs = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn xoá sạch lịch sử nhật ký hệ thống không?')) {
-      return;
-    }
+  const handleDeleteSingleLog = async (logId) => {
+    if (!window.confirm('Xoá nhật ký này?')) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/audit-logs/cleanup`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/audit-logs/${logId}`, {
         method: 'DELETE'
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(data.message || 'Đã xoá sạch nhật ký hệ thống!');
-        // Refresh logs list
-        const logsRes = await fetch(`${API_BASE_URL}/api/admin/audit-logs`);
-        const logsData = await logsRes.json();
-        setAuditLogs(logsData);
+        toast.success('Đã xoá nhật ký!');
+        setAuditLogs(prev => prev.filter(l => l.Id !== logId));
       } else {
-        toast.error(data.message || 'Lỗi khi xoá nhật ký hệ thống');
+        toast.error(data.message || 'Lỗi khi xoá nhật ký');
       }
     } catch (e) {
       console.error(e);
@@ -832,38 +827,8 @@ export default function AdminDashboard() {
                     <polyline points="12 19 5 12 12 5"></polyline>
                   </svg>
                 </button>
-                <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Nhật ký hệ thống (Audit Logs)</h2>
+                <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Nhật ký hệ thống</h2>
               </div>
-              <button
-                onClick={handleClearAuditLogs}
-                style={{
-                  background: 'rgba(246, 70, 93, 0.1)',
-                  color: '#F6465D',
-                  border: '1px solid #F6465D',
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  fontWeight: 700,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = '#F6465D';
-                  e.currentTarget.style.color = '#000';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(246, 70, 93, 0.1)';
-                  e.currentTarget.style.color = '#F6465D';
-                }}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Xóa lịch sử nhật ký
-              </button>
             </div>
 
             {/* Filter Tabs */}
@@ -906,6 +871,7 @@ export default function AdminDashboard() {
                   <th style={{ padding: '12px', width: '160px' }}>Thời gian</th>
                   <th style={{ padding: '12px', width: '200px' }}>Hành động</th>
                   <th style={{ padding: '12px' }}>Chi tiết</th>
+                  <th style={{ padding: '12px', width: '52px' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -922,7 +888,7 @@ export default function AdminDashboard() {
                   }
                   return true;
                 }).length === 0 ? (
-                  <tr><td colSpan="3" style={{ padding: '24px', textAlign: 'center', color: '#5e6673' }}>Chưa có nhật ký nào</td></tr>
+                  <tr><td colSpan="4" style={{ padding: '24px', textAlign: 'center', color: '#5e6673' }}>Chưa có nhật ký nào</td></tr>
                 ) : (
                   auditLogs.filter(log => {
                     if (logTab === 'all') return true;
