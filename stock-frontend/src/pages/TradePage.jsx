@@ -968,6 +968,20 @@ export default function TradePage() {
                     </div>
                   </div>
                   <div className="k-user-dropdown-divider" />
+                  
+                  {/* Phần tài sản hiển thị số dư trực tiếp trong user menu hover */}
+                  <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div style={{ fontSize: '11px', color: '#848e9c' }}>Tài sản của tôi</div>
+                    <div style={{ fontSize: '15px', color: '#24DB9B', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      <span style={{ fontSize: '11px', color: '#eaecef', fontWeight: 'normal' }}>USDT</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#848e9c' }}>
+                      ≈ {(balance / (btcCoin?.price || 77000)).toFixed(6)} BTC
+                    </div>
+                  </div>
+                  <div className="k-user-dropdown-divider" />
+
                   {currentUser.isAdmin && (
                     <Link to="/admin" className="k-user-dropdown-item k-user-dropdown-admin">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -1546,32 +1560,32 @@ export default function TradePage() {
         <div className="bp-content">
           {bottomTab === 'binary' ? (
             <div style={{ width: '100%', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', color: '#EAECEF', fontSize: '12px', textAlign: 'left' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', color: '#EAECEF', fontSize: '12px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ color: '#848e9c', borderBottom: '1px solid #2B3139' }}>
-                    <th style={{ padding: '8px' }}>Thời gian vào</th>
-                    <th style={{ padding: '8px' }}>Thời gian kết toán</th>
-                    <th style={{ padding: '8px' }}>Cặp giao dịch</th>
-                    <th style={{ padding: '8px' }}>Loại cược</th>
-                    <th style={{ padding: '8px' }}>Giá vào</th>
-                    <th style={{ padding: '8px' }}>Giá kết toán</th>
-                    <th style={{ padding: '8px' }}>Số tiền (USDT)</th>
-                    <th style={{ padding: '8px' }}>Thanh toán</th>
-                    <th style={{ padding: '8px' }}>Trạng thái</th>
+                    <th style={{ padding: '10px 16px' }}>Thời gian vào</th>
+                    <th style={{ padding: '10px 16px' }}>Thời gian kết toán</th>
+                    <th style={{ padding: '10px 16px' }}>Cặp giao dịch</th>
+                    <th style={{ padding: '10px 16px' }}>Loại cược</th>
+                    <th style={{ padding: '10px 16px' }}>Giá vào</th>
+                    <th style={{ padding: '10px 16px' }}>Giá kết toán</th>
+                    <th style={{ padding: '10px 16px' }}>Số tiền (USDT)</th>
+                    <th style={{ padding: '10px 16px' }}>Thanh toán</th>
+                    <th style={{ padding: '10px 16px' }}>Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
                   {binaryBets.map((bet) => (
                     <tr key={bet.Id} style={{ borderBottom: '1px solid #1e2329' }}>
-                      <td style={{ padding: '8px' }}>{new Date(bet.StartTime).toLocaleString()}</td>
-                      <td style={{ padding: '8px' }}>{new Date(bet.EndTime).toLocaleString()}</td>
-                      <td style={{ padding: '8px' }}>{bet.Symbol}</td>
-                      <td style={{ padding: '8px', color: bet.BetType === 'UP' ? '#00FFA3' : '#F6465D' }}>{bet.BetType}</td>
-                      <td style={{ padding: '8px' }}>{fmtP(bet.StartPrice)}</td>
-                      <td style={{ padding: '8px' }}>{bet.EndPrice ? fmtP(bet.EndPrice) : '--'}</td>
-                      <td style={{ padding: '8px' }}>{fmtP(bet.BetAmount)}</td>
-                      <td style={{ padding: '8px' }}>{bet.Payout > 0 ? `+${fmtP(bet.Payout)}` : '--'}</td>
-                      <td style={{ padding: '8px' }}>
+                      <td style={{ padding: '10px 16px' }}>{new Date(bet.StartTime).toLocaleString()}</td>
+                      <td style={{ padding: '10px 16px' }}>{new Date(bet.EndTime).toLocaleString()}</td>
+                      <td style={{ padding: '10px 16px' }}>{bet.Symbol}</td>
+                      <td style={{ padding: '10px 16px', color: bet.BetType === 'UP' ? '#00FFA3' : '#F6465D' }}>{bet.BetType}</td>
+                      <td style={{ padding: '10px 16px' }}>{fmtP(bet.StartPrice)}</td>
+                      <td style={{ padding: '10px 16px' }}>{bet.EndPrice ? fmtP(bet.EndPrice) : '--'}</td>
+                      <td style={{ padding: '10px 16px' }}>{fmtP(bet.BetAmount)}</td>
+                      <td style={{ padding: '10px 16px' }}>{bet.Payout > 0 ? `+${fmtP(bet.Payout)}` : '--'}</td>
+                      <td style={{ padding: '10px 16px' }}>
                         {bet.Status === 'PENDING' && <span style={{ color: '#FCD535' }}>Đang chờ</span>}
                         {bet.Status === 'WIN' && <span style={{ color: '#00FFA3' }}>Thắng</span>}
                         {bet.Status === 'LOSE' && <span style={{ color: '#F6465D' }}>Thua</span>}
