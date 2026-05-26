@@ -831,7 +831,7 @@
   .trade-body {
     display: grid !important;
     grid-template-rows: 280px 1fr !important;
-    grid-template-columns: 45% 55% !important;
+    grid-template-columns: 50% 50% !important; /* Đổi thành 50% 50% để cột trái rộng hơn */
     height: calc(100vh - 250px) !important;
     height: calc(100dvh - 250px) !important; /* 100dvh - 100px (header) - 150px (bottom panel) */
     width: 100% !important;
@@ -861,6 +861,14 @@
     border-left: none !important;
     border-right: 1px solid #1e2329 !important;
   }
+
+  /* Định dạng lại danh sách giao dịch gần đây thành Grid để không bị đè chữ lên nhau */
+  .ob-col-header, .ob-row {
+    display: grid !important;
+    grid-template-columns: 38% 34% 28% !important;
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+  }
   
   /* Form đặt lệnh cuộn nội bộ */
   .trade-right-panel {
@@ -870,6 +878,30 @@
     height: 100% !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+  }
+
+  /* Tối ưu hóa kích thước form trên di động để hiển thị gọn trong khung hình */
+  .rp-body {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  .rp-time-selector {
+    margin: 4px 0 8px 0 !important;
+  }
+  .rp-input-wrap {
+    padding: 4px 8px !important;
+  }
+  .rp-submit-btn {
+    padding: 8px !important;
+    margin-top: 2px !important;
+    font-size: 13px !important;
+  }
+  .rp-info-box {
+    padding: 6px !important;
+    font-size: 10px !important;
+  }
+  .rp-slider-row {
+    padding: 2px 0 !important;
   }
   
   /* Phần lịch sử lệnh ở dưới cùng cố định */
