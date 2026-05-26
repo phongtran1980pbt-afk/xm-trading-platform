@@ -782,7 +782,7 @@
 }
 
 /* ===================== MOBILE RESPONSIVE ===================== */
-@media (max-width: 768px) {
+/* Apply mobile styles globally by default */
   /* Ẩn bớt các hàng và cột phụ */
   .th-favorites-nav {
     display: none !important;
@@ -913,7 +913,7 @@
     min-width: 0 !important;
     width: 100% !important;
   }
-}
+/* End of first global mobile styles block */
 .th-assets-dropdown a svg {
   color: #848e9c;
 }
@@ -1084,19 +1084,39 @@
    MOBILE-ONLY STYLES & LAYOUT OVERRIDES (Binance-style premium dark design)
    ========================================================================== */
 
-/* 1. Hide mobile-only elements by default on desktop */
-.tp-m-topbar,
-.tp-m-price-section,
-.tp-m-tf-strip,
-.tp-m-ma-strip,
-.tp-m-vol-strip,
-.tp-m-bottom-bar,
-.tp-m-modal-overlay {
+/* 1. Hide mobile-only elements by default on desktop - REMOVED to show them globally */
+/* Hide desktop components globally */
+.trade-header-container,
+.trade-left-toolbar,
+.trade-orderbook-panel,
+.trade-right-panel {
   display: none !important;
 }
 
-/* 2. Responsive styles inside max-width 768px */
-@media (max-width: 768px) {
+/* 2. Display mobile-only elements globally by default */
+.tp-m-topbar {
+  display: flex !important;
+}
+.tp-m-price-section {
+  display: block !important;
+}
+.tp-m-tf-strip {
+  display: flex !important;
+}
+.tp-m-ma-strip {
+  display: flex !important;
+}
+.tp-m-vol-strip {
+  display: block !important;
+}
+.tp-m-bottom-bar {
+  display: flex !important;
+}
+.tp-m-modal-overlay {
+  display: flex !important;
+}
+
+/* 3. Global mobile styles */
   /* Completely hide desktop header on mobile */
   .trade-header-container {
     display: none !important;
@@ -1640,5 +1660,61 @@
     cursor: not-allowed !important;
     pointer-events: none !important;
     transform: none !important;
+  }
+
+/* End of second global mobile styles block */
+
+@media (min-width: 769px) {
+  body {
+    background-color: #080a0f !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+  }
+  .trade-page {
+    width: 480px !important;
+    max-width: 480px !important;
+    height: 100vh !important;
+    border-left: 1px solid #1e2329 !important;
+    border-right: 1px solid #1e2329 !important;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8) !important;
+    margin: 0 auto !important;
+    position: relative !important;
+  }
+  .trade-body {
+    max-width: 480px !important;
+    width: 100% !important;
+  }
+  .trade-bottom-panel {
+    max-width: 480px !important;
+    width: 100% !important;
+  }
+  /* Constrain the bottom bar inside the centered viewport */
+  .tp-m-bottom-bar {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  /* Constrain the modal overlays inside the centered viewport */
+  .tp-m-modal-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  .tp-m-deposit-modal-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 }
