@@ -1313,16 +1313,7 @@
     color: #00FFA3;
     background: rgba(0, 255, 163, 0.08);
   }
-  .tp-m-tf-chart {
-    font-size: 10px;
-    line-height: 1.1;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 6px;
-    color: #eaecef;
-    padding: 4px 8px;
-    background: rgba(255, 255, 255, 0.02) !important;
-  }
+
 
   /* --- Mobile MA Labels Overlay --- */
   .tp-m-ma-strip {

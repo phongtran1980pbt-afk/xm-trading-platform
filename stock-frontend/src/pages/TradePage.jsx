@@ -882,7 +882,6 @@ export default function TradePage() {
 
       {/* Mobile Timeframe Strip */}
       <div className="tp-m-tf-strip">
-        <button className="tp-m-tf-item tp-m-tf-chart">Dây<br/>chứng<br/>khoán</button>
         {mobileTimeframes.map(t => (
           <button key={t.k} className={`tp-m-tf-item${tf === t.k ? ' active' : ''}`} onClick={() => setTf(t.k)}>
             {t.l}
