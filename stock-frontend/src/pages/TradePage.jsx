@@ -392,7 +392,7 @@ export default function TradePage() {
                 toast.error(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                      <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
+                      <img src="https://www.kucoin.com/favicon.ico" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'contain', background: '#fff', padding: '2px' }} />
                       <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
@@ -405,7 +405,7 @@ export default function TradePage() {
                 toast.info(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                      <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
+                      <img src="https://www.kucoin.com/favicon.ico" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'contain', background: '#fff', padding: '2px' }} />
                       <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
@@ -537,13 +537,13 @@ export default function TradePage() {
     }
   };
 
-  const kuToast = (type, title, message) => {
+  const kuToast = (type, message) => {
     const toastFn = type === 'success' ? toast.success : type === 'error' ? toast.error : toast.warning;
     toastFn(
       <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
-          <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · {title}</span>
+          <img src="https://www.kucoin.com/favicon.ico" alt="KuCoin" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'contain', background: '#fff', padding: '2px' }} />
+          <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
         </div>
         <div style={{ color: '#EAECEF' }}>{message}</div>
       </div>,
@@ -553,14 +553,14 @@ export default function TradePage() {
 
   const handleBinaryBet = async (type) => {
     if (!binaryAmount || isNaN(binaryAmount) || Number(binaryAmount) <= 0) {
-      kuToast('warning', 'Thông báo', 'Vui lòng nhập số tiền cược hợp lệ.');
+      kuToast('warning', 'Vui lòng nhập số tiền cược hợp lệ.');
       return;
     }
     try {
       setBinaryLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
-        kuToast('warning', 'Thông báo', 'Vui lòng đăng nhập để đặt cược.');
+        kuToast('warning', 'Vui lòng đăng nhập để đặt cược.');
         return;
       }
       const res = await axios.post(`${API_BASE_URL}/api/binary/place`, {
@@ -572,13 +572,13 @@ export default function TradePage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
-        kuToast('success', 'Đặt lệnh thành công', `Đã đặt lệnh ${type === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'} ${Number(binaryAmount).toFixed(2)} USDT`);
+        kuToast('success', `Đã đặt lệnh ${type === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'} ${Number(binaryAmount).toFixed(2)} USDT`);
         setBinaryAmount('');
         fetchBinaryHistory();
         fetchBalance();
       }
     } catch (err) {
-      kuToast('error', 'Lỗi đặt lệnh', err.response?.data?.message || 'Lỗi khi đặt cược.');
+      kuToast('error', err.response?.data?.message || 'Lỗi khi đặt cược.');
     } finally {
       setBinaryLoading(false);
     }
