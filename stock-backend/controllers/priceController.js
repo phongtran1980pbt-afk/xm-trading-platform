@@ -243,11 +243,20 @@ setInterval(() => {
   prices = next;
 }, 2000);
 
+function getNormalizedSymbol(symbol) {
+  if (!symbol) return '';
+  const match = Object.keys(INITIAL_COINS).find(
+    k => k.toLowerCase() === symbol.toLowerCase()
+  );
+  return match || symbol;
+}
+
 export const getCandles = (req, res) => {
   const { symbol } = req.query;
   if (!symbol) return res.status(400).json({ success: false, message: 'Missing symbol' });
-  const hist = candleHistory[symbol] || [];
-  const curr = currentCandles[symbol];
+  const targetSymbol = getNormalizedSymbol(symbol);
+  const hist = candleHistory[targetSymbol] || [];
+  const curr = currentCandles[targetSymbol];
   if (curr) {
     res.json([...hist, {
       time: curr.time,
@@ -269,7 +278,7 @@ export const getPrices = (req, res) => {
 
 export const setTrend = (req, res) => {
   const { symbol, trend } = req.body;
-  const targetSymbol = symbol || 'BTC';
+  const targetSymbol = getNormalizedSymbol(symbol || 'BTC');
   if (['up', 'down', 'neutral'].includes(trend)) {
     coinTrends[targetSymbol] = trend;
     res.json({ success: true, symbol: targetSymbol, trend });
@@ -280,11 +289,11 @@ export const setTrend = (req, res) => {
 
 export const getTrend = (req, res) => {
   const { symbol } = req.query;
-  const targetSymbol = symbol || 'BTC';
+  const targetSymbol = getNormalizedSymbol(symbol || 'BTC');
   res.json({ trend: coinTrends[targetSymbol] || 'neutral' });
 };
 
 export const resetTrendToNeutral = (symbol) => {
-  const targetSymbol = symbol || 'BTC';
+  const targetSymbol = getNormalizedSymbol(symbol || 'BTC');
   coinTrends[targetSymbol] = 'neutral';
 };
