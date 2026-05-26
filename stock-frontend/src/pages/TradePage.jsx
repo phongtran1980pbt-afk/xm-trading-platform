@@ -613,11 +613,6 @@ export default function TradePage() {
     const el = chartRef.current;
     if (!el) return;
 
-    // Wait for globalCoin to be loaded/synced from the API/WS first so we have the correct current price for scaling!
-    if (!globalCoin || (!globalCoin.backendSynced && !globalCoin.isReal)) {
-      return;
-    }
-
     const chart = createChart(el, {
       layout: { background: { color: '#0b0e11' }, textColor: '#848e9c' },
       grid:   { vertLines: { color: '#1a1e27' }, horzLines: { color: '#1a1e27' } },
@@ -720,7 +715,7 @@ export default function TradePage() {
       chart.remove();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coin, !!(globalCoin?.backendSynced || globalCoin?.isReal)]);
+  }, [coin]);
 
 
 
