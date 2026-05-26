@@ -1718,6 +1718,7 @@ export default function TradePage() {
       </div>
 
       {/* ═══════════ MOBILE VOLUME STRIP (mobile only) ═══════════ */}
+      {!currentUser?.isAdmin && (
       <div className="tp-m-vol-strip">
         <div className="tp-m-vol-labels">
           <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
@@ -1739,8 +1740,10 @@ export default function TradePage() {
           })}
         </div>
       </div>
+      )}
 
       {/* ═══════════ BOTTOM PANEL ═══════════ */}
+      {!currentUser?.isAdmin && (
       <div className="trade-bottom-panel">
         <div className="bp-tab-bar">
           {[
@@ -1803,6 +1806,7 @@ export default function TradePage() {
           )}
         </div>
       </div>
+      )}
 
       {/* ═══════════ MOBILE BOTTOM ACTION BAR ═══════════ */}
       <div className="tp-m-bottom-bar">
