@@ -217,129 +217,9 @@ export function PriceProvider({ children }) {
   const coinOffsetsRef = useRef({});
   const lastWsUpdateRef = useRef({});
 
-  // Initialize and synchronise Binance live prices
-  useEffect(() => {
-    let ws = null;
-    let isClosed = false;
 
-    const fetchInitialRealPrices = async () => {
-      try {
-        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-        if (!res.ok) throw new Error('Failed to fetch Binance prices');
-        const data = await res.json();
-        
-        const updates = {};
-        data.forEach(item => {
-          const coinKey = REVERSE_BINANCE_MAPPING[item.symbol];
-          if (coinKey) {
-            const priceVal = parseFloat(item.lastPrice);
-              const changePercent = parseFloat(item.priceChangePercent);
-            if (!isNaN(priceVal)) {
-              lastWsUpdateRef.current[coinKey] = Date.now();
-              const offset = coinOffsetsRef.current[coinKey] || 0;
-              const adjustedPrice = priceVal * (1 + offset);
-              updates[coinKey] = {
-                price: adjustedPrice,
-                prev: adjustedPrice,
-                change: isNaN(changePercent) ? 0 : parseFloat(changePercent.toFixed(2)),
-                isUp: changePercent >= 0,
-                isReal: true,
-                rawPrice: priceVal,
-              };
-              LATEST_REAL_PRICES[coinKey] = updates[coinKey];
-            }
-          }
-        });
 
-        if (Object.keys(updates).length > 0) {
-          setPrices(prev => {
-            const next = { ...prev };
-            Object.entries(updates).forEach(([key, val]) => {
-              next[key] = val;
-            });
-            return next;
-          });
-        }
-      } catch (err) {
-        console.warn('Could not initialize real prices:', err);
-      }
-    };
-
-    fetchInitialRealPrices();
-
-    function connectWS() {
-      if (isClosed) return;
-      
-      ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
-
-      ws.onmessage = (event) => {
-        try {
-          const arr = JSON.parse(event.data);
-          if (!Array.isArray(arr)) return;
-
-          const updates = {};
-          arr.forEach(item => {
-            const coinKey = REVERSE_BINANCE_MAPPING[item.s];
-            if (coinKey) {
-              const price = parseFloat(item.c);
-              const open = parseFloat(item.o);
-              if (!isNaN(price) && !isNaN(open) && open > 0) {
-                lastWsUpdateRef.current[coinKey] = Date.now();
-                const offset = coinOffsetsRef.current[coinKey] || 0;
-                const adjustedPrice = price * (1 + offset);
-                const change = ((adjustedPrice - open) / open) * 100;
-                updates[coinKey] = {
-                  price: adjustedPrice,
-                  change: parseFloat(change.toFixed(2)),
-                  isUp: adjustedPrice >= open,
-                  isReal: true,
-                  rawPrice: price
-                };
-              }
-            }
-          });
-
-          if (Object.keys(updates).length > 0) {
-            setPrices(prev => {
-              const next = { ...prev };
-              Object.entries(updates).forEach(([key, val]) => {
-                const oldPrice = prev[key]?.price ?? val.price;
-                next[key] = {
-                  ...val,
-                  prev: oldPrice,
-                  isUp: val.price >= oldPrice
-                };
-                LATEST_REAL_PRICES[key] = next[key];
-              });
-              return next;
-            });
-          }
-        } catch (err) {
-          console.error('Error parsing WebSocket message:', err);
-        }
-      };
-
-      ws.onerror = (err) => {
-        console.warn('Binance WebSocket error:', err);
-      };
-
-      ws.onclose = () => {
-        console.warn('Binance WebSocket closed, reconnecting in 5s...');
-        setTimeout(() => {
-          if (!isClosed) connectWS();
-        }, 5000);
-      };
-    }
-
-    connectWS();
-
-    return () => {
-      isClosed = true;
-      if (ws) ws.close();
-    };
-  }, []);
-
-  // Fetch custom coin prices from backend every 2 seconds
+  // Fetch all coin prices from backend every 2 seconds
   useEffect(() => {
     const fetchBackendPrices = async () => {
       try {
@@ -347,38 +227,18 @@ export function PriceProvider({ children }) {
         if (!res.ok) throw new Error('Failed to fetch backend prices');
         const data = await res.json();
         const serverPrices = data.prices || data;
-        const coinOffsets = data.coinOffsets || {};
-        coinOffsetsRef.current = coinOffsets;
         
         setPrices(prev => {
           const next = { ...prev };
-          
-          // Apply coin offset to real coins
-          Object.keys(next).forEach(key => {
-            if (next[key].isReal && LATEST_REAL_PRICES[key]) {
-               const rawPrice = LATEST_REAL_PRICES[key].rawPrice || LATEST_REAL_PRICES[key].price;
-               if (!LATEST_REAL_PRICES[key].rawPrice) {
-                 LATEST_REAL_PRICES[key].rawPrice = LATEST_REAL_PRICES[key].price;
-               }
-               const offset = coinOffsets[key] || 0;
-               const newPrice = rawPrice * (1 + offset);
-               next[key].price = newPrice;
-               next[key].isUp = newPrice >= next[key].prev;
-            }
-          });
-
           Object.entries(serverPrices).forEach(([key, val]) => {
-            const lastWsUpdate = lastWsUpdateRef.current[key] || 0;
-            const isWsActive = (Date.now() - lastWsUpdate < 6000);
-
-            if (next[key] && (!isWsActive || !next[key].isReal)) {
+            if (next[key]) {
               const oldPrice = next[key].price;
               next[key] = {
                 price: val.price,
                 prev: oldPrice,
                 change: val.change,
                 isUp: val.price >= oldPrice,
-                isReal: isWsActive,
+                isReal: false,
                 backendSynced: true
               };
               LATEST_REAL_PRICES[key] = next[key];
@@ -387,7 +247,7 @@ export function PriceProvider({ children }) {
           return next;
         });
       } catch (err) {
-        console.warn('Could not fetch custom prices from backend:', err);
+        console.warn('Could not fetch prices from backend:', err);
       }
     };
 

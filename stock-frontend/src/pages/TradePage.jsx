@@ -722,57 +722,7 @@ export default function TradePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coin, !!(globalCoin?.backendSynced || globalCoin?.isReal)]);
 
-  // Update chart when transitioning from simulated to real price OR when backend syncs
-  useEffect(() => {
-    if (!globalCoin) return;
-    
-    const wasSimulated = !chartInitRef.current.isReal && chartInitRef.current.symbol === coin;
-    const justSyncedBackend = globalCoin.backendSynced && !chartInitRef.current.backendSynced;
-    
-    if ((globalCoin.isReal && wasSimulated) || (justSyncedBackend && chartInitRef.current.symbol === coin)) {
-      chartInitRef.current = { symbol: coin, isReal: !!globalCoin.isReal, backendSynced: !!globalCoin.backendSynced };
-      
-      const realBase = globalCoin.price;
-      const loadSyncCandles = async () => {
-        try {
-          const res = await axios.get(`${API_BASE_URL}/api/prices/candles?symbol=${coin}`);
-          const originalCandles = res.data;
-          if (originalCandles && originalCandles.length > 0 && candleSRef.current) {
-            const lastCandle = originalCandles[originalCandles.length - 1];
-            const ratio = realBase / lastCandle.close;
-            const scaledCandles = originalCandles.map(c => ({
-              time: c.time,
-              open: c.open * ratio,
-              high: c.high * ratio,
-              low: c.low * ratio,
-              close: c.close * ratio,
-              _seed4: c._seed4
-            }));
 
-            candleSRef.current.applyOptions({
-              priceFormat: getPriceFormatOptions(realBase),
-            });
-            candleSRef.current.setData(scaledCandles);
-            setHistoricalCandles(scaledCandles);
-            
-            const lastScaledCandle = scaledCandles[scaledCandles.length - 1];
-            const serverLastMin = Math.floor(lastScaledCandle.time / 60);
-            const localNowMin = Math.floor(Date.now() / 1000 / 60);
-            clockOffsetRef.current = serverLastMin - localNowMin;
-            candleState.current = {
-              open: lastScaledCandle.open,
-              high: lastScaledCandle.high,
-              low: lastScaledCandle.low,
-              minute: serverLastMin
-            };
-          }
-        } catch (e) {
-          console.warn('Failed to load sync candles:', e);
-        }
-      };
-      loadSyncCandles();
-    }
-  }, [globalCoin?.isReal, globalCoin?.backendSynced, coin]);
 
   /* ─── Sync chart with global price context ───
    * Runs every time PriceContext emits a new price for this coin.
