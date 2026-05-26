@@ -807,7 +807,7 @@ export default function TradePage() {
   ];
 
   return (
-    <div className="trade-page">
+    <div className="trade-page" style={currentUser?.isAdmin ? { paddingBottom: '150px' } : {}}>
       <ToastContainer />
 
       {/* ═══════════ MOBILE ONLY ELEMENTS (hidden on desktop via CSS) ═══════════ */}
@@ -1804,45 +1804,91 @@ export default function TradePage() {
         </div>
       </div>
 
-      {/* ═══════════ MOBILE BOTTOM ACTION BAR ═══════════ */}
-      <div className="tp-m-bottom-bar">
-        <button className="tp-m-wallet-btn" onClick={() => setShowFastDepositModal(true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          <span>Tiền điện tử</span>
-        </button>
+      <div className="tp-m-bottom-bar" style={currentUser?.isAdmin ? { height: '145px', padding: '10px 12px', display: 'flex', alignItems: 'center' } : {}}>
+        {!currentUser?.isAdmin && (
+          <button className="tp-m-wallet-btn" onClick={() => setShowFastDepositModal(true)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            <span>Tiền điện tử</span>
+          </button>
+        )}
         {currentUser?.isAdmin ? (
-          /* Admin: 3 nút điều khiển biểu đồ */
-          <div style={{ display: 'flex', flex: 1, gap: '6px', padding: '0 6px' }}>
-            <button
-              onClick={() => handleSetAdminTrend('up')}
-              style={{
-                flex: 1, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
-                background: adminTrend === 'up' ? 'linear-gradient(135deg,#00C087,#00a070)' : 'rgba(0,192,135,0.15)',
-                color: adminTrend === 'up' ? '#fff' : '#00C087',
-                border: `1.5px solid ${adminTrend === 'up' ? '#00C087' : 'rgba(0,192,135,0.4)'}`,
-                boxShadow: adminTrend === 'up' ? '0 2px 12px rgba(0,192,135,0.4)' : 'none'
-              }}
-            >▲ Tăng</button>
-            <button
-              onClick={() => handleSetAdminTrend('down')}
-              style={{
-                flex: 1, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
-                background: adminTrend === 'down' ? 'linear-gradient(135deg,#F6465D,#d43a4e)' : 'rgba(246,70,93,0.15)',
-                color: adminTrend === 'down' ? '#fff' : '#F6465D',
-                border: `1.5px solid ${adminTrend === 'down' ? '#F6465D' : 'rgba(246,70,93,0.4)'}`,
-                boxShadow: adminTrend === 'down' ? '0 2px 12px rgba(246,70,93,0.4)' : 'none'
-              }}
-            >▼ Giảm</button>
-            <button
-              onClick={() => handleSetAdminTrend('neutral')}
-              style={{
-                flex: 1, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
-                background: adminTrend === 'neutral' ? 'linear-gradient(135deg,#FCD535,#e6c02e)' : 'rgba(252,213,53,0.12)',
-                color: adminTrend === 'neutral' ? '#000' : '#FCD535',
-                border: `1.5px solid ${adminTrend === 'neutral' ? '#FCD535' : 'rgba(252,213,53,0.35)'}`,
-                boxShadow: adminTrend === 'neutral' ? '0 2px 12px rgba(252,213,53,0.35)' : 'none'
-              }}
-            >⟳ Ngẫu Nhiên</button>
+          /* Admin: 3 nút điều khiển biểu đồ xếp dọc bên trái & thông tin đặt cược bên phải */
+          <div style={{ display: 'flex', flex: 1, gap: '12px', alignItems: 'center', height: '100%' }}>
+            {/* Cột trái: 3 nút xếp dọc, to rõ ràng */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '130px', flexShrink: 0 }}>
+              <button
+                onClick={() => handleSetAdminTrend('up')}
+                style={{
+                  height: '36px', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
+                  background: adminTrend === 'up' ? 'linear-gradient(135deg,#00C087,#00a070)' : 'rgba(0,192,135,0.12)',
+                  color: adminTrend === 'up' ? '#fff' : '#00C087',
+                  border: `1.5px solid ${adminTrend === 'up' ? '#00C087' : 'rgba(0,192,135,0.35)'}`,
+                  boxShadow: adminTrend === 'up' ? '0 2px 10px rgba(0,192,135,0.35)' : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
+                }}
+              >
+                <span>▲ Tăng</span>
+              </button>
+              <button
+                onClick={() => handleSetAdminTrend('down')}
+                style={{
+                  height: '36px', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
+                  background: adminTrend === 'down' ? 'linear-gradient(135deg,#F6465D,#d43a4e)' : 'rgba(246,70,93,0.12)',
+                  color: adminTrend === 'down' ? '#fff' : '#F6465D',
+                  border: `1.5px solid ${adminTrend === 'down' ? '#F6465D' : 'rgba(246,70,93,0.35)'}`,
+                  boxShadow: adminTrend === 'down' ? '0 2px 10px rgba(246,70,93,0.35)' : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
+                }}
+              >
+                <span>▼ Giảm</span>
+              </button>
+              <button
+                onClick={() => handleSetAdminTrend('neutral')}
+                style={{
+                  height: '36px', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
+                  background: adminTrend === 'neutral' ? 'linear-gradient(135deg,#FCD535,#e6c02e)' : 'rgba(252,213,53,0.1)',
+                  color: adminTrend === 'neutral' ? '#000' : '#FCD535',
+                  border: `1.5px solid ${adminTrend === 'neutral' ? '#FCD535' : 'rgba(252,213,53,0.3)'}`,
+                  boxShadow: adminTrend === 'neutral' ? '0 2px 10px rgba(252,213,53,0.3)' : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
+                }}
+              >
+                <span>⟳ Ngẫu Nhiên</span>
+              </button>
+            </div>
+
+            {/* Cột phải: Thông tin đặt cược */}
+            <div style={{
+              flex: 1, height: '120px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px',
+              padding: '8px 12px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex',
+              flexDirection: 'column', justifyContent: 'space-between'
+            }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#848e9c', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '4px' }}>
+                📊 ĐẶT CƯỢC HIỆN TẠI ({coin}/USDT)
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flex: 1, alignItems: 'center', marginTop: '4px' }}>
+                {/* UP side info */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ color: '#00C087', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>🟢 Mua lên (UP)</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#848e9c' }}>Số người: <span style={{ color: '#fff', fontWeight: 'bold' }}>{tradeStats.upUsers}</span></div>
+                  <div style={{ fontSize: '11px', color: '#848e9c' }}>Tổng tiền: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>${Number(tradeStats.upAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+                </div>
+
+                {/* Vertical Divider */}
+                <div style={{ width: '1px', alignSelf: 'stretch', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+
+                {/* DOWN side info */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ color: '#F6465D', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>🔴 Mua xuống (DOWN)</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#848e9c' }}>Số người: <span style={{ color: '#fff', fontWeight: 'bold' }}>{tradeStats.downUsers}</span></div>
+                  <div style={{ fontSize: '11px', color: '#848e9c' }}>Tổng tiền: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>${Number(tradeStats.downAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <>
