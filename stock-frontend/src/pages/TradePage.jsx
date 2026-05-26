@@ -1718,7 +1718,7 @@ export default function TradePage() {
       </div>
 
       {/* ═══════════ MOBILE VOLUME STRIP (mobile only) ═══════════ */}
-      <div className="tp-m-vol-strip" style={currentUser?.isAdmin ? {visibility:'hidden', pointerEvents:'none'} : {}}>
+      <div className="tp-m-vol-strip" style={currentUser?.isAdmin ? {display:'none'} : {}}>
         <div className="tp-m-vol-labels">
           <span style={{color:'#848e9c'}}>VOL(5,10,20)</span>
           <span style={{color:'#00c087'}}>MA5: {(livePrice * 0.00040).toFixed(2)}M</span>
