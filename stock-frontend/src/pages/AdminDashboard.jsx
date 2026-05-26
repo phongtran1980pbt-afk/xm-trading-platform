@@ -398,6 +398,56 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteActiveChat = async () => {
+    if (!activeId) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xoá lịch sử tin nhắn của cuộc trò chuyện này không?')) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/chat/session/${activeId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Đã xoá lịch sử cuộc trò chuyện!');
+        setActiveId(null);
+        setMessages([]);
+        // Refresh sessions list
+        const all = await getAllSessions();
+        setSessions(all);
+      } else {
+        toast.error(data.message || 'Lỗi khi xoá cuộc trò chuyện');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Lỗi kết nối server');
+    }
+  };
+
+  const handleClearAuditLogs = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xoá sạch lịch sử nhật ký hệ thống không?')) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/audit-logs/cleanup`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Đã xoá sạch nhật ký hệ thống!');
+        // Refresh logs list
+        const logsRes = await fetch(`${API_BASE_URL}/api/admin/audit-logs`);
+        const logsData = await logsRes.json();
+        setAuditLogs(logsData);
+      } else {
+        toast.error(data.message || 'Lỗi khi xoá nhật ký hệ thống');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Lỗi kết nối server');
+    }
+  };
+
   const prevMessagesLength = useRef(0);
   const prevActiveId = useRef(null);
 
@@ -760,28 +810,60 @@ export default function AdminDashboard() {
           </div>
         ) : view === 'logs' ? (
           <div className="admin-logs-container" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-              <button 
-                className="admin-mobile-back-btn" 
-                onClick={() => setShowSidebarMobile(true)}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button 
+                  className="admin-mobile-back-btn" 
+                  onClick={() => setShowSidebarMobile(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#848e9c',
+                    cursor: 'pointer',
+                    display: 'none',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px'
+                  }}
+                  title="Quay lại"
+                >
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                  </svg>
+                </button>
+                <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Nhật ký hệ thống (Audit Logs)</h2>
+              </div>
+              <button
+                onClick={handleClearAuditLogs}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#848e9c',
+                  background: 'rgba(246, 70, 93, 0.1)',
+                  color: '#F6465D',
+                  border: '1px solid #F6465D',
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '12px',
                   cursor: 'pointer',
-                  display: 'none',
+                  transition: 'all 0.2s',
+                  display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '4px'
+                  gap: '6px'
                 }}
-                title="Quay lại"
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = '#F6465D';
+                  e.currentTarget.style.color = '#000';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(246, 70, 93, 0.1)';
+                  e.currentTarget.style.color = '#F6465D';
+                }}
               >
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <line x1="19" y1="12" x2="5" y2="12"></line>
-                  <polyline points="12 19 5 12 12 5"></polyline>
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
+                Xóa lịch sử nhật ký
               </button>
-              <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Nhật ký hệ thống (Audit Logs)</h2>
             </div>
 
             {/* Filter Tabs */}
@@ -1053,8 +1135,8 @@ export default function AdminDashboard() {
               ))}
             </div>
 
-            {/* Quick Actions Panel */}
-            <div className="admin-chat-actions" style={{ padding: '8px 16px', background: '#11141a', borderTop: '1px solid #1e2329', display: 'flex', alignItems: 'center' }}>
+             {/* Quick Actions Panel */}
+            <div className="admin-chat-actions" style={{ padding: '8px 16px', background: '#11141a', borderTop: '1px solid #1e2329', display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button
                 className="admin-action-withdraw-btn"
                 onClick={handleConfirmTransfer}
@@ -1085,6 +1167,38 @@ export default function AdminDashboard() {
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
                 Xác nhận đã chuyển tiền (Rút tiền)
+              </button>
+
+              <button
+                className="admin-action-delete-chat-btn"
+                onClick={handleDeleteActiveChat}
+                style={{
+                  background: 'rgba(246, 70, 93, 0.1)',
+                  color: '#F6465D',
+                  border: '1px solid #F6465D',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = '#F6465D';
+                  e.currentTarget.style.color = '#000';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(246, 70, 93, 0.1)';
+                  e.currentTarget.style.color = '#F6465D';
+                }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Xóa lịch sử tin nhắn
               </button>
             </div>
 

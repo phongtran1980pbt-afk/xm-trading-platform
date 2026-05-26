@@ -399,3 +399,55 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi xoá user: ' + error.message });
   }
 };
+
+// DELETE /api/admin/audit-logs/cleanup - Xoá sạch nhật ký hệ thống
+export const clearAuditLogs = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      DELETE FROM AuditLogs 
+      WHERE Action NOT IN ('PLACE_BINARY_ORDER', 'SETTLE_BINARY_ORDER')
+    `);
+    
+    // Ghi log hành động dọn dẹp
+    await pool.request()
+      .input('action', 'CLEANUP_LOGS')
+      .input('details', `Đã xoá sạch ${result.rowsAffected[0]} nhật ký hệ thống`)
+      .input('createdAt', getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: `Đã xoá sạch ${result.rowsAffected[0]} nhật ký hệ thống!` });
+  } catch (error) {
+    console.error('Lỗi xoá nhật ký hệ thống:', error);
+    res.status(500).json({ message: 'Lỗi server khi xoá nhật ký hệ thống: ' + error.message });
+  }
+};
+
+// DELETE /api/admin/chat/session/:sessionId - Xoá một phiên chat cụ thể
+export const deleteChatSession = async (req, res) => {
+  const { sessionId } = req.params;
+  try {
+    const pool = await poolPromise;
+    // Xoá tin nhắn của session này
+    const msgResult = await pool.request()
+      .input('sid', sessionId)
+      .query('DELETE FROM ChatMessages WHERE SessionId = @sid');
+      
+    // Xoá session
+    const sessResult = await pool.request()
+      .input('sid', sessionId)
+      .query('DELETE FROM ChatSessions WHERE SessionId = @sid');
+
+    // Ghi log
+    await pool.request()
+      .input('action', 'DELETE_CHAT_SESSION')
+      .input('details', `Đã xoá phiên chat ${sessionId} (${msgResult.rowsAffected[0]} tin nhắn)`)
+      .input('createdAt', getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: `Đã xoá thành công phiên chat và lịch sử tin nhắn!` });
+  } catch (error) {
+    console.error('Lỗi xoá phiên chat:', error);
+    res.status(500).json({ message: 'Lỗi server khi xoá phiên chat: ' + error.message });
+  }
+};

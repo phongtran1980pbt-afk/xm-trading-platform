@@ -677,7 +677,7 @@ function KucoinWeb() {
           <div className="k-earn-content">
             <h2>Gia tăng tài sản với KuCoin Earn</h2>
             <p>Kiếm thu nhập thụ động mỗi ngày từ tài sản của bạn. Lựa chọn linh hoạt giữa gửi tiết kiệm, staking, và các sản phẩm sinh lời cao khác.</p>
-            <Link to="/register" className="earn-cta">Bắt đầu kiếm tiền</Link>
+            <Link to="/trade/BTC-USDT" className="earn-cta">Bắt đầu kiếm tiền</Link>
           </div>
           <div className="k-earn-cards">
             <div className="earn-card">
