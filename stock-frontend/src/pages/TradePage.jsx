@@ -383,7 +383,7 @@ export default function TradePage() {
                       <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
-                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>🏆 Thắng</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>Thắng</span></div>
                     <div style={{ color: '#848e9c' }}>Nhận về: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span> <span style={{ color: '#848e9c', fontSize: '11px' }}>(Lợi nhuận: +{profit.toFixed(2)} USDT)</span></div>
                   </div>,
                   { theme: 'dark', autoClose: 6000, icon: false }
@@ -396,7 +396,7 @@ export default function TradePage() {
                       <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
-                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>❌ Thua</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>Thua</span></div>
                     <div style={{ color: '#848e9c' }}>Số dư thay đổi: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>-{newOrder.BetAmount} USDT</span></div>
                   </div>,
                   { theme: 'dark', autoClose: 6000, icon: false }
@@ -409,7 +409,7 @@ export default function TradePage() {
                       <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
-                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#FCD535', fontWeight: 'bold' }}>⚖️ Hòa</span></div>
+                    <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#EAECEF', fontWeight: 'bold' }}>Hòa</span></div>
                     <div style={{ color: '#848e9c' }}>Hoàn trả: <span style={{ color: '#FCD535', fontWeight: 'bold' }}>+{newOrder.Payout} USDT</span></div>
                   </div>,
                   { theme: 'dark', autoClose: 6000, icon: false }
