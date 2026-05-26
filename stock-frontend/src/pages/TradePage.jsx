@@ -1813,11 +1813,11 @@ export default function TradePage() {
         <button className="tp-m-buy-up-btn" onClick={() => {
           if (!currentUser) { navigate('/login'); return; }
           setMobileTradeType('UP'); setShowMobileTradeModal(true);
-        }}>Mua lên</button>
+        }}>Tăng</button>
         <button className="tp-m-buy-down-btn" onClick={() => {
           if (!currentUser) { navigate('/login'); return; }
           setMobileTradeType('DOWN'); setShowMobileTradeModal(true);
-        }}>Mua xuống</button>
+        }}>Giảm</button>
       </div>
 
       {/* ═══════════ MOBILE TRADE BOTTOM SHEET MODAL ═══════════ */}
@@ -1828,7 +1828,7 @@ export default function TradePage() {
             <div className="tp-m-modal-header">
               <div>
                 <span className="tp-m-modal-type" style={{color: mobileTradeType==='UP'?'#00C087':'#F6465D'}}>
-                  {mobileTradeType === 'UP' ? '▲ Mua lên' : '▼ Mua xuống'}
+                  {mobileTradeType === 'UP' ? '▲ Tăng' : '▼ Giảm'}
                 </span>
                 <span className="tp-m-modal-pair">{coin}USDT</span>
               </div>
@@ -1866,7 +1866,7 @@ export default function TradePage() {
               onClick={() => { handleBinaryBet(mobileTradeType); setShowMobileTradeModal(false); }}
               disabled={binaryLoading}
             >
-              {binaryLoading ? 'Đang xử lý...' : (mobileTradeType==='UP' ? '▲ Xác nhận Mua lên' : '▼ Xác nhận Mua xuống')}
+              {binaryLoading ? 'Đang xử lý...' : (mobileTradeType==='UP' ? '▲ Xác nhận Tăng' : '▼ Xác nhận Giảm')}
             </button>
           </div>
         </div>

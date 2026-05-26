@@ -717,6 +717,59 @@ export default function AdminDashboard() {
                   }}
                 >⟳ NGẪU NHIÊN</button>
               </div>
+
+              {/* Live active betters list */}
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <h4 style={{ color: '#eaecef', fontSize: '13px', margin: '0 0 12px 0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#00FFA3', animate: 'pulse 1.5s infinite' }}></span>
+                  Danh sách người đang đặt cược
+                </h4>
+
+                <div style={{ maxHeight: '200px', overflowY: 'auto', borderRadius: '8px', border: '1px solid #1e2329' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: '#11141a', color: '#848e9c', borderBottom: '1px solid #1e2329' }}>
+                        <th style={{ padding: '8px 12px' }}>UID</th>
+                        <th style={{ padding: '8px 12px' }}>Tên</th>
+                        <th style={{ padding: '8px 12px' }}>Cặp</th>
+                        <th style={{ padding: '8px 12px' }}>Cược</th>
+                        <th style={{ padding: '8px 12px' }}>Tiền cược</th>
+                        <th style={{ padding: '8px 12px' }}>Thời gian</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {!tradeStats.activeBets || tradeStats.activeBets.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" style={{ padding: '12px', textAlign: 'center', color: '#5e6673' }}>
+                            Không có ai đang cược.
+                          </td>
+                        </tr>
+                      ) : (
+                        tradeStats.activeBets.map((bet) => {
+                          const isUp = bet.BetType === 'UP';
+                          const timeRemaining = Math.max(0, Math.round((new Date(bet.EndTime) - new Date()) / 1000));
+                          return (
+                            <tr key={bet.Id} style={{ borderBottom: '1px solid #1a1e27', background: 'rgba(255,255,255,0.01)' }}>
+                              <td style={{ padding: '8px 12px', color: '#00FFA3', fontWeight: 600 }}>{bet.AccountCode || 'N/A'}</td>
+                              <td style={{ padding: '8px 12px', color: '#eaecef' }}>{bet.FullName}</td>
+                              <td style={{ padding: '8px 12px', color: '#848e9c' }}>{bet.Symbol}</td>
+                              <td style={{ padding: '8px 12px', color: isUp ? '#00FFA3' : '#F6465D', fontWeight: 700 }}>
+                                {isUp ? '▲ TĂNG' : '▼ GIẢM'}
+                              </td>
+                              <td style={{ padding: '8px 12px', color: '#24DB9B', fontWeight: 700 }}>
+                                ${Number(bet.BetAmount || 0).toLocaleString('en-US')}
+                              </td>
+                              <td style={{ padding: '8px 12px', color: '#848e9c' }}>
+                                {timeRemaining > 0 ? `${timeRemaining}s còn lại` : 'Hết giờ'}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
             <div style={{ 

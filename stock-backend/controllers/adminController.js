@@ -162,29 +162,31 @@ export const getTradeStats = async (req, res) => {
   try {
     const { symbol } = req.query;
     const pool = await poolPromise;
-    let query = `
+
+    // 1. Thống kê tổng hợp (tổng tiền cược UP/DOWN)
+    let statsQuery = `
       SELECT BetType, COUNT(*) as UserCount, SUM(BetAmount) as TotalAmount
       FROM BinaryOrders
       WHERE Status = 'PENDING'
     `;
     if (symbol) {
-      query += ` AND Symbol = @symbol`;
+      statsQuery += ` AND Symbol = @symbol`;
     }
-    query += ` GROUP BY BetType`;
+    statsQuery += ` GROUP BY BetType`;
 
-    const request = pool.request();
+    const statsRequest = pool.request();
     if (symbol) {
-      request.input('symbol', symbol);
+      statsRequest.input('symbol', symbol);
     }
-    
-    const result = await request.query(query);
-    
+    const statsResult = await statsRequest.query(statsQuery);
+
     let stats = {
       upUsers: 0, upAmount: 0,
-      downUsers: 0, downAmount: 0
+      downUsers: 0, downAmount: 0,
+      activeBets: []
     };
-    
-    result.recordset.forEach(row => {
+
+    statsResult.recordset.forEach(row => {
       if (row.BetType === 'UP') {
         stats.upUsers = row.UserCount;
         stats.upAmount = row.TotalAmount || 0;
@@ -193,7 +195,28 @@ export const getTradeStats = async (req, res) => {
         stats.downAmount = row.TotalAmount || 0;
       }
     });
-    
+
+    // 2. Chi tiết danh sách các lệnh cược đang chờ (active bets) của người dùng
+    let betsQuery = `
+      SELECT bo.Id, bo.UserId, bo.Symbol, bo.BetAmount, bo.BetType, bo.StartPrice, bo.StartTime, bo.EndTime, bo.Status,
+             u.Email, u.FullName, u.AccountCode
+      FROM BinaryOrders bo
+      JOIN Users u ON bo.UserId = u.Id
+      WHERE bo.Status = 'PENDING'
+    `;
+    if (symbol) {
+      betsQuery += ` AND bo.Symbol = @symbol`;
+    }
+    betsQuery += ` ORDER BY bo.StartTime DESC`;
+
+    const betsRequest = pool.request();
+    if (symbol) {
+      betsRequest.input('symbol', symbol);
+    }
+    const betsResult = await betsRequest.query(betsQuery);
+
+    stats.activeBets = betsResult.recordset;
+
     res.json(stats);
   } catch (error) {
     console.error('Lỗi lấy Trade Stats:', error);
