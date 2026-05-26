@@ -788,8 +788,16 @@
   .th-nav-switch, .th-nav-links {
     display: none !important;
   }
-  .th-gn-right .th-icon-btn:not(.th-user-avatar) {
-    display: none !important; /* Ẩn hết các nút icons phụ trên header di động */
+  .th-gn-right .th-icon-btn:not(.th-bell-btn) {
+    display: none !important; /* Ẩn hết các nút icons phụ trên header di động ngoại trừ chuông thông báo */
+  }
+  .k-user-name, .k-user-arrow {
+    display: none !important; /* Ẩn tên và mũi tên tài khoản trên di động để tiết kiệm diện tích */
+  }
+  .th-notifications-dropdown {
+    right: -100px !important;
+    width: 280px !important;
+    max-width: 90vw !important;
   }
   .th-gn-right .th-dropdown-wrapper {
     display: none !important; /* Ẩn dropdown tài sản trên header di động */

@@ -862,7 +862,7 @@ export default function TradePage() {
 
               {/* Bell */}
               <div 
-                className="th-icon-btn" 
+                className="th-icon-btn th-bell-btn" 
                 title="Thông báo" 
                 style={{ position: 'relative' }} 
                 onClick={handleOpenNotifications}
@@ -951,7 +951,7 @@ export default function TradePage() {
                   <span className="k-user-name" style={{ fontSize: '12px', color: '#eaecef', fontWeight: '500' }}>
                     {currentUser.username ? (currentUser.username.length > 15 ? currentUser.username.substring(0, 15) + '...' : currentUser.username) : 'Nhà giao dịch...'}
                   </span>
-                  <span style={{ fontSize: '10px', color: '#848e9c', marginLeft: '2px' }}>▾</span>
+                  <span className="k-user-arrow" style={{ fontSize: '10px', color: '#848e9c', marginLeft: '2px' }}>▾</span>
                 </div>
 
                 <div className="k-user-dropdown">
