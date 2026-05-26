@@ -379,8 +379,8 @@ export default function TradePage() {
                 toast.success(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                      <img src="https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6VudCEACBeRRBi6k0znSymZq9AhXz.svg" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%' }} />
-                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
+                      {renderKuCoinLogo(22)}
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#00FFA3', fontWeight: 'bold' }}>🏆 Thắng</span></div>
@@ -392,8 +392,8 @@ export default function TradePage() {
                 toast.error(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                      <img src="https://www.kucoin.com/favicon.ico" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'contain', background: '#fff', padding: '2px' }} />
-                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
+                      {renderKuCoinLogo(22)}
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#F6465D', fontWeight: 'bold' }}>❌ Thua</span></div>
@@ -405,8 +405,8 @@ export default function TradePage() {
                 toast.info(
                   <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                      <img src="https://www.kucoin.com/favicon.ico" alt="KuCoin" style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'contain', background: '#fff', padding: '2px' }} />
-                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin · Kết toán lệnh</span>
+                      {renderKuCoinLogo(22)}
+                      <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
                     </div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Cặp giao dịch: <span style={{ color: '#EAECEF', fontWeight: 600 }}>{newOrder.Symbol}/USDT ({newOrder.BetType === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'})</span></div>
                     <div style={{ color: '#848e9c', marginBottom: '4px' }}>Trạng thái: <span style={{ color: '#FCD535', fontWeight: 'bold' }}>⚖️ Hòa</span></div>
@@ -537,12 +537,19 @@ export default function TradePage() {
     }
   };
 
+  // Hàm vẽ SVG logo KuCoin
+  const renderKuCoinLogo = (size = 20) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 16.5H7.5V14.5H9.5V16.5ZM9.5 13.5H7.5V11.5H9.5V13.5ZM9.5 10.5H7.5V8.5H9.5V10.5ZM16.5 16.5H14.5V14.5H16.5V16.5ZM16.5 13.5H14.5V11.5H16.5V13.5ZM16.5 10.5H14.5V8.5H16.5V10.5ZM13 16.5H11V14.5H13V16.5ZM13 13.5H11V11.5H13V13.5ZM13 10.5H11V8.5H13V10.5Z" fill="#FCD535"/>
+    </svg>
+  );
+
   const kuToast = (type, message) => {
     const toastFn = type === 'success' ? toast.success : type === 'error' ? toast.error : toast.warning;
     toastFn(
       <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <img src="https://www.kucoin.com/favicon.ico" alt="KuCoin" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'contain', background: '#fff', padding: '2px' }} />
+          {renderKuCoinLogo(20)}
           <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#EAECEF', letterSpacing: '0.3px' }}>KuCoin</span>
         </div>
         <div style={{ color: '#EAECEF' }}>{message}</div>
