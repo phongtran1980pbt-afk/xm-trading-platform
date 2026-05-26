@@ -880,14 +880,7 @@ export default function TradePage() {
         </div>
       </div>
 
-      {/* Mobile Timeframe Strip */}
-      <div className="tp-m-tf-strip">
-        {mobileTimeframes.map(t => (
-          <button key={t.k} className={`tp-m-tf-item${tf === t.k ? ' active' : ''}`} onClick={() => setTf(t.k)}>
-            {t.l}
-          </button>
-        ))}
-      </div>
+
 
       {/* ═══════════ HEADER ═══════════ */}
       {/* ═══════════ NEW 3-ROW HEADER ═══════════ */}
