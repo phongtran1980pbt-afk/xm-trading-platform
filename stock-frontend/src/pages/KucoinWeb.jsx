@@ -474,21 +474,44 @@ function KucoinWeb() {
               Khám phá sàn giao dịch hàng đầu thế giới để mua, bán và tích lũy tiền điện tử an toàn. Tiếp cận hơn 700+ tài sản kỹ thuật số sớm nhất.
             </p>
 
-            <form className="k-hero-form" onSubmit={handleQuickRegister}>
-              <input 
-                type="text" 
-                placeholder="Email / Số điện thoại" 
-                className="k-hero-input"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-              />
-              <button type="submit" className="k-hero-submit">Đăng ký ngay</button>
-            </form>
+            {user ? (
+              <div className="k-hero-logged-in" style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ fontSize: '15px', color: '#eaecef', lineHeight: '1.6', background: 'rgba(36, 219, 155, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(36, 219, 155, 0.1)', maxWidth: '480px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '18px' }}>👋</span>
+                    <span style={{ color: '#848e9c' }}>Chào mừng trở lại,</span>
+                    <strong style={{ color: '#24DB9B', fontSize: '14px' }}>{user.username || user.fullName || user.email}</strong>
+                  </div>
+                  <span style={{ color: '#848e9c', fontSize: '13px' }}>Bắt đầu phân tích thị trường và thực hiện các giao dịch BO sinh lời ngay hôm nay.</span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', maxWidth: '480px' }}>
+                  <Link to="/trade/BTC-USDT" className="k-hero-submit" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 200px', padding: '15px 30px', fontWeight: 'bold' }}>
+                    Giao dịch ngay
+                  </Link>
+                  <Link to="/support/deposit" className="k-hero-submit" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 200px', padding: '15px 30px', background: '#1e2329', border: '1px solid #2b3139', color: '#eaecef', fontWeight: 'bold' }}>
+                    Nạp tiền nhanh
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <form className="k-hero-form" onSubmit={handleQuickRegister}>
+                  <input 
+                    type="text" 
+                    placeholder="Email / Số điện thoại" 
+                    className="k-hero-input"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                  />
+                  <button type="submit" className="k-hero-submit">Đăng ký ngay</button>
+                </form>
 
-            <div className="k-hero-reward">
-              <span className="gift-icon">🎁</span>
-              <span>Đăng ký nhận phần thưởng chào mừng người mới lên tới <strong>700 USDT</strong></span>
-            </div>
+                <div className="k-hero-reward">
+                  <span className="gift-icon">🎁</span>
+                  <span>Đăng ký nhận phần thưởng chào mừng người mới lên tới <strong>700 USDT</strong></span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="k-hero-right">
