@@ -840,6 +840,14 @@ export default function TradePage() {
           )}
         </div>
         <div style={{ flex: 1 }} />
+        {currentUser && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', marginRight: '10px' }}>
+            <span style={{ fontSize: '9px', color: '#848e9c', fontWeight: 500, lineHeight: '1' }}>Số dư</span>
+            <span style={{ fontSize: '13px', color: '#FCD535', fontWeight: 700, marginTop: '2px' }}>
+              ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+        )}
         <button className="tp-m-nav-btn">
           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
         </button>
