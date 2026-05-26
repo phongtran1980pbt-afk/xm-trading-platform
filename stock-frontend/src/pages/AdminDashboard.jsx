@@ -647,29 +647,7 @@ export default function AdminDashboard() {
                 Điều khiển xu hướng biểu đồ
               </h3>
 
-              {/* Stats row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ background: 'rgba(0,255,163,0.06)', border: '1px solid rgba(0,255,163,0.2)', borderRadius: '10px', padding: '14px' }}>
-                  <div style={{ color: '#00FFA3', fontSize: '12px', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <svg width="12" height="12" fill="#00FFA3" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    CƯỢC TĂNG
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: '#848e9c' }}>Số người: <strong style={{ color: '#eaecef' }}>{tradeStats.upUsers}</strong></span>
-                    <span style={{ color: '#00FFA3', fontWeight: 700 }}>${Number(tradeStats.upAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-                <div style={{ background: 'rgba(246,70,93,0.06)', border: '1px solid rgba(246,70,93,0.2)', borderRadius: '10px', padding: '14px' }}>
-                  <div style={{ color: '#F6465D', fontSize: '12px', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <svg width="12" height="12" fill="#F6465D" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    CƯỢC GIẢM
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: '#848e9c' }}>Số người: <strong style={{ color: '#eaecef' }}>{tradeStats.downUsers}</strong></span>
-                    <span style={{ color: '#F6465D', fontWeight: 700 }}>${Number(tradeStats.downAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Current trend indicator */}
               <div style={{ marginBottom: '12px', fontSize: '12px', color: '#848e9c', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -684,64 +662,84 @@ export default function AdminDashboard() {
                 </span>
               </div>
 
-              {/* Control buttons */}
+              {/* Control buttons - điều khiển hướng chạy biểu đồ */}
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   onClick={() => handleSetTrend('up')}
                   style={{
-                    flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                    flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
                     background: trend === 'up' ? 'linear-gradient(135deg,#00FFA3,#00c87a)' : 'rgba(0,255,163,0.08)',
                     color: trend === 'up' ? '#000' : '#00FFA3',
                     border: `1px solid ${trend === 'up' ? '#00FFA3' : 'rgba(0,255,163,0.3)'}`,
                     boxShadow: trend === 'up' ? '0 4px 16px rgba(0,255,163,0.3)' : 'none'
                   }}
-                >▲ TĂNG</button>
+                >▲ Tăng biểu đồ</button>
                 <button
                   onClick={() => handleSetTrend('down')}
                   style={{
-                    flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                    flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
                     background: trend === 'down' ? 'linear-gradient(135deg,#F6465D,#d43a4e)' : 'rgba(246,70,93,0.08)',
                     color: trend === 'down' ? '#fff' : '#F6465D',
                     border: `1px solid ${trend === 'down' ? '#F6465D' : 'rgba(246,70,93,0.3)'}`,
                     boxShadow: trend === 'down' ? '0 4px 16px rgba(246,70,93,0.3)' : 'none'
                   }}
-                >▼ GIẢM</button>
+                >▼ Giảm biểu đồ</button>
                 <button
                   onClick={() => handleSetTrend('neutral')}
                   style={{
-                    flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                    flex: 1, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s',
                     background: trend === 'neutral' ? '#eaecef' : 'rgba(234,236,239,0.06)',
                     color: trend === 'neutral' ? '#000' : '#eaecef',
                     border: `1px solid ${trend === 'neutral' ? '#eaecef' : 'rgba(234,236,239,0.2)'}`,
                     boxShadow: trend === 'neutral' ? '0 4px 16px rgba(234,236,239,0.15)' : 'none'
                   }}
-                >⟳ NGẪU NHIÊN</button>
+                >⟳ Chạy ngẫu nhiên</button>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '11px', color: '#5e6673', fontStyle: 'italic' }}>
+                ⚠ Các nút trên điều chỉnh hướng biểu đồ, không phải kết quả đặt cược.
+              </div>
+
+              {/* Thống kê lệnh cược hiện tại */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ background: 'rgba(0,255,163,0.06)', border: '1px solid rgba(0,255,163,0.2)', borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ color: '#00FFA3', fontSize: '11px', fontWeight: 700, marginBottom: '6px' }}>▲ Người đặt MUA LÊN</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#848e9c' }}>Số lệnh: <strong style={{ color: '#eaecef' }}>{tradeStats.upUsers}</strong></span>
+                    <span style={{ color: '#00FFA3', fontWeight: 700 }}>${Number(tradeStats.upAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(246,70,93,0.06)', border: '1px solid rgba(246,70,93,0.2)', borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ color: '#F6465D', fontSize: '11px', fontWeight: 700, marginBottom: '6px' }}>▼ Người đặt MUA XUỐNG</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ color: '#848e9c' }}>Số lệnh: <strong style={{ color: '#eaecef' }}>{tradeStats.downUsers}</strong></span>
+                    <span style={{ color: '#F6465D', fontWeight: 700 }}>${Number(tradeStats.downAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Live active betters list */}
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <h4 style={{ color: '#eaecef', fontSize: '13px', margin: '0 0 12px 0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#00FFA3', animate: 'pulse 1.5s infinite' }}></span>
-                  Danh sách người đang đặt cược
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <h4 style={{ color: '#eaecef', fontSize: '12px', margin: '0 0 10px 0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ display: 'inline-block', width: '7px', height: '7px', borderRadius: '50%', background: '#00FFA3' }}></span>
+                  Danh sách lệnh đang chờ kết toán
                 </h4>
-
-                <div style={{ maxHeight: '200px', overflowY: 'auto', borderRadius: '8px', border: '1px solid #1e2329' }}>
+                <div style={{ maxHeight: '220px', overflowY: 'auto', borderRadius: '8px', border: '1px solid #1e2329' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ background: '#11141a', color: '#848e9c', borderBottom: '1px solid #1e2329' }}>
-                        <th style={{ padding: '8px 12px' }}>UID</th>
-                        <th style={{ padding: '8px 12px' }}>Tên</th>
-                        <th style={{ padding: '8px 12px' }}>Cặp</th>
-                        <th style={{ padding: '8px 12px' }}>Cược</th>
-                        <th style={{ padding: '8px 12px' }}>Tiền cược</th>
-                        <th style={{ padding: '8px 12px' }}>Thời gian</th>
+                        <th style={{ padding: '7px 10px' }}>UID</th>
+                        <th style={{ padding: '7px 10px' }}>Tên</th>
+                        <th style={{ padding: '7px 10px' }}>Cặp</th>
+                        <th style={{ padding: '7px 10px' }}>Lệnh</th>
+                        <th style={{ padding: '7px 10px' }}>Tiền</th>
+                        <th style={{ padding: '7px 10px' }}>Còn lại</th>
                       </tr>
                     </thead>
                     <tbody>
                       {!tradeStats.activeBets || tradeStats.activeBets.length === 0 ? (
                         <tr>
-                          <td colSpan="6" style={{ padding: '12px', textAlign: 'center', color: '#5e6673' }}>
-                            Không có ai đang cược.
+                          <td colSpan="6" style={{ padding: '14px', textAlign: 'center', color: '#5e6673' }}>
+                            Chưa có lệnh nào đang chờ kết toán.
                           </td>
                         </tr>
                       ) : (
@@ -749,18 +747,18 @@ export default function AdminDashboard() {
                           const isUp = bet.BetType === 'UP';
                           const timeRemaining = Math.max(0, Math.round((new Date(bet.EndTime) - new Date()) / 1000));
                           return (
-                            <tr key={bet.Id} style={{ borderBottom: '1px solid #1a1e27', background: 'rgba(255,255,255,0.01)' }}>
-                              <td style={{ padding: '8px 12px', color: '#00FFA3', fontWeight: 600 }}>{bet.AccountCode || 'N/A'}</td>
-                              <td style={{ padding: '8px 12px', color: '#eaecef' }}>{bet.FullName}</td>
-                              <td style={{ padding: '8px 12px', color: '#848e9c' }}>{bet.Symbol}</td>
-                              <td style={{ padding: '8px 12px', color: isUp ? '#00FFA3' : '#F6465D', fontWeight: 700 }}>
-                                {isUp ? '▲ TĂNG' : '▼ GIẢM'}
+                            <tr key={bet.Id} style={{ borderBottom: '1px solid #1a1e27' }}>
+                              <td style={{ padding: '7px 10px', color: '#00FFA3', fontWeight: 600 }}>{bet.AccountCode || 'N/A'}</td>
+                              <td style={{ padding: '7px 10px', color: '#eaecef' }}>{bet.FullName}</td>
+                              <td style={{ padding: '7px 10px', color: '#848e9c' }}>{bet.Symbol}</td>
+                              <td style={{ padding: '7px 10px', color: isUp ? '#00FFA3' : '#F6465D', fontWeight: 700 }}>
+                                {isUp ? '▲ Mua lên' : '▼ Mua xuống'}
                               </td>
-                              <td style={{ padding: '8px 12px', color: '#24DB9B', fontWeight: 700 }}>
+                              <td style={{ padding: '7px 10px', color: '#24DB9B', fontWeight: 700 }}>
                                 ${Number(bet.BetAmount || 0).toLocaleString('en-US')}
                               </td>
-                              <td style={{ padding: '8px 12px', color: '#848e9c' }}>
-                                {timeRemaining > 0 ? `${timeRemaining}s còn lại` : 'Hết giờ'}
+                              <td style={{ padding: '7px 10px', color: timeRemaining <= 30 ? '#FCD535' : '#848e9c', fontWeight: timeRemaining <= 30 ? 700 : 400 }}>
+                                {timeRemaining > 0 ? `${timeRemaining}s` : 'Hết giờ'}
                               </td>
                             </tr>
                           );
