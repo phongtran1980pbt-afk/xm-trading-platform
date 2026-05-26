@@ -1535,7 +1535,7 @@
   }
   .tp-m-dur-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 6px;
   }
   .tp-m-dur-btn {

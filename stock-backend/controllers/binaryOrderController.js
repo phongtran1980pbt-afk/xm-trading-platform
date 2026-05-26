@@ -26,8 +26,8 @@ export const placeOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Loại cược không hợp lệ.' });
         }
 
-        const validDurations = [5, 10, 15, 20, 25, 30];
-        const minutes = validDurations.includes(Number(duration)) ? Number(duration) : 5;
+        const validDurations = [60, 120, 180, 360];
+        const seconds = validDurations.includes(Number(duration)) ? Number(duration) : 60;
 
         const pool = await poolPromise;
         if (!pool) return res.status(500).json({ success: false, message: 'Lỗi kết nối cơ sở dữ liệu' });
@@ -67,18 +67,18 @@ export const placeOrder = async (req, res) => {
                 .input('UserId', sql.Int, userId)
                 .query('UPDATE Users SET Balance = Balance - @BetAmount WHERE Id = @UserId');
 
-            // Insert BinaryOrder (EndTime is minutes from StartTime)
+            // Insert BinaryOrder (EndTime is seconds from StartTime)
             const insertResult = await transaction.request()
                 .input('UserId', sql.Int, userId)
                 .input('Symbol', sql.NVarChar(20), symbol)
                 .input('BetAmount', sql.Decimal(18, 2), betAmount)
                 .input('BetType', sql.NVarChar(10), betType)
                 .input('StartPrice', sql.Decimal(18, 6), startPrice)
-                .input('Duration', sql.Int, minutes)
+                .input('Duration', sql.Int, seconds)
                 .query(`
                     INSERT INTO BinaryOrders (UserId, Symbol, BetAmount, BetType, StartPrice, EndTime)
                     OUTPUT INSERTED.Id, INSERTED.StartTime, INSERTED.EndTime
-                    VALUES (@UserId, @Symbol, @BetAmount, @BetType, @StartPrice, DATEADD(minute, @Duration, GETDATE()))
+                    VALUES (@UserId, @Symbol, @BetAmount, @BetType, @StartPrice, DATEADD(second, @Duration, GETDATE()))
                 `);
 
             await transaction.commit();

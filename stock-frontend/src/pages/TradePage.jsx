@@ -323,7 +323,7 @@ export default function TradePage() {
   const [binaryLoading, setBinaryLoading] = useState(false);
   const [balance, setBalance] = useState(0);
   const [showBalance, setShowBalance] = useState(true);
-  const [binaryDuration, setBinaryDuration] = useState(5);
+  const [binaryDuration, setBinaryDuration] = useState(60);
   const prevBetsRef = useRef([]);
   const [showMobileTradeModal, setShowMobileTradeModal] = useState(false);
   const [mobileTradeType, setMobileTradeType] = useState('UP'); // 'UP' | 'DOWN'
@@ -1525,10 +1525,10 @@ export default function TradePage() {
             <div className="rp-time-selector" style={{ margin: '12px 0 16px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#848e9c', marginBottom: '8px' }}>
                 <span>Thời gian kết toán</span>
-                <span style={{ color: '#EAECEF', fontWeight: '500' }}>{binaryDuration} phút</span>
+                <span style={{ color: '#EAECEF', fontWeight: '500' }}>{binaryDuration} giây</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
-                {[5, 10, 15, 20, 25, 30].map((d) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                {[60, 120, 180, 360].map((d) => (
                   <button
                     key={d}
                     type="button"
@@ -1546,7 +1546,7 @@ export default function TradePage() {
                       textAlign: 'center'
                     }}
                   >
-                    {d}p
+                    {d}s
                   </button>
                 ))}
               </div>
@@ -1621,7 +1621,7 @@ export default function TradePage() {
 
             <div className="rp-info-box">
               <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>Kiếm tiền tự động. Không lo kiến, giao dịch tốt đẹp ở tốc nào. (Lệnh sẽ kết toán sau {binaryDuration} phút)</span>
+              <span>Kiếm tiền tự động. Không lo kiến, giao dịch tốt đẹp ở tốc nào. (Lệnh sẽ kết toán sau {binaryDuration} giây)</span>
             </div>
             </>
             )}
@@ -1852,9 +1852,9 @@ export default function TradePage() {
             </div>
             <div className="tp-m-modal-section-title">Thời gian kết toán</div>
             <div className="tp-m-dur-grid">
-              {[5,10,15,20,25,30].map(d => (
+              {[60,120,180,360].map(d => (
                 <button key={d} className={`tp-m-dur-btn${binaryDuration===d?' active':''}`}
-                  onClick={() => setBinaryDuration(d)}>{d}p</button>
+                  onClick={() => setBinaryDuration(d)}>{d}s</button>
               ))}
             </div>
             <div className="tp-m-modal-section-title">Số tiền đặt cược (USDT)</div>
