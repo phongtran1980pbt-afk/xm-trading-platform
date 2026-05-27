@@ -1298,37 +1298,7 @@ export default function AdminDashboard() {
 
              {/* Quick Actions Panel */}
             <div className="admin-chat-actions" style={{ padding: '8px 16px', background: '#11141a', borderTop: '1px solid #1e2329', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                className="admin-action-withdraw-btn"
-                onClick={handleConfirmTransfer}
-                style={{
-                  background: 'rgba(246, 70, 93, 0.1)',
-                  color: '#F6465D',
-                  border: '1px solid #F6465D',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  fontWeight: 700,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = '#F6465D';
-                  e.currentTarget.style.color = '#000';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(246, 70, 93, 0.1)';
-                  e.currentTarget.style.color = '#F6465D';
-                }}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-                Xác nhận đã chuyển tiền (Rút tiền)
-              </button>
+
 
               <button
                 className="admin-action-delete-chat-btn"
