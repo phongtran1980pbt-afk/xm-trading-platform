@@ -1696,47 +1696,17 @@ export default function TradePage() {
               </div>
             </div>
 
-            {countdownActive ? (
-              /* ── Vòng tròn đếm ngược ── */
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '8px 0' }}>
-                <div style={{ position: 'relative', width: '110px', height: '110px' }}>
-                  <svg width="110" height="110" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="55" cy="55" r="48" fill="none" stroke="#1e2329" strokeWidth="7" />
-                    <circle
-                      cx="55" cy="55" r="48"
-                      fill="none"
-                      stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
-                      strokeWidth="7"
-                      strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 48}`}
-                      strokeDashoffset={`${2 * Math.PI * 48 * (1 - countdownLeft / countdownTotal)}`}
-                      style={{ transition: 'stroke-dashoffset 0.95s linear' }}
-                    />
-                  </svg>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                    <span style={{ fontSize: '30px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
-                    <span style={{ fontSize: '11px', color: '#848e9c', fontWeight: 600 }}>giây</span>
-                  </div>
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 'bold', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D' }}>
-                  {countdownBetType === 'UP' ? '▲ Đang chờ kết toán' : '▼ Đang chờ kết toán'}
-                </div>
-              </div>
-            ) : (
-              <>
-                <button
-                  className={`rp-submit-btn ${tradeTab==='sell'?'sell-btn':''}`}
-                  onClick={() => handleBinaryBet(tradeTab === 'buy' ? 'UP' : 'DOWN')}
-                  disabled={binaryLoading}
-                >
-                  {tradeTab === 'buy' ? `Mua ${coin}` : `Bán ${coin}`}
-                </button>
-                <div className="rp-info-box">
-                  <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  <span>Lệnh sẽ kết toán sau {binaryDuration} giây</span>
-                </div>
-              </>
-            )}
+            <button
+              className={`rp-submit-btn ${tradeTab==='sell'?'sell-btn':''}`}
+              onClick={() => handleBinaryBet(tradeTab === 'buy' ? 'UP' : 'DOWN')}
+              disabled={binaryLoading || countdownActive}
+            >
+              {tradeTab === 'buy' ? `Mua ${coin}` : `Bán ${coin}`}
+            </button>
+            <div className="rp-info-box">
+              <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>Lệnh sẽ kết toán sau {binaryDuration} giây</span>
+            </div>
             </>
             )}
           </div>
@@ -1771,6 +1741,44 @@ export default function TradePage() {
                 ≈ {showBalance ? (balance / (btcCoin?.price || 77000)).toFixed(6) : '••••••'} BTC
               </div>
             </div>
+
+            {/* ── Countdown Circle (hiển thị dưới Số dư khi đang chờ kết toán) ── */}
+            {countdownActive && (
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                gap: '8px', 
+                padding: '16px', 
+                background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.06)' : 'rgba(246,70,93,0.06)', 
+                borderRadius: '12px', 
+                border: `1px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.15)' : 'rgba(246,70,93,0.15)'}`,
+                marginBottom: '14px'
+              }}>
+                <div style={{ position: 'relative', width: '90px', height: '90px' }}>
+                  <svg width="90" height="90" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="45" cy="45" r="38" fill="none" stroke="#1e2329" strokeWidth="6" />
+                    <circle
+                      cx="45" cy="45" r="38"
+                      fill="none"
+                      stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 38}`}
+                      strokeDashoffset={`${2 * Math.PI * 38 * (1 - countdownLeft / countdownTotal)}`}
+                      style={{ transition: 'stroke-dashoffset 0.95s linear' }}
+                    />
+                  </svg>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                    <span style={{ fontSize: '24px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
+                    <span style={{ fontSize: '10px', color: '#848e9c', fontWeight: 600 }}>giây</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D' }}>
+                  {countdownBetType === 'UP' ? '▲ Đang chờ kết toán TĂNG' : '▼ Đang chờ kết toán GIẢM'}
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0 4px 0', fontSize: '11px', color: '#848e9c' }}>
               <span>Tài khoản Giao dịch</span>
