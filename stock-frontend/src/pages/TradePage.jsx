@@ -1697,7 +1697,7 @@ export default function TradePage() {
             </div>
 
             {countdownActive ? (
-              /* ── Countdown Circle (thay nút khi đang chờ kết toán) ── */
+              /* ── Vòng tròn đếm ngược ── */
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '8px 0' }}>
                 <div style={{ position: 'relative', width: '110px', height: '110px' }}>
                   <svg width="110" height="110" style={{ transform: 'rotate(-90deg)' }}>
@@ -1740,6 +1740,7 @@ export default function TradePage() {
             </>
             )}
           </div>
+
 
           <div className="rp-overview" style={{ borderTop: '1px solid #1e2329', padding: '12px' }}>
 
