@@ -955,9 +955,9 @@ export default function Profile() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-              {/* Bank Linking Form */}
+              {/* Bank Linking Card */}
               <div className="k-profile-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasBankLinked ? '16px' : '20px' }}>
                   <h3 className="k-profile-card-title" style={{ margin: 0 }}>Liên kết tài khoản ngân hàng</h3>
                   {hasBankLinked && (
                     <span style={{ fontSize: '11px', color: '#24DB9B', background: 'rgba(36, 219, 155, 0.1)', padding: '3px 10px', borderRadius: '4px', fontWeight: 'bold' }}>
@@ -965,100 +965,127 @@ export default function Profile() {
                     </span>
                   )}
                 </div>
-                <p style={{ color: '#848e9c', fontSize: '13px', margin: '-10px 0 20px 0', lineHeight: 1.5 }}>
-                  Liên kết tài khoản ngân hàng để có thể gửi yêu cầu rút tiền nhanh chóng. Tên chủ tài khoản phải khớp với tên đã đăng ký KYC.
-                </p>
 
-                <form onSubmit={handleSaveBankInfo}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div>
-                      <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Tên ngân hàng</label>
-                      <select
-                        value={bankName}
-                        onChange={(e) => setBankName(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: bankName ? '#fff' : '#848e9c', outline: 'none' }}
+                {hasBankLinked ? (
+                  /* Chỉ hiện thẻ ngân hàng đã liên kết */
+                  <div style={{ background: '#11141a', border: '1px solid rgba(36,219,155,0.2)', borderRadius: '12px', padding: '18px 20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(36,219,155,0.25), rgba(36,219,155,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(36,219,155,0.25)' }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#24DB9B" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="6.01" y2="15"/><line x1="10" y1="15" x2="16" y2="15"/></svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#eaecef' }}>{bankName}</div>
+                        <div style={{ fontSize: '15px', color: '#fff', fontFamily: 'monospace', letterSpacing: '2px', marginTop: '3px' }}>{bankAccountNumber}</div>
+                        <div style={{ fontSize: '12px', color: '#848e9c', marginTop: '3px' }}>{bankAccountHolder}{bankBranch ? ` — ${bankBranch}` : ''}</div>
+                      </div>
+                      <button
+                        onClick={() => setHasBankLinked(false)}
+                        style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #2b3139', borderRadius: '6px', color: '#848e9c', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0 }}
+                        onMouseEnter={(e) => { e.target.style.borderColor = '#F0B90B'; e.target.style.color = '#F0B90B'; }}
+                        onMouseLeave={(e) => { e.target.style.borderColor = '#2b3139'; e.target.style.color = '#848e9c'; }}
                       >
-                        <option value="">-- Chọn ngân hàng --</option>
-                        <option value="Vietcombank">Vietcombank</option>
-                        <option value="Techcombank">Techcombank</option>
-                        <option value="VietinBank">VietinBank</option>
-                        <option value="BIDV">BIDV</option>
-                        <option value="Agribank">Agribank</option>
-                        <option value="MB Bank">MB Bank</option>
-                        <option value="ACB">ACB</option>
-                        <option value="VPBank">VPBank</option>
-                        <option value="TPBank">TPBank</option>
-                        <option value="Sacombank">Sacombank</option>
-                        <option value="HDBank">HDBank</option>
-                        <option value="OCB">OCB</option>
-                        <option value="SHB">SHB</option>
-                        <option value="Eximbank">Eximbank</option>
-                        <option value="MSB">MSB</option>
-                        <option value="SeABank">SeABank</option>
-                        <option value="VIB">VIB</option>
-                        <option value="ABBANK">ABBANK</option>
-                        <option value="LienVietPostBank">LienVietPostBank</option>
-                        <option value="Nam A Bank">Nam A Bank</option>
-                        <option value="Khác">Khác</option>
-                      </select>
+                        Đổi ngân hàng
+                      </button>
                     </div>
-
-                    <div>
-                      <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Số tài khoản ngân hàng</label>
-                      <input
-                        type="text"
-                        placeholder="Nhập số tài khoản"
-                        value={bankAccountNumber}
-                        onChange={(e) => setBankAccountNumber(e.target.value.replace(/\D/g, ''))}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none', fontFamily: 'monospace', letterSpacing: '1px' }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Tên chủ tài khoản (viết hoa)</label>
-                      <input
-                        type="text"
-                        placeholder="VD: NGUYEN VAN A"
-                        value={bankAccountHolder}
-                        onChange={(e) => setBankAccountHolder(e.target.value.toUpperCase())}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none', textTransform: 'uppercase' }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Chi nhánh (không bắt buộc)</label>
-                      <input
-                        type="text"
-                        placeholder="VD: Chi nhánh Hà Nội"
-                        value={bankBranch}
-                        onChange={(e) => setBankBranch(e.target.value)}
-                        style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSavingBank}
-                      style={{
-                        padding: '12px',
-                        background: '#24DB9B',
-                        color: '#000',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: 'bold',
-                        cursor: isSavingBank ? 'not-allowed' : 'pointer',
-                        opacity: isSavingBank ? 0.6 : 1,
-                        fontSize: '14px',
-                        transition: 'opacity 0.2s'
-                      }}
-                    >
-                      {isSavingBank ? 'Đang lưu...' : (hasBankLinked ? '✓ Cập nhật thông tin ngân hàng' : '+ Liên kết ngân hàng')}
-                    </button>
                   </div>
-                </form>
+                ) : (
+                  /* Form nhập thông tin ngân hàng */
+                  <>
+                    <p style={{ color: '#848e9c', fontSize: '13px', margin: '-10px 0 20px 0', lineHeight: 1.5 }}>
+                      Liên kết tài khoản ngân hàng để có thể gửi yêu cầu rút tiền nhanh chóng. Tên chủ tài khoản phải khớp với tên đã đăng ký KYC.
+                    </p>
+                    <form onSubmit={handleSaveBankInfo}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Tên ngân hàng</label>
+                          <select
+                            value={bankName}
+                            onChange={(e) => setBankName(e.target.value)}
+                            required
+                            style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: bankName ? '#fff' : '#848e9c', outline: 'none' }}
+                          >
+                            <option value="">-- Chọn ngân hàng --</option>
+                            <option value="Vietcombank">Vietcombank</option>
+                            <option value="Techcombank">Techcombank</option>
+                            <option value="VietinBank">VietinBank</option>
+                            <option value="BIDV">BIDV</option>
+                            <option value="Agribank">Agribank</option>
+                            <option value="MB Bank">MB Bank</option>
+                            <option value="ACB">ACB</option>
+                            <option value="VPBank">VPBank</option>
+                            <option value="TPBank">TPBank</option>
+                            <option value="Sacombank">Sacombank</option>
+                            <option value="HDBank">HDBank</option>
+                            <option value="OCB">OCB</option>
+                            <option value="SHB">SHB</option>
+                            <option value="Eximbank">Eximbank</option>
+                            <option value="MSB">MSB</option>
+                            <option value="SeABank">SeABank</option>
+                            <option value="VIB">VIB</option>
+                            <option value="ABBANK">ABBANK</option>
+                            <option value="LienVietPostBank">LienVietPostBank</option>
+                            <option value="Nam A Bank">Nam A Bank</option>
+                            <option value="Khác">Khác</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Số tài khoản ngân hàng</label>
+                          <input
+                            type="text"
+                            placeholder="Nhập số tài khoản"
+                            value={bankAccountNumber}
+                            onChange={(e) => setBankAccountNumber(e.target.value.replace(/\D/g, ''))}
+                            required
+                            style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none', fontFamily: 'monospace', letterSpacing: '1px' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Tên chủ tài khoản (viết hoa)</label>
+                          <input
+                            type="text"
+                            placeholder="VD: NGUYEN VAN A"
+                            value={bankAccountHolder}
+                            onChange={(e) => setBankAccountHolder(e.target.value.toUpperCase())}
+                            required
+                            style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none', textTransform: 'uppercase' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Chi nhánh (không bắt buộc)</label>
+                          <input
+                            type="text"
+                            placeholder="VD: Chi nhánh Hà Nội"
+                            value={bankBranch}
+                            onChange={(e) => setBankBranch(e.target.value)}
+                            style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSavingBank}
+                          style={{
+                            padding: '12px',
+                            background: '#24DB9B',
+                            color: '#000',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: 'bold',
+                            cursor: isSavingBank ? 'not-allowed' : 'pointer',
+                            opacity: isSavingBank ? 0.6 : 1,
+                            fontSize: '14px',
+                            transition: 'opacity 0.2s'
+                          }}
+                        >
+                          {isSavingBank ? 'Đang lưu...' : '+ Liên kết ngân hàng'}
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                )}
               </div>
 
               {/* Withdraw Request Form */}
@@ -1073,20 +1100,6 @@ export default function Profile() {
                   </div>
                 ) : (
                   <>
-                    {/* Linked bank info preview */}
-                    <div style={{ background: '#11141a', border: '1px solid #1e2329', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '44px', height: '44px', borderRadius: '8px', background: 'linear-gradient(135deg, rgba(36,219,155,0.2), rgba(36,219,155,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(36,219,155,0.2)' }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#24DB9B" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#eaecef' }}>{bankName}</div>
-                          <div style={{ fontSize: '13px', color: '#fff', fontFamily: 'monospace', letterSpacing: '1px', marginTop: '2px' }}>{bankAccountNumber}</div>
-                          <div style={{ fontSize: '12px', color: '#848e9c', marginTop: '2px' }}>{bankAccountHolder}{bankBranch ? ` — ${bankBranch}` : ''}</div>
-                        </div>
-                        <span style={{ fontSize: '10px', color: '#24DB9B', background: 'rgba(36,219,155,0.1)', padding: '3px 8px', borderRadius: '4px', fontWeight: 'bold', flexShrink: 0 }}>Đã liên kết</span>
-                      </div>
-                    </div>
 
                     {/* Withdraw amount */}
                     <form onSubmit={handleWithdrawRequest}>
