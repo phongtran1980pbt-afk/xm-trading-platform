@@ -16,13 +16,19 @@ export const register = async (req, res) => {
       });
     }
 
-    // 1. Kiểm tra email đã tồn tại chưa
+    // 1. Kiểm tra email hoặc số điện thoại đã tồn tại chưa
     const checkUser = await pool.request()
       .input('email', sql.NVarChar, email)
-      .query('SELECT * FROM Users WHERE Email = @email');
+      .input('phoneNumber', sql.NVarChar, phoneNumber || '')
+      .query('SELECT * FROM Users WHERE Email = @email OR (PhoneNumber != \'\' AND PhoneNumber = @phoneNumber) OR Email = @phoneNumber');
 
     if (checkUser.recordset.length > 0) {
-      return res.status(400).json({ message: 'Email này đã được đăng ký!' });
+      const existingUser = checkUser.recordset[0];
+      if (existingUser.Email === email) {
+        return res.status(400).json({ message: email.includes('@') ? 'Email này đã được đăng ký!' : 'Số điện thoại này đã được đăng ký!' });
+      } else {
+        return res.status(400).json({ message: 'Số điện thoại này đã được đăng ký!' });
+      }
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -94,11 +100,11 @@ export const login = async (req, res) => {
         FROM Users u
         LEFT JOIN UserRoles ur ON u.Id = ur.UserId
         LEFT JOIN Roles r ON ur.RoleId = r.Id
-        WHERE u.Email = @email
+        WHERE u.Email = @email OR u.PhoneNumber = @email
       `);
 
     const user = result.recordset[0];
-    if (!user) return res.status(400).json({ message: 'Email không tồn tại!' });
+    if (!user) return res.status(400).json({ message: 'Tài khoản không tồn tại!' });
 
     const validPassword = await bcrypt.compare(password, user.PasswordHash);
     if (!validPassword) return res.status(400).json({ message: 'Mật khẩu không đúng!' });
@@ -181,10 +187,10 @@ export const checkUserExists = async (req, res) => {
     }
     const result = await pool.request()
       .input('email', sql.NVarChar, email)
-      .query('SELECT Id, IsActive FROM Users WHERE Email = @email');
+      .query('SELECT Id, IsActive FROM Users WHERE Email = @email OR PhoneNumber = @email');
       
     if (result.recordset.length === 0) {
-      return res.status(404).json({ exists: false, message: 'Email hoặc số điện thoại chưa được đăng ký!' });
+      return res.status(404).json({ exists: false, message: 'Tài khoản chưa được đăng ký!' });
     }
     
     const user = result.recordset[0];

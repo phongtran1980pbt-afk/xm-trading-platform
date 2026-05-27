@@ -26,6 +26,7 @@ const countries = [
 function Register() {
   const navigate = useNavigate();
   const [step, setStep] = React.useState(1); // 1: Info, 2: KYC/Verification
+  const [regType, setRegType] = React.useState('email'); // 'email' | 'phone'
   const [selectedCountry, setSelectedCountry] = React.useState("Vietnam");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = React.useState(false);
 
@@ -49,7 +50,9 @@ function Register() {
   const frontInputRef = React.useRef(null);
   const backInputRef = React.useRef(null);
 
-  const isEmailValid = email.length > 10 && email.toLowerCase().endsWith('@gmail.com');
+  const isEmailValid = regType === 'email'
+    ? (email.length > 10 && email.toLowerCase().endsWith('@gmail.com'))
+    : (email.length >= 10 && email.length <= 11 && /^0\d+$/.test(email));
   const isEmailError = email.length > 0 && !isEmailValid;
   
   const pwReq1 = password.length >= 10 && password.length <= 15;
@@ -66,6 +69,9 @@ function Register() {
     e.preventDefault();
     if (isFormValid) {
       setServerError('');
+      if (regType === 'phone') {
+        setPhoneNumber(email);
+      }
       setStep(2);
     }
   };
@@ -135,8 +141,10 @@ function Register() {
       console.error('Lỗi đăng ký:', error);
       const msg = error.response?.data?.message;
       if (msg && (msg.includes('đã tồn tại') || msg.includes('đã được đăng ký'))) {
-        setServerError('Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.');
-        setStep(1); // Quay lại step 1 để đổi email
+        setServerError(regType === 'email' 
+          ? 'Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.'
+          : 'Số điện thoại này đã được đăng ký. Vui lòng sử dụng số điện thoại khác hoặc đăng nhập.');
+        setStep(1); // Quay lại step 1 để đổi email/phone
       } else {
         alert(msg || 'Không thể kết nối tới Server!');
       }
@@ -226,9 +234,41 @@ function Register() {
             {step === 1 ? (
               <>
                 <h2 style={{ marginBottom: '8px' }}>Hãy đăng ký!</h2>
-                <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '32px' }}>
+                <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '20px' }}>
                   Bạn đã có tài khoản? <Link to="/login" style={{ color: '#24DB9B', textDecoration: 'none' }}>Đăng nhập</Link>
                 </p>
+
+                {/* Tab selector for Email / Phone */}
+                <div style={{ display: 'flex', gap: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '24px', paddingBottom: '8px' }}>
+                  <div 
+                    onClick={() => { setRegType('email'); setEmail(''); setServerError(''); }}
+                    style={{ 
+                      color: regType === 'email' ? '#24DB9B' : '#848e9c', 
+                      fontWeight: 600, 
+                      fontSize: '14px', 
+                      cursor: 'pointer',
+                      borderBottom: regType === 'email' ? '2px solid #24DB9B' : 'none',
+                      paddingBottom: '8px',
+                      marginBottom: '-10px'
+                    }}
+                  >
+                    Email
+                  </div>
+                  <div 
+                    onClick={() => { setRegType('phone'); setEmail(''); setServerError(''); }}
+                    style={{ 
+                      color: regType === 'phone' ? '#24DB9B' : '#848e9c', 
+                      fontWeight: 600, 
+                      fontSize: '14px', 
+                      cursor: 'pointer',
+                      borderBottom: regType === 'phone' ? '2px solid #24DB9B' : 'none',
+                      paddingBottom: '8px',
+                      marginBottom: '-10px'
+                    }}
+                  >
+                    Số điện thoại
+                  </div>
+                </div>
 
                 <form onSubmit={handleNextStep}>
                    {/* Country Dropdown */}
@@ -271,17 +311,29 @@ function Register() {
                      )}
                    </div>
 
-                   {/* Email */}
+                   {/* Email or Phone Input */}
                    <div className="k-input-group">
-                     <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>Email</label>
+                     <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>
+                       {regType === 'email' ? 'Email' : 'Số điện thoại'}
+                     </label>
                      <input 
-                        type="email" 
-                        placeholder="Email" 
+                        type={regType === 'email' ? 'email' : 'tel'} 
+                        placeholder={regType === 'email' ? 'Email' : 'Số điện thoại'} 
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          if (regType === 'phone') {
+                            setEmail(e.target.value.replace(/\D/g, ''));
+                          } else {
+                            setEmail(e.target.value);
+                          }
+                        }}
                         style={{ borderColor: isEmailError ? '#d32f2f' : '' }}
                      />
-                     {isEmailError && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px' }}>Email phải có đuôi @gmail.com</div>}
+                     {isEmailError && (
+                       <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px' }}>
+                         {regType === 'email' ? 'Email phải có đuôi @gmail.com' : 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có 10-11 chữ số)'}
+                       </div>
+                     )}
                      {serverError && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px' }}>{serverError}</div>}
                    </div>
 
@@ -348,7 +400,7 @@ function Register() {
 
                    {(!isFormValid && isPasswordTouched) && (
                      <div style={{ color: '#d32f2f', fontSize: '13px', textAlign: 'center', marginBottom: '16px' }}>
-                        Vui lòng hoàn thành tất cả yêu cầu (Email, Mật khẩu, Đồng ý điều khoản) để tiếp tục.
+                        Vui lòng hoàn thành tất cả yêu cầu ({regType === 'email' ? 'Email' : 'Số điện thoại'}, Mật khẩu, Đồng ý điều khoản) để tiếp tục.
                      </div>
                    )}
 
