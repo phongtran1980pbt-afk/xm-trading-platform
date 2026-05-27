@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getBalance, checkUserExists, getProfile } from '../controllers/authController.js';
+import { register, login, getBalance, checkUserExists, getProfile, updateKyc } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -44,5 +44,6 @@ router.post('/check-user', checkUserExists);
 
 router.get('/balance/:id', getBalance);
 router.get('/profile/:id', getProfile);
+router.post('/profile/:id/update-kyc', updateKyc);
 
 export default router;

@@ -81,6 +81,7 @@ function App() {
             <Route path="/articles/category/:cat" element={<ArticlesPage />} />
             <Route path="/articles/:slug" element={<ArticlesPage />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/kyc" element={<Profile />} />
           </Routes>
           {/* Tự động chọn: Admin Panel hoặc Chat Widget dựa theo tài khoản */}
           <ChatOrAdmin />

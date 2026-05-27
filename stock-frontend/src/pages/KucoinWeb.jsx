@@ -106,17 +106,22 @@ function KucoinWeb() {
     }
   };
 
-  // Poll for real-time balance
+  const [profileData, setProfileData] = useState(null);
+
+  // Poll for real-time profile (includes balance and KYC status)
   useEffect(() => {
     let intervalId;
     
-    function fetchBalance() {
+    function fetchProfile() {
       if (user && user.id) {
-        fetch(`${API_BASE_URL}/api/auth/balance/${user.id}`)
+        fetch(`${API_BASE_URL}/api/auth/profile/${user.id}`)
           .then(res => res.json())
           .then(data => {
-            if (data && typeof data.balance === 'number') {
-              setBalance(data.balance);
+            if (data && data.Email) {
+              setProfileData(data);
+              if (typeof data.Balance === 'number') {
+                setBalance(data.Balance);
+              }
             }
           })
           .catch(console.error);
@@ -124,8 +129,8 @@ function KucoinWeb() {
     }
 
     if (user && user.id) {
-      fetchBalance();
-      intervalId = setInterval(fetchBalance, 3000);
+      fetchProfile();
+      intervalId = setInterval(fetchProfile, 4000);
     }
     
     return () => clearInterval(intervalId);
@@ -342,8 +347,12 @@ function KucoinWeb() {
                       {(user.username || user.email || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="k-udrop-info">
-                      <div className="k-udrop-title">Nhà giao dịch KANET</div>
-                      <div className="k-udrop-email">{user.email}</div>
+                      <div className="k-udrop-title" style={{ textTransform: 'uppercase' }}>
+                        {profileData?.FullName || 'Nhà giao dịch KANET'}
+                      </div>
+                      <div className="k-udrop-email">
+                        {profileData?.Email || profileData?.PhoneNumber || user.email}
+                      </div>
                       {user.accountCode && (
                         <div className="k-udrop-uid">
                           <span>UID: {user.accountCode}</span>
@@ -386,7 +395,14 @@ function KucoinWeb() {
                       <span className="k-udrop-menu-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                       </span>
-                      <span>Xác thực</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, marginRight: '8px' }}>
+                        <span>Xác thực</span>
+                        {profileData && profileData.HasFrontPhoto === 1 && profileData.HasBackPhoto === 1 ? (
+                          <span style={{ fontSize: '10px', color: '#00FFA3', background: 'rgba(0, 255, 163, 0.1)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>Đã xác thực</span>
+                        ) : (
+                          <span style={{ fontSize: '10px', color: '#F6465D', background: 'rgba(246, 70, 93, 0.1)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>Chưa xác thực</span>
+                        )}
+                      </div>
                       <svg className="k-udrop-menu-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
                     </Link>
 

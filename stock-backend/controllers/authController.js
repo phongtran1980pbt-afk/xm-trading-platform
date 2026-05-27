@@ -162,7 +162,13 @@ export const getProfile = async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request()
       .input('id', sql.Int, id)
-      .query('SELECT Email, FullName, AccountCode, Country, IdCardType, IdNumber, Balance, PhoneNumber FROM Users WHERE Id = @id');
+      .query(`
+        SELECT Email, FullName, AccountCode, Country, IdCardType, IdNumber, Balance, PhoneNumber,
+               CASE WHEN IdFrontPhoto IS NOT NULL AND IdFrontPhoto <> '' THEN 1 ELSE 0 END AS HasFrontPhoto,
+               CASE WHEN IdBackPhoto IS NOT NULL AND IdBackPhoto <> '' THEN 1 ELSE 0 END AS HasBackPhoto
+        FROM Users 
+        WHERE Id = @id
+      `);
     
     if (result.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
@@ -204,4 +210,65 @@ export const checkUserExists = async (req, res) => {
     res.status(500).json({ message: 'Lỗi hệ thống khi kiểm tra tài khoản!' });
   }
 };
+
+export const updateKyc = async (req, res) => {
+  const { id } = req.params;
+  const { fullName, country, idCardType, idNumber, idFrontPhoto, idBackPhoto, phoneNumber } = req.body;
+  
+  try {
+    const pool = await poolPromise;
+    if (!pool) {
+      return res.status(500).json({ message: 'Lỗi kết nối cơ sở dữ liệu' });
+    }
+    
+    // Kiểm tra CCCD đã được sử dụng chưa
+    if (idNumber) {
+      const checkId = await pool.request()
+        .input('id', id)
+        .input('idNumber', idNumber)
+        .query('SELECT Id FROM Users WHERE IdNumber = @idNumber AND Id != @id');
+        
+      if (checkId.recordset.length > 0) {
+        return res.status(400).json({ message: 'Số CCCD này đã được đăng ký bởi tài khoản khác!' });
+      }
+    }
+
+    await pool.request()
+      .input('id', id)
+      .input('fullName', fullName ? fullName.toUpperCase() : null)
+      .input('country', country || null)
+      .input('idCardType', idCardType || null)
+      .input('idNumber', idNumber || null)
+      .input('idFrontPhoto', idFrontPhoto || null)
+      .input('idBackPhoto', idBackPhoto || null)
+      .input('phoneNumber', phoneNumber || null)
+      .query(`
+        UPDATE Users 
+        SET FullName = COALESCE(@fullName, FullName),
+            Country = COALESCE(@country, Country),
+            IdCardType = COALESCE(@idCardType, IdCardType),
+            IdNumber = COALESCE(@idNumber, IdNumber),
+            IdFrontPhoto = COALESCE(@idFrontPhoto, IdFrontPhoto),
+            IdBackPhoto = COALESCE(@idBackPhoto, IdBackPhoto),
+            PhoneNumber = COALESCE(@phoneNumber, PhoneNumber)
+        WHERE Id = @id
+      `);
+
+    // Ghi log hoạt động
+    const userRes = await pool.request().input('id', id).query('SELECT Email FROM Users WHERE Id = @id');
+    const userEmail = userRes.recordset[0]?.Email || 'Unknown';
+    
+    await pool.request()
+      .input('action', 'Cập nhật KYC')
+      .input('details', `Người dùng ${userEmail} đã cập nhật thông tin xác thực KYC`)
+      .input('createdAt', getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: 'Cập nhật thông tin xác thực KYC thành công!' });
+  } catch (error) {
+    console.error('Lỗi cập nhật KYC:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật KYC: ' + error.message });
+  }
+};
+
 
