@@ -408,4 +408,119 @@ export const getLoginHistory = async (req, res) => {
   }
 };
 
+export const getTransactionHistory = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    
+    // 1. Lấy thông tin user (email)
+    const userRes = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT Email FROM Users WHERE Id = @id');
+      
+    if (userRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+    }
+    const email = userRes.recordset[0].Email;
+
+    // 2. Lấy BinaryOrders của user
+    const ordersRes = await pool.request()
+      .input('userId', sql.Int, id)
+      .query(`
+        SELECT Id, Symbol, BetAmount, BetType, StartPrice, EndPrice, StartTime, EndTime, Status, Payout 
+        FROM BinaryOrders 
+        WHERE UserId = @userId
+        ORDER BY StartTime DESC
+      `);
+
+    // 3. Lấy AuditLogs liên quan nạp/rút của user email
+    const logsRes = await pool.request()
+      .input('emailFilter', sql.NVarChar, `%tài khoản ${email}%`)
+      .query(`
+        SELECT Id, Action, Details, CreatedAt 
+        FROM AuditLogs 
+        WHERE Details LIKE @emailFilter 
+          AND (Action LIKE N'Nạp tiền%' OR Action LIKE N'Rút tiền%')
+        ORDER BY CreatedAt DESC
+      `);
+
+    // 4. Kết hợp và định dạng
+    const transactions = [];
+
+    // Chuyển BinaryOrders sang định dạng giao dịch
+    ordersRes.recordset.forEach(order => {
+      let type = 'Đặt cược';
+      let amount = order.BetAmount;
+      let profit = 0;
+
+      if (order.Status === 'WIN') {
+        type = 'Thắng cược';
+        amount = order.Payout;
+        profit = order.Payout - order.BetAmount;
+      } else if (order.Status === 'LOSE') {
+        type = 'Thua cược';
+        amount = order.BetAmount;
+        profit = -order.BetAmount;
+      } else if (order.Status === 'TIE') {
+        type = 'Hòa cược';
+        amount = order.BetAmount;
+        profit = 0;
+      } else {
+        type = 'Đang chờ';
+        amount = order.BetAmount;
+        profit = 0;
+      }
+
+      transactions.push({
+        id: `bet-${order.Id}`,
+        date: order.EndTime || order.StartTime,
+        type: type,
+        amount: amount,
+        betAmount: order.BetAmount,
+        payout: order.Payout,
+        profit: profit,
+        description: `Đặt cược ${order.Symbol} (${order.BetType}) - Giá vào: ${order.StartPrice} -> Giá ra: ${order.EndPrice || 'chờ'}`,
+        rawType: 'bet',
+        status: order.Status
+      });
+    });
+
+    // Chuyển AuditLogs sang định dạng giao dịch
+    logsRes.recordset.forEach(log => {
+      let type = 'Khác';
+      if (log.Action.includes('Nạp tiền')) {
+        type = 'Nạp tiền';
+      } else if (log.Action.includes('Rút tiền')) {
+        type = 'Rút tiền';
+      }
+
+      let amount = 0;
+      const match = log.Details.match(/Đã (?:nạp|rút) \$([0-9.]+)/);
+      if (match && match[1]) {
+        amount = parseFloat(match[1]);
+      }
+
+      transactions.push({
+        id: `log-${log.Id}`,
+        date: log.CreatedAt,
+        type: type,
+        amount: amount,
+        profit: type === 'Nạp tiền' ? amount : -amount,
+        description: log.Details,
+        rawType: 'log',
+        status: 'SUCCESS'
+      });
+    });
+
+    // Sắp xếp theo ngày giảm dần
+    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json(transactions);
+  } catch (error) {
+    console.error('Lỗi lấy lịch sử giao dịch:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy lịch sử giao dịch: ' + error.message });
+  }
+};
+
+
 

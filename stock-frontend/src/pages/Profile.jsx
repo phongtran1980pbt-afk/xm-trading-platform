@@ -15,8 +15,8 @@ export default function Profile() {
   
   // Tab control & Form States for KYC
   const [activeTab, setActiveTab] = useState(
-    location.pathname === '/kyc' ? 'kyc' : (location.pathname === '/security' ? 'security' : 'info')
-  ); // 'info' | 'kyc' | 'security'
+    location.pathname === '/kyc' ? 'kyc' : (location.pathname === '/security' ? 'security' : (location.pathname === '/history' ? 'history' : 'info'))
+  ); // 'info' | 'kyc' | 'security' | 'history'
   const [fullNameVal, setFullNameVal] = useState('');
   const [phoneVal, setPhoneVal] = useState('');
   const [countryVal, setCountryVal] = useState('Vietnam');
@@ -34,6 +34,37 @@ export default function Profile() {
 
   const frontInputRef = React.useRef(null);
   const backInputRef = React.useRef(null);
+
+  // Transactions state
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+
+  const fetchTransactions = async () => {
+    if (!user || !user.id) return;
+    setLoadingTransactions(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/auth/profile/${user.id}/transactions`);
+      setTransactions(res.data);
+    } catch (err) {
+      console.error('Lỗi lấy lịch sử giao dịch:', err);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'history' && user && user.id) {
+      fetchTransactions();
+    }
+  }, [activeTab, user]);
+
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    if (tabName === 'info') navigate('/profile');
+    else if (tabName === 'security') navigate('/security');
+    else if (tabName === 'kyc') navigate('/kyc');
+    else if (tabName === 'history') navigate('/history');
+  };
 
   // Authenticate user
   useEffect(() => {
@@ -58,6 +89,8 @@ export default function Profile() {
       setActiveTab('kyc');
     } else if (location.pathname === '/security') {
       setActiveTab('security');
+    } else if (location.pathname === '/history') {
+      setActiveTab('history');
     } else if (location.pathname === '/profile') {
       setActiveTab('info');
     }
@@ -151,6 +184,26 @@ export default function Profile() {
     return num.slice(0, 3) + '******' + num.slice(-3);
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      const date = new Date(dateStr);
+      const pad = (n) => n.toString().padStart(2, '0');
+      
+      const day = pad(date.getDate());
+      const month = pad(date.getMonth() + 1);
+      const year = date.getFullYear();
+      
+      const hours = pad(date.getHours());
+      const minutes = pad(date.getMinutes());
+      const seconds = pad(date.getSeconds());
+      
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   const handlePhotoUploadLocal = (e, side) => {
     const file = e.target.files[0];
     if (file) {
@@ -190,7 +243,7 @@ export default function Profile() {
       if (res.data.success) {
         alert('Tải tài liệu xác thực KYC thành công! Vui lòng chờ phê duyệt.');
         await fetchProfile();
-        setActiveTab('info');
+        handleTabChange('info');
       }
     } catch (err) {
       console.error(err);
@@ -261,19 +314,24 @@ export default function Profile() {
           </div>
 
           <nav className="k-profile-sidebar-nav">
-            <div className={`k-profile-nav-item ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')} style={{ cursor: 'pointer' }}>
+            <div className={`k-profile-nav-item ${activeTab === 'info' ? 'active' : ''}`} onClick={() => handleTabChange('info')} style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <span>Thông tin cá nhân</span>
             </div>
 
-            <div className={`k-profile-nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')} style={{ cursor: 'pointer' }}>
+            <div className={`k-profile-nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => handleTabChange('security')} style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               <span>An toàn & Bảo mật</span>
             </div>
 
-            <div className={`k-profile-nav-item ${activeTab === 'kyc' ? 'active' : ''}`} onClick={() => setActiveTab('kyc')} style={{ cursor: 'pointer' }}>
+            <div className={`k-profile-nav-item ${activeTab === 'kyc' ? 'active' : ''}`} onClick={() => handleTabChange('kyc')} style={{ cursor: 'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
               <span>Xác thực danh tính</span>
+            </div>
+
+            <div className={`k-profile-nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => handleTabChange('history')} style={{ cursor: 'pointer' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span>Lịch sử giao dịch</span>
             </div>
 
             <button onClick={handleLogout} className="k-profile-nav-item k-profile-logout-btn">
@@ -401,8 +459,8 @@ export default function Profile() {
                             <span className="dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#F6465D' }}></span>
                             Chưa xác thực
                           </span>
-                          <button 
-                            onClick={() => setActiveTab('kyc')}
+                           <button 
+                            onClick={() => handleTabChange('kyc')}
                             style={{
                               padding: '4px 12px',
                               background: '#24DB9B',
@@ -610,7 +668,7 @@ export default function Profile() {
               </div>
             )}
           </main>
-        ) : (
+        ) : activeTab === 'security' ? (
           <main className="k-profile-content">
             <h2 className="k-profile-content-title">An toàn & Bảo mật</h2>
 
@@ -681,7 +739,106 @@ export default function Profile() {
               </form>
             </div>
           </main>
-        )}
+        ) : activeTab === 'history' ? (
+          <main className="k-profile-content">
+            <h2 className="k-profile-content-title">Lịch sử giao dịch</h2>
+
+            <div className="k-profile-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 className="k-profile-card-title" style={{ margin: 0 }}>Giao dịch gần đây</h3>
+                <button 
+                  className={`k-profile-refresh-btn ${loadingTransactions ? 'spinning' : ''}`}
+                  onClick={fetchTransactions}
+                  title="Làm mới lịch sử"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                </button>
+              </div>
+
+              {loadingTransactions ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#848e9c' }}>
+                  <div className="k-profile-spinner" style={{ margin: '0 auto 12px auto' }}></div>
+                  <p>Đang tải dữ liệu giao dịch...</p>
+                </div>
+              ) : transactions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: '#848e9c' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '16px', opacity: 0.5 }}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <p style={{ fontSize: '14px' }}>Không có lịch sử giao dịch nào.</p>
+                </div>
+              ) : (
+                <div className="k-tx-table-container" style={{ overflowX: 'auto' }}>
+                  <table className="k-tx-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                        <th style={{ padding: '12px 16px', color: '#848e9c', fontSize: '12px', fontWeight: 'bold' }}>Thời gian</th>
+                        <th style={{ padding: '12px 16px', color: '#848e9c', fontSize: '12px', fontWeight: 'bold' }}>Loại giao dịch</th>
+                        <th style={{ padding: '12px 16px', color: '#848e9c', fontSize: '12px', fontWeight: 'bold' }}>Số tiền (USDT)</th>
+                        <th style={{ padding: '12px 16px', color: '#848e9c', fontSize: '12px', fontWeight: 'bold' }}>Chi tiết</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map((tx) => {
+                        let amountColor = '#ffffff';
+                        let amountPrefix = '';
+                        if (tx.type === 'Thắng cược' || tx.type === 'Nạp tiền') {
+                          amountColor = '#24DB9B';
+                          amountPrefix = '+ ';
+                        } else if (tx.type === 'Thua cược' || tx.type === 'Rút tiền') {
+                          amountColor = '#F6465D';
+                          amountPrefix = '- ';
+                        }
+
+                        let badgeBg = 'rgba(255, 255, 255, 0.05)';
+                        let badgeColor = '#ffffff';
+                        
+                        if (tx.type === 'Nạp tiền' || tx.type === 'Thắng cược') {
+                          badgeBg = 'rgba(36, 219, 155, 0.1)';
+                          badgeColor = '#24DB9B';
+                        } else if (tx.type === 'Rút tiền' || tx.type === 'Thua cược') {
+                          badgeBg = 'rgba(246, 70, 93, 0.1)';
+                          badgeColor = '#F6465D';
+                        } else if (tx.type === 'Hòa cược') {
+                          badgeBg = 'rgba(132, 142, 156, 0.1)';
+                          badgeColor = '#848e9c';
+                        } else if (tx.type === 'Đang chờ') {
+                          badgeBg = 'rgba(240, 185, 11, 0.1)';
+                          badgeColor = '#F0B90B';
+                        }
+
+                        return (
+                          <tr key={tx.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                            <td style={{ padding: '16px', fontSize: '13px', color: '#eaecef', whiteSpace: 'nowrap' }}>
+                              {formatDate(tx.date)}
+                            </td>
+                            <td style={{ padding: '16px' }}>
+                              <span style={{ 
+                                display: 'inline-block', 
+                                padding: '4px 8px', 
+                                borderRadius: '4px', 
+                                fontSize: '11px', 
+                                fontWeight: 'bold',
+                                background: badgeBg,
+                                color: badgeColor
+                              }}>
+                                {tx.type}
+                              </span>
+                            </td>
+                            <td style={{ padding: '16px', fontSize: '14px', fontWeight: 'bold', color: amountColor, fontFamily: 'monospace' }}>
+                              {amountPrefix}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td style={{ padding: '16px', fontSize: '13px', color: '#848e9c', minWidth: '200px' }}>
+                              {tx.description}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </main>
+        ) : null}
       </div>
     </div>
   );

@@ -83,6 +83,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/kyc" element={<Profile />} />
             <Route path="/security" element={<Profile />} />
+            <Route path="/history" element={<Profile />} />
           </Routes>
           {/* Tự động chọn: Admin Panel hoặc Chat Widget dựa theo tài khoản */}
           <ChatOrAdmin />
