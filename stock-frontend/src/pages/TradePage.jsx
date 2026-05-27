@@ -925,11 +925,42 @@ export default function TradePage() {
         </div>
         <div style={{ flex: 1 }} />
         {currentUser && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', marginRight: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', marginRight: '10px', position: 'relative' }}>
             <span style={{ fontSize: '9px', color: '#848e9c', fontWeight: 500, lineHeight: '1' }}>Số dư</span>
             <span style={{ fontSize: '13px', color: '#FCD535', fontWeight: 700, marginTop: '2px' }}>
               ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
+            {countdownActive && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                marginTop: '6px',
+                zIndex: 9999,
+                background: countdownBetType === 'UP' ? 'rgba(0, 255, 163, 0.95)' : 'rgba(246, 70, 93, 0.95)',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                whiteSpace: 'nowrap'
+              }}>
+                <svg width="16" height="16" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="8" cy="8" r="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+                  <circle
+                    cx="8" cy="8" r="6"
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="2"
+                    strokeDasharray={`${2 * Math.PI * 6}`}
+                    strokeDashoffset={`${2 * Math.PI * 6 * (1 - countdownLeft / countdownTotal)}`}
+                  />
+                </svg>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: '#fff', fontFamily: 'monospace' }}>{countdownLeft}s</span>
+              </div>
+            )}
           </div>
         )}
         <button className="tp-m-nav-btn">
@@ -2048,6 +2079,49 @@ export default function TradePage() {
             if (!currentUser) { navigate('/login'); return; }
             setMobileTradeType('DOWN'); setShowMobileTradeModal(true);
           }}>Mua xuống</button>
+        </div>
+      )}
+
+      {/* Floating Countdown for Mobile */}
+      {countdownActive && (
+        <div className="tp-m-floating-countdown" style={{
+          position: 'fixed',
+          bottom: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9998,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'rgba(21, 24, 33, 0.95)',
+          border: `1px solid ${countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}`,
+          borderRadius: '16px',
+          padding: '12px 24px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <div style={{ position: 'relative', width: '60px', height: '60px' }}>
+            <svg width="60" height="60" style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx="30" cy="30" r="26" fill="none" stroke="#1e2329" strokeWidth="4" />
+              <circle
+                cx="30" cy="30" r="26"
+                fill="none"
+                stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 26}`}
+                strokeDashoffset={`${2 * Math.PI * 26 * (1 - countdownLeft / countdownTotal)}`}
+                style={{ transition: 'stroke-dashoffset 0.95s linear' }}
+              />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '18px', fontWeight: 'bold', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace' }}>{countdownLeft}</span>
+            </div>
+          </div>
+          <span style={{ fontSize: '11px', color: '#eaecef', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Kết toán {countdownBetType === 'UP' ? 'TĂNG' : 'GIẢM'}
+          </span>
         </div>
       )}
 
