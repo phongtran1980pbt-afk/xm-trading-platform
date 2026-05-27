@@ -1,3 +1,4 @@
+import sql from 'mssql';
 import { poolPromise } from '../config/db.js';
 import { getTrueTime } from '../timeService.js';
 
@@ -493,3 +494,146 @@ export const deleteChatSession = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi xoá phiên chat: ' + error.message });
   }
 };
+
+// GET /api/admin/withdraw-requests
+export const getAdminWithdrawRequests = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT wr.*, u.Email, u.FullName, u.Balance AS UserBalance
+      FROM WithdrawRequests wr
+      LEFT JOIN Users u ON wr.UserId = u.Id
+      ORDER BY wr.CreatedAt DESC
+    `);
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Lỗi lấy danh sách rút tiền:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách yêu cầu rút tiền' });
+  }
+};
+
+// POST /api/admin/withdraw-requests/:id/approve
+export const approveWithdrawRequest = async (req, res) => {
+  const { id } = req.params;
+  const { note } = req.body;
+  try {
+    const pool = await poolPromise;
+    
+    // Lấy thông tin yêu cầu rút tiền
+    const reqRes = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT UserId, Amount, Status, BankName, BankAccountNumber FROM WithdrawRequests WHERE Id = @id');
+      
+    if (reqRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy yêu cầu rút tiền!' });
+    }
+    
+    const withdrawReq = reqRes.recordset[0];
+    if (withdrawReq.Status !== 'PENDING') {
+      return res.status(400).json({ message: 'Yêu cầu này đã được xử lý trước đó!' });
+    }
+    
+    // Kiểm tra số dư người dùng
+    const userRes = await pool.request()
+      .input('userId', sql.Int, withdrawReq.UserId)
+      .query('SELECT Email, FullName, Balance FROM Users WHERE Id = @userId');
+      
+    if (userRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+    }
+    
+    const user = userRes.recordset[0];
+    if (parseFloat(user.Balance) < parseFloat(withdrawReq.Amount)) {
+      return res.status(400).json({ message: `Số dư người dùng không đủ! Số dư hiện tại: $${parseFloat(user.Balance).toFixed(2)}` });
+    }
+    
+    // Cập nhật trạng thái yêu cầu rút tiền
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('note', sql.NVarChar, note || 'Đã duyệt yêu cầu rút tiền')
+      .input('updatedAt', sql.DateTime, getTrueTime())
+      .query("UPDATE WithdrawRequests SET Status = 'APPROVED', Note = @note, UpdatedAt = @updatedAt WHERE Id = @id");
+      
+    // Trừ tiền người dùng
+    await pool.request()
+      .input('userId', sql.Int, withdrawReq.UserId)
+      .input('amount', sql.Decimal(18, 2), withdrawReq.Amount)
+      .query('UPDATE Users SET Balance = Balance - @amount WHERE Id = @userId');
+      
+    // Ghi AuditLog
+    await pool.request()
+      .input('action', sql.NVarChar, 'Duyệt rút tiền')
+      .input('details', sql.NVarChar, `Đã duyệt yêu cầu rút $${withdrawReq.Amount} cho ${user.Email} (${user.FullName}) về ${withdrawReq.BankName} - ${withdrawReq.BankAccountNumber}`)
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+      
+    // Gửi thông báo cho khách hàng
+    await pool.request()
+      .input('userId', sql.Int, withdrawReq.UserId)
+      .input('msg', sql.NVarChar, `Yêu cầu rút $${parseFloat(withdrawReq.Amount).toFixed(2)} đã được phê duyệt thành công!`)
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query('INSERT INTO Notifications (UserId, Message, CreatedAt) VALUES (@userId, @msg, @createdAt)');
+      
+    res.json({ success: true, message: 'Duyệt yêu cầu rút tiền thành công!' });
+  } catch (error) {
+    console.error('Lỗi duyệt yêu cầu rút tiền:', error);
+    res.status(500).json({ message: 'Lỗi server khi duyệt yêu cầu rút tiền: ' + error.message });
+  }
+};
+
+// POST /api/admin/withdraw-requests/:id/reject
+export const rejectWithdrawRequest = async (req, res) => {
+  const { id } = req.params;
+  const { note } = req.body;
+  try {
+    const pool = await poolPromise;
+    
+    // Lấy thông tin yêu cầu rút tiền
+    const reqRes = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT UserId, Amount, Status, BankName, BankAccountNumber FROM WithdrawRequests WHERE Id = @id');
+      
+    if (reqRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy yêu cầu rút tiền!' });
+    }
+    
+    const withdrawReq = reqRes.recordset[0];
+    if (withdrawReq.Status !== 'PENDING') {
+      return res.status(400).json({ message: 'Yêu cầu này đã được xử lý trước đó!' });
+    }
+    
+    // Lấy thông tin người dùng để gửi thông báo
+    const userRes = await pool.request()
+      .input('userId', sql.Int, withdrawReq.UserId)
+      .query('SELECT Email, FullName FROM Users WHERE Id = @userId');
+      
+    const user = userRes.recordset[0] || { Email: 'Unknown', FullName: 'Unknown' };
+    
+    // Cập nhật trạng thái thành REJECTED
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('note', sql.NVarChar, note || 'Từ chối yêu cầu rút tiền')
+      .input('updatedAt', sql.DateTime, getTrueTime())
+      .query("UPDATE WithdrawRequests SET Status = 'REJECTED', Note = @note, UpdatedAt = @updatedAt WHERE Id = @id");
+      
+    // Ghi AuditLog
+    await pool.request()
+      .input('action', sql.NVarChar, 'Từ chối rút tiền')
+      .input('details', sql.NVarChar, `Từ chối yêu cầu rút $${withdrawReq.Amount} cho ${user.Email} (${user.FullName}) với lý do: ${note || 'Không có lý do'}`)
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+      
+    // Gửi thông báo cho khách hàng
+    await pool.request()
+      .input('userId', sql.Int, withdrawReq.UserId)
+      .input('msg', sql.NVarChar, `Yêu cầu rút $${parseFloat(withdrawReq.Amount).toFixed(2)} bị từ chối. Lý do: ${note || 'Liên hệ bộ phận hỗ trợ'}`)
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query('INSERT INTO Notifications (UserId, Message, CreatedAt) VALUES (@userId, @msg, @createdAt)');
+      
+    res.json({ success: true, message: 'Từ chối yêu cầu rút tiền thành công!' });
+  } catch (error) {
+    console.error('Lỗi từ chối yêu cầu rút tiền:', error);
+    res.status(500).json({ message: 'Lỗi server khi từ chối yêu cầu rút tiền: ' + error.message });
+  }
+};
+

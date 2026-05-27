@@ -79,6 +79,8 @@ export default function AdminDashboard() {
   const [tradeStats, setTradeStats] = useState({ upUsers: 0, upAmount: 0, downUsers: 0, downAmount: 0 });
   const [trend, setTrend] = useState('neutral');
   const [selectedUserForView, setSelectedUserForView] = useState(null);
+  const [adminWithdrawRequests, setAdminWithdrawRequests] = useState([]);
+  const [selectedWithdrawForDetail, setSelectedWithdrawForDetail] = useState(null);
   const bottomRef = useRef(null);
 
   // Poll for updates every 1.5 seconds
@@ -190,6 +192,72 @@ export default function AdminDashboard() {
       return () => clearInterval(id);
     }
   }, [view]);
+
+  const fetchWithdraws = () => {
+    fetch(`${API_BASE_URL}/api/admin/withdraw-requests`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAdminWithdrawRequests(data);
+        }
+      })
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchWithdraws();
+    const id = setInterval(fetchWithdraws, 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  const handleApproveWithdraw = async (id, amount, email) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn DUYỆT yêu cầu rút $${amount} của tài khoản ${email}?`)) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/withdraw-requests/${id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: 'Đã phê duyệt bởi quản trị viên' })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Đã duyệt yêu cầu rút tiền thành công!');
+        fetchWithdraws();
+        if (selectedWithdrawForDetail && selectedWithdrawForDetail.Id === id) {
+          setSelectedWithdrawForDetail(prev => ({ ...prev, Status: 'APPROVED' }));
+        }
+      } else {
+        toast.error(data.message || 'Có lỗi xảy ra!');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Không thể kết nối đến máy chủ!');
+    }
+  };
+
+  const handleRejectWithdraw = async (id, amount, email) => {
+    const note = window.prompt(`Nhập lý do từ chối yêu cầu rút $${amount} của tài khoản ${email}:`, 'Không đủ điều kiện giao dịch');
+    if (note === null) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/withdraw-requests/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Đã từ chối yêu cầu rút tiền!');
+        fetchWithdraws();
+        if (selectedWithdrawForDetail && selectedWithdrawForDetail.Id === id) {
+          setSelectedWithdrawForDetail(prev => ({ ...prev, Status: 'REJECTED', Note: note }));
+        }
+      } else {
+        toast.error(data.message || 'Có lỗi xảy ra!');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Không thể kết nối đến máy chủ!');
+    }
+  };
 
   async function handleSetTrend(newTrend) {
     try {
@@ -548,6 +616,15 @@ export default function AdminDashboard() {
           <button className={`admin-menu-item ${view === 'deposit' ? 'active' : ''}`} onClick={() => { setView('deposit'); setShowSidebarMobile(false); }}>
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '8px'}}><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             Nạp tiền tài khoản
+          </button>
+          <button className={`admin-menu-item ${view === 'withdraw' ? 'active' : ''}`} onClick={() => { setView('withdraw'); setShowSidebarMobile(false); }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '8px'}}><rect x="2" y="9" width="20" height="10" rx="2" /><path d="M12 2v7M9 5l3-3 3 3" /></svg>
+            Duyệt rút tiền
+            {adminWithdrawRequests.filter(r => r.Status === 'PENDING').length > 0 && (
+              <span style={{ marginLeft: 'auto', background: '#F6465D', color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '10px' }}>
+                {adminWithdrawRequests.filter(r => r.Status === 'PENDING').length}
+              </span>
+            )}
           </button>
           <button className={`admin-menu-item ${view === 'logs' ? 'active' : ''}`} onClick={() => { setView('logs'); setShowSidebarMobile(false); }}>
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '8px'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -1111,6 +1188,210 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+        ) : view === 'withdraw' ? (
+          <div className="admin-withdraw-container" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <button 
+                className="admin-mobile-back-btn" 
+                onClick={() => setShowSidebarMobile(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#848e9c',
+                  cursor: 'pointer',
+                  display: 'none',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px'
+                }}
+                title="Quay lại"
+              >
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              <h2 style={{ color: '#eaecef', margin: 0, fontSize: '18px' }}>Quản lý & Phê duyệt Rút tiền</h2>
+            </div>
+
+            <div style={{ overflowX: 'auto', background: '#11141a', border: '1px solid #1e2329', borderRadius: '12px', padding: '16px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #2b3139', color: '#848e9c' }}>
+                    <th style={{ padding: '12px' }}>Thời gian</th>
+                    <th style={{ padding: '12px' }}>Khách hàng (UID)</th>
+                    <th style={{ padding: '12px' }}>Số tiền</th>
+                    <th style={{ padding: '12px' }}>Ngân hàng</th>
+                    <th style={{ padding: '12px' }}>Trạng thái</th>
+                    <th style={{ padding: '12px' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminWithdrawRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ padding: '24px', textAlign: 'center', color: '#5e6673' }}>
+                        Chưa có yêu cầu rút tiền nào
+                      </td>
+                    </tr>
+                  ) : (
+                    adminWithdrawRequests.map(req => {
+                      let statusColor = '#F0B90B';
+                      let statusBg = 'rgba(240,185,11,0.1)';
+                      let statusText = 'Chờ duyệt';
+                      if (req.Status === 'APPROVED') {
+                        statusColor = '#24DB9B';
+                        statusBg = 'rgba(36,219,155,0.1)';
+                        statusText = 'Đã duyệt';
+                      } else if (req.Status === 'REJECTED') {
+                        statusColor = '#F6465D';
+                        statusBg = 'rgba(246,70,93,0.1)';
+                        statusText = 'Từ chối';
+                      }
+
+                      return (
+                        <tr key={req.Id} style={{ borderBottom: '1px solid #1a1e27', color: '#eaecef' }}>
+                          <td style={{ padding: '12px', color: '#848e9c', whiteSpace: 'nowrap' }}>{formatDate(req.CreatedAt)}</td>
+                          <td style={{ padding: '12px' }}>
+                            <div style={{ fontWeight: 'bold' }}>{req.FullName || 'N/A'}</div>
+                            <div style={{ fontSize: '11px', color: '#848e9c', marginTop: '2px' }}>{req.Email}</div>
+                          </td>
+                          <td style={{ padding: '12px', fontWeight: 'bold', color: '#F6465D', fontFamily: 'monospace' }}>
+                            -${parseFloat(req.Amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <div style={{ fontWeight: '500' }}>{req.BankName}</div>
+                            <div style={{ fontSize: '11px', color: '#848e9c', marginTop: '2px' }}>{req.BankAccountNumber} — {req.BankAccountHolder}</div>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', background: statusBg, color: statusColor }}>
+                              {statusText}
+                            </span>
+                            {req.Note && <div style={{ fontSize: '11px', color: '#848e9c', marginTop: '4px' }}>Lý do: {req.Note}</div>}
+                          </td>
+                          <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>
+                            <button
+                              onClick={() => setSelectedWithdrawForDetail(req)}
+                              style={{ padding: '6px 12px', background: '#1e2530', border: '1px solid #2b3139', borderRadius: '6px', color: '#24DB9B', fontSize: '12px', cursor: 'pointer', marginRight: '8px', fontWeight: 'bold' }}
+                            >
+                              Xem chi tiết
+                            </button>
+                            {req.Status === 'PENDING' && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveWithdraw(req.Id, req.Amount, req.Email)}
+                                  style={{ padding: '6px 12px', background: '#24DB9B', border: 'none', borderRadius: '6px', color: '#000', fontSize: '12px', cursor: 'pointer', marginRight: '8px', fontWeight: 'bold' }}
+                                >
+                                  Duyệt
+                                </button>
+                                <button
+                                  onClick={() => handleRejectWithdraw(req.Id, req.Amount, req.Email)}
+                                  style={{ padding: '6px 12px', background: '#F6465D', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                  Từ chối
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Withdraw Detail Popup/Modal */}
+            {selectedWithdrawForDetail && (
+              <div className="k-modal-overlay" onClick={() => setSelectedWithdrawForDetail(null)}>
+                <div className="k-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                  <button className="k-modal-close-btn" onClick={() => setSelectedWithdrawForDetail(null)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                  <h3 style={{ margin: '0 0 20px 0', color: '#fff', fontSize: '18px' }}>Chi tiết yêu cầu rút tiền</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ borderBottom: '1px solid #2b3139', paddingBottom: '12px' }}>
+                      <div style={{ fontSize: '12px', color: '#848e9c' }}>Tài khoản khách hàng</div>
+                      <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff', marginTop: '4px' }}>{selectedWithdrawForDetail.FullName}</div>
+                      <div style={{ fontSize: '13px', color: '#848e9c', marginTop: '2px' }}>Email: {selectedWithdrawForDetail.Email}</div>
+                      <div style={{ fontSize: '13px', color: '#848e9c', marginTop: '2px' }}>Số dư hiện tại: <span style={{ color: '#24DB9B', fontWeight: 'bold' }}>${parseFloat(selectedWithdrawForDetail.UserBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+                    </div>
+
+                    <div style={{ borderBottom: '1px solid #2b3139', paddingBottom: '12px' }}>
+                      <div style={{ fontSize: '12px', color: '#848e9c' }}>Số tiền yêu cầu rút</div>
+                      <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#F6465D', marginTop: '4px', fontFamily: 'monospace' }}>
+                        -${parseFloat(selectedWithdrawForDetail.Amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#11141a', borderRadius: '8px', padding: '14px', border: '1px solid #1e2329' }}>
+                      <div style={{ fontSize: '12px', color: '#848e9c', marginBottom: '8px', fontWeight: 'bold' }}>THÔNG TIN NGÂN HÀNG NHẬN</div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#848e9c' }}>Ngân hàng:</span>
+                          <span style={{ color: '#fff', fontWeight: 'bold' }}>{selectedWithdrawForDetail.BankName}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#848e9c' }}>Số tài khoản:</span>
+                          <span style={{ color: '#fff', fontWeight: 'bold', fontFamily: 'monospace' }}>{selectedWithdrawForDetail.BankAccountNumber}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#848e9c' }}>Chủ tài khoản:</span>
+                          <span style={{ color: '#fff', fontWeight: 'bold' }}>{selectedWithdrawForDetail.BankAccountHolder}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#848e9c' }}>Chi nhánh:</span>
+                          <span style={{ color: '#fff' }}>{selectedWithdrawForDetail.BankBranch || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: '#848e9c', fontSize: '13px' }}>Trạng thái:</span>
+                      <span style={{
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        background: selectedWithdrawForDetail.Status === 'APPROVED' ? 'rgba(36,219,155,0.1)' : selectedWithdrawForDetail.Status === 'REJECTED' ? 'rgba(246,70,93,0.1)' : 'rgba(240,185,11,0.1)',
+                        color: selectedWithdrawForDetail.Status === 'APPROVED' ? '#24DB9B' : selectedWithdrawForDetail.Status === 'REJECTED' ? '#F6465D' : '#F0B90B'
+                      }}>
+                        {selectedWithdrawForDetail.Status === 'APPROVED' ? 'Đã duyệt' : selectedWithdrawForDetail.Status === 'REJECTED' ? 'Từ chối' : 'Chờ duyệt'}
+                      </span>
+                    </div>
+
+                    {selectedWithdrawForDetail.Note && (
+                      <div style={{ fontSize: '13px', color: '#848e9c' }}>
+                        <strong>Ghi chú:</strong> {selectedWithdrawForDetail.Note}
+                      </div>
+                    )}
+
+                    {selectedWithdrawForDetail.Status === 'PENDING' && (
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                        <button
+                          onClick={() => {
+                            handleApproveWithdraw(selectedWithdrawForDetail.Id, selectedWithdrawForDetail.Amount, selectedWithdrawForDetail.Email);
+                          }}
+                          style={{ flex: 1, padding: '12px', background: '#24DB9B', border: 'none', borderRadius: '8px', color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                        >
+                          Phê duyệt rút tiền
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleRejectWithdraw(selectedWithdrawForDetail.Id, selectedWithdrawForDetail.Amount, selectedWithdrawForDetail.Email);
+                          }}
+                          style={{ flex: 1, padding: '12px', background: '#F6465D', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                        >
+                          Từ chối
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : view === 'deposit' ? (
           <div className="admin-deposit-container" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
