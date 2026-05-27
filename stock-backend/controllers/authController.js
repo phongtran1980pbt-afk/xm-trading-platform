@@ -5,7 +5,7 @@ import { poolPromise, SECRET_KEY } from '../config/db.js';
 import { getTrueTime } from '../timeService.js';
 
 export const register = async (req, res) => {
-  const { email, password, fullName } = req.body;
+  const { email, password, fullName, country, idCardType, idNumber, idFrontPhoto, idBackPhoto } = req.body;
   
   try {
     const pool = await poolPromise;
@@ -31,13 +31,24 @@ export const register = async (req, res) => {
     // Generate 8-digit AccountCode
     const accountCode = Math.floor(10000000 + Math.random() * 90000000).toString();
 
-    // 2. Lưu vào bảng Users
+    // 2. Lưu vào bảng Users với các trường KYC
     const insertUser = await pool.request()
       .input('email', sql.NVarChar, email)
       .input('password', sql.NVarChar, hashedPassword)
-      .input('fullName', sql.NVarChar, fullName)
+      .input('fullName', sql.NVarChar, fullName || 'Nhà giao dịch KANET')
       .input('accountCode', sql.NVarChar, accountCode)
-      .query('INSERT INTO Users (Email, PasswordHash, FullName, AccountCode, IsActive) OUTPUT INSERTED.Id VALUES (@email, @password, @fullName, @accountCode, 1)');
+      .input('country', sql.NVarChar, country || 'Vietnam')
+      .input('idCardType', sql.NVarChar, idCardType || 'Thẻ căn cước')
+      .input('idNumber', sql.NVarChar, idNumber || '')
+      .input('idFrontPhoto', sql.NVarChar, idFrontPhoto || '')
+      .input('idBackPhoto', sql.NVarChar, idBackPhoto || '')
+      .query(`
+        INSERT INTO Users 
+        (Email, PasswordHash, FullName, AccountCode, IsActive, Country, IdCardType, IdNumber, IdFrontPhoto, IdBackPhoto) 
+        OUTPUT INSERTED.Id 
+        VALUES 
+        (@email, @password, @fullName, @accountCode, 1, @country, @idCardType, @idNumber, @idFrontPhoto, @idBackPhoto)
+      `);
 
     const newUserId = insertUser.recordset[0].Id;
 

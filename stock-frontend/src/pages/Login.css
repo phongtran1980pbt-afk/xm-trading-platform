@@ -290,3 +290,221 @@
     display: none;
   }
 }
+
+/* ===== KYC / ACCOUNT VERIFICATION STYLES ===== */
+.k-kyc-form {
+  margin-top: 8px;
+}
+
+.k-kyc-label {
+  display: block;
+  font-size: 13px;
+  color: #cdd5e0;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.k-kyc-select {
+  width: 100%;
+  background-color: #1f242e;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23848e9c' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  transition: border-color 0.2s;
+}
+
+.k-kyc-select:focus {
+  border-color: #24DB9B;
+}
+
+.k-kyc-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.k-kyc-input-clear {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #848e9c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.k-kyc-input-clear:hover {
+  opacity: 1;
+}
+
+.k-kyc-upload-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.k-kyc-upload-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.k-kyc-upload-box {
+  width: 100%;
+  height: 96px;
+  background-color: #1e2530;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.k-kyc-upload-box:hover {
+  border-color: #24DB9B;
+  background-color: #242c39;
+}
+
+.k-kyc-upload-box svg {
+  width: 24px;
+  height: 24px;
+  color: #848e9c;
+}
+
+.k-kyc-upload-subtext {
+  font-size: 11px;
+  color: #848e9c;
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.4;
+  height: 32px;
+}
+
+.k-kyc-examples {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.k-kyc-examples-title {
+  font-size: 13px;
+  color: #cdd5e0;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.k-kyc-examples-container {
+  display: flex;
+  gap: 16px;
+}
+
+.k-kyc-example-card {
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 6px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+}
+
+.k-kyc-example-card img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.k-kyc-btn-submit {
+  width: 100%;
+  background-color: #1e92f4;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(30, 146, 244, 0.3);
+}
+
+.k-kyc-btn-submit:hover {
+  background-color: #1a82da;
+}
+
+.k-kyc-warning-text {
+  font-size: 11px;
+  color: #848e9c;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.k-kyc-warning-link {
+  color: #1e92f4;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.k-kyc-warning-link:hover {
+  color: #4faaf7;
+  text-decoration: underline;
+}
+
+.k-kyc-preview-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(11, 15, 20, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.k-kyc-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.k-kyc-preview-remove {
+  position: absolute;
+  top: 4px; right: 4px;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+}
+.k-kyc-preview-remove:hover {
+  background: rgba(0,0,0,0.8);
+}
+

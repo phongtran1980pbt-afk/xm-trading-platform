@@ -25,6 +25,7 @@ const countries = [
 
 function Register() {
   const navigate = useNavigate();
+  const [step, setStep] = React.useState(1); // 1: Info, 2: KYC/Verification
   const [selectedCountry, setSelectedCountry] = React.useState("Vietnam");
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = React.useState(false);
 
@@ -36,6 +37,15 @@ function Register() {
   const [isTermsChecked, setIsTermsChecked] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [serverError, setServerError] = React.useState('');
+
+  // KYC States
+  const [idCardType, setIdCardType] = React.useState("Thẻ căn cước");
+  const [idNumber, setIdNumber] = React.useState("");
+  const [idFrontPhoto, setIdFrontPhoto] = React.useState("");
+  const [idBackPhoto, setIdBackPhoto] = React.useState("");
+
+  const frontInputRef = React.useRef(null);
+  const backInputRef = React.useRef(null);
 
   const isEmailValid = email.length > 10 && email.toLowerCase().endsWith('@gmail.com');
   const isEmailError = email.length > 0 && !isEmailValid;
@@ -50,37 +60,86 @@ function Register() {
   const isPasswordError = isPasswordTouched && password.length > 0 && !isPasswordValid;
   const isFormValid = isEmailValid && isPasswordValid && isTermsChecked;
 
-  const handleSubmit = async (e) => {
+  const handleNextStep = (e) => {
     e.preventDefault();
-    if (isFormValid && !isLoading) {
-       setIsLoading(true);
-       setServerError('');
-       try {
-          const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
-             email: email,
-             password: password,
-             fullName: 'Nhà giao dịch KUCOIN'
-          });
+    if (isFormValid) {
+      setServerError('');
+      setStep(2);
+    }
+  };
 
-          if (response.status === 201) {
-             navigate('/login');
-          }
-       } catch (error) {
-          console.error('Lỗi đăng ký:', error);
-          const msg = error.response?.data?.message;
-          if (msg && (msg.includes('đã tồn tại') || msg.includes('đã được đăng ký'))) {
-             setServerError('Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.');
-          } else {
-             alert(msg || 'Không thể kết nối tới Server!');
-          }
-       } finally {
-          setIsLoading(false);
-       }
+  const handlePhotoUpload = (e, side) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (side === 'front') {
+          setIdFrontPhoto(reader.result);
+        } else {
+          setIdBackPhoto(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFinalRegister = async (e) => {
+    e.preventDefault();
+    if (!idNumber.trim()) {
+      alert('Vui lòng nhập số ID/hộ chiếu của bạn!');
+      return;
+    }
+    
+    setIsLoading(true);
+    setServerError('');
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
+        email: email,
+        password: password,
+        fullName: 'Nhà giao dịch KANET',
+        country: selectedCountry,
+        idCardType: idCardType,
+        idNumber: idNumber,
+        idFrontPhoto: idFrontPhoto,
+        idBackPhoto: idBackPhoto
+      });
+
+      if (response.status === 201) {
+        alert('Đăng ký tài khoản và xác thực KYC thành công! Vui lòng đăng nhập.');
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Lỗi đăng ký:', error);
+      const msg = error.response?.data?.message;
+      if (msg && (msg.includes('đã tồn tại') || msg.includes('đã được đăng ký'))) {
+        setServerError('Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.');
+        setStep(1); // Quay lại step 1 để đổi email
+      } else {
+        alert(msg || 'Không thể kết nối tới Server!');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="k-login-wrapper">
+      {/* Invisible file inputs for KYC uploads */}
+      <input
+        type="file"
+        ref={frontInputRef}
+        onChange={(e) => handlePhotoUpload(e, 'front')}
+        accept="image/*"
+        style={{ display: 'none' }}
+      />
+      <input
+        type="file"
+        ref={backInputRef}
+        onChange={(e) => handlePhotoUpload(e, 'back')}
+        accept="image/*"
+        style={{ display: 'none' }}
+      />
+
       {/* Left Panel */}
       <div className="k-login-left">
         <Link to="/" className="k-login-brand">
@@ -141,148 +200,348 @@ function Register() {
                <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>100<span style={{ fontSize: '16px' }}>%</span></div>
             </div>
 
-            <h2 style={{ marginBottom: '8px' }}>Hãy đăng ký!</h2>
-            <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '32px' }}>Bạn đã có tài khoản? <Link to="/login" style={{ color: '#24DB9B', textDecoration: 'none' }}>Đăng nhập</Link></p>
+            {step === 1 ? (
+              <>
+                <h2 style={{ marginBottom: '8px' }}>Hãy đăng ký!</h2>
+                <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '32px' }}>
+                  Bạn đã có tài khoản? <Link to="/login" style={{ color: '#24DB9B', textDecoration: 'none' }}>Đăng nhập</Link>
+                </p>
 
-            <form onSubmit={handleSubmit}>
-               {/* Country Dropdown */}
-               <div className="k-input-group" style={{ position: 'relative' }}>
-                 <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>Quốc gia cư trú</label>
-                 <div 
-                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                    style={{
-                      width: '100%', backgroundColor: 'transparent', border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '8px', padding: '14px 16px', color: '#ffffff', fontSize: '14px',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer'
-                    }}
-                 >
-                    <span>{selectedCountry}</span>
-                    <span style={{ fontSize: '10px' }}>▼</span>
-                 </div>
-                 {isCountryDropdownOpen && (
-                    <div style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#1f242e',
-                      border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', marginTop: '4px',
-                      maxHeight: '200px', overflowY: 'auto', zIndex: 100
-                    }}>
-                       {countries.sort().map((country, idx) => (
-                          <div 
-                             key={idx} 
-                             onClick={() => {
-                                setSelectedCountry(country);
-                                setIsCountryDropdownOpen(false);
-                             }}
-                             style={{
-                               padding: '12px 16px', fontSize: '14px', cursor: 'pointer',
-                               backgroundColor: selectedCountry === country ? 'rgba(36,219,155,0.1)' : 'transparent',
-                               color: selectedCountry === country ? '#24DB9B' : '#fff'
-                             }}
-                          >
-                             {country}
-                          </div>
-                       ))}
-                    </div>
-                 )}
-               </div>
-
-               {/* Email */}
-               <div className="k-input-group">
-                 <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>Email</label>
-                 <input 
-                    type="email" 
-                    placeholder="Email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    style={{ borderColor: isEmailError ? '#d32f2f' : '' }}
-                 />
-                 {isEmailError && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px' }}>Email phải có đuôi @gmail.com</div>}
-                 {serverError && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px' }}>{serverError}</div>}
-               </div>
-
-               {/* Password */}
-               <div className="k-input-group" style={{ position: 'relative' }}>
-                 <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>Mật khẩu</label>
-                 <div style={{ position: 'relative' }}>
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="Mật khẩu" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onFocus={() => setIsPasswordFocused(true)}
-                      onBlur={() => {
-                        setIsPasswordFocused(false);
-                        setIsPasswordTouched(true);
-                      }}
-                      style={{ borderColor: isPasswordError ? '#d32f2f' : '' }}
-                    />
-                    <span 
-                      onClick={() => setShowPassword(!showPassword)}
-                      style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#a0a0a0' }}
-                    >
-                      {showPassword ? (
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                      )}
-                    </span>
-                 </div>
-
-                 {isPasswordFocused && (
-                   <div style={{
-                     position: 'absolute', bottom: '100%', left: 0, width: '100%', backgroundColor: '#1f242e',
-                     border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '16px',
-                     marginBottom: '8px', zIndex: 100, fontSize: '12px', color: '#a0a0a0',
-                     boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-                   }}>
-                      <div style={{ color: '#fff', fontWeight: '600', marginBottom: '8px' }}>Các yêu cầu về mật khẩu:</div>
-                      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                         <li style={{ color: pwReq1 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq1 ? '✓' : '×'} Sử dụng 10 - 15 ký tự</li>
-                         <li style={{ color: pwReq2 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq2 ? '✓' : '×'} Sử dụng 1 hoặc nhiều số</li>
-                         <li style={{ color: pwReq3 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq3 ? '✓' : '×'} Sử dụng chữ thường</li>
-                         <li style={{ color: pwReq4 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq4 ? '✓' : '×'} Sử dụng chữ hoa</li>
-                         <li style={{ color: pwReq5 ? '#24DB9B' : '#a0a0a0' }}>{pwReq5 ? '✓' : '×'} Ký tự đặc biệt (#[]()@$&*!?:;.-_=+^~,&lt;&gt;)</li>
-                      </ul>
+                <form onSubmit={handleNextStep}>
+                   {/* Country Dropdown */}
+                   <div className="k-input-group" style={{ position: 'relative' }}>
+                     <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>Quốc gia cư trú</label>
+                     <div 
+                        onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                        style={{
+                          width: '100%', backgroundColor: 'transparent', border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '8px', padding: '14px 16px', color: '#ffffff', fontSize: '14px',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer'
+                        }}
+                     >
+                        <span>{selectedCountry}</span>
+                        <span style={{ fontSize: '10px' }}>▼</span>
+                     </div>
+                     {isCountryDropdownOpen && (
+                        <div style={{
+                          position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#1f242e',
+                          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', marginTop: '4px',
+                          maxHeight: '200px', overflowY: 'auto', zIndex: 100
+                        }}>
+                           {countries.sort().map((country, idx) => (
+                              <div 
+                                 key={idx} 
+                                 onClick={() => {
+                                    setSelectedCountry(country);
+                                    setIsCountryDropdownOpen(false);
+                                 }}
+                                 style={{
+                                   padding: '12px 16px', fontSize: '14px', cursor: 'pointer',
+                                   backgroundColor: selectedCountry === country ? 'rgba(36,219,155,0.1)' : 'transparent',
+                                   color: selectedCountry === country ? '#24DB9B' : '#fff'
+                                 }}
+                              >
+                                 {country}
+                              </div>
+                           ))}
+                        </div>
+                     )}
                    </div>
-                 )}
-               </div>
 
-               <p style={{ fontSize: '13px', color: '#a0a0a0', marginBottom: '24px' }}>Bạn có Mã đối tác? <a href="#" style={{ color: '#24DB9B', textDecoration: 'none' }}>Nhập vào đây</a></p>
+                   {/* Email */}
+                   <div className="k-input-group">
+                     <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>Email</label>
+                     <input 
+                        type="email" 
+                        placeholder="Email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        style={{ borderColor: isEmailError ? '#d32f2f' : '' }}
+                     />
+                     {isEmailError && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px' }}>Email phải có đuôi @gmail.com</div>}
+                     {serverError && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '6px' }}>{serverError}</div>}
+                   </div>
 
-               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '24px', cursor: 'pointer' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={isTermsChecked}
-                    onChange={(e) => setIsTermsChecked(e.target.checked)}
-                    style={{ marginTop: '4px', accentColor: '#24DB9B' }}
-                  />
-                  <span style={{ fontSize: '12px', color: (!isTermsChecked && isPasswordTouched) ? '#d32f2f' : '#a0a0a0', lineHeight: '1.5' }}>
-                    Tôi đồng ý nhận các email marketing và cho phép dữ liệu của mình được sử dụng để tối ưu hóa và cá nhân hóa vì mục đích tiếp thị và quảng cáo.
-                  </span>
-               </label>
+                   {/* Password */}
+                   <div className="k-input-group" style={{ position: 'relative' }}>
+                     <label style={{ display: 'block', fontSize: '12px', color: '#a0a0a0', marginBottom: '8px' }}>Mật khẩu</label>
+                     <div style={{ position: 'relative' }}>
+                        <input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Mật khẩu" 
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onFocus={() => setIsPasswordFocused(true)}
+                          onBlur={() => {
+                            setIsPasswordFocused(false);
+                            setIsPasswordTouched(true);
+                          }}
+                          style={{ borderColor: isPasswordError ? '#d32f2f' : '' }}
+                        />
+                        <span 
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#a0a0a0' }}
+                        >
+                          {showPassword ? (
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                          )}
+                        </span>
+                     </div>
 
-               {(!isFormValid && isPasswordTouched) && (
-                 <div style={{ color: '#d32f2f', fontSize: '13px', textAlign: 'center', marginBottom: '16px' }}>
-                    Vui lòng hoàn thành tất cả yêu cầu (Email, Mật khẩu, Đồng ý điều khoản) để tiếp tục.
-                 </div>
-               )}
+                     {isPasswordFocused && (
+                       <div style={{
+                         position: 'absolute', bottom: '100%', left: 0, width: '100%', backgroundColor: '#1f242e',
+                         border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '16px',
+                         marginBottom: '8px', zIndex: 100, fontSize: '12px', color: '#a0a0a0',
+                         boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                       }}>
+                          <div style={{ color: '#fff', fontWeight: '600', marginBottom: '8px' }}>Các yêu cầu về mật khẩu:</div>
+                          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                             <li style={{ color: pwReq1 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq1 ? '✓' : '×'} Sử dụng 10 - 15 ký tự</li>
+                             <li style={{ color: pwReq2 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq2 ? '✓' : '×'} Sử dụng 1 hoặc nhiều số</li>
+                             <li style={{ color: pwReq3 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq3 ? '✓' : '×'} Sử dụng chữ thường</li>
+                             <li style={{ color: pwReq4 ? '#24DB9B' : '#a0a0a0', marginBottom: '4px' }}>{pwReq4 ? '✓' : '×'} Sử dụng chữ hoa</li>
+                             <li style={{ color: pwReq5 ? '#24DB9B' : '#a0a0a0' }}>{pwReq5 ? '✓' : '×'} Ký tự đặc biệt (#[]()@$&*!?:;.-_=+^~,&lt;&gt;)</li>
+                          </ul>
+                       </div>
+                     )}
+                   </div>
 
-               <button 
-                 type="submit" 
-                 className="k-btn-primary" 
-                 disabled={!isFormValid || isLoading}
-                 style={{
-                   opacity: isFormValid ? 1 : 0.5,
-                   cursor: isFormValid ? 'pointer' : 'not-allowed',
-                   marginBottom: '16px'
-                 }}
-               >
-                 {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
-               </button>
+                   <p style={{ fontSize: '13px', color: '#a0a0a0', marginBottom: '24px' }}>Bạn có Mã đối tác? <a href="#" style={{ color: '#24DB9B', textDecoration: 'none' }}>Nhập vào đây</a></p>
 
-               <div style={{ fontSize: '11px', color: '#7e8a9c', textAlign: 'center', lineHeight: '1.5' }}>
-                 Cùng với việc đăng ký, tôi tuyên bố rằng tôi đã đọc kỹ, hiểu và chấp nhận toàn bộ nội dung của <a href="#" style={{ color: '#a0a0a0' }}>Các văn bản pháp lý</a> và <a href="#" style={{ color: '#a0a0a0' }}>Chính sách bảo mật</a>.
-               </div>
-            </form>
+                   <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '24px', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={isTermsChecked}
+                        onChange={(e) => setIsTermsChecked(e.target.checked)}
+                        style={{ marginTop: '4px', accentColor: '#24DB9B' }}
+                      />
+                      <span style={{ fontSize: '12px', color: (!isTermsChecked && isPasswordTouched) ? '#d32f2f' : '#a0a0a0', lineHeight: '1.5' }}>
+                        Tôi đồng ý nhận các email marketing và cho phép dữ liệu của mình được sử dụng để tối ưu hóa và cá nhân hóa vì mục đích tiếp thị và quảng cáo.
+                      </span>
+                   </label>
+
+                   {(!isFormValid && isPasswordTouched) && (
+                     <div style={{ color: '#d32f2f', fontSize: '13px', textAlign: 'center', marginBottom: '16px' }}>
+                        Vui lòng hoàn thành tất cả yêu cầu (Email, Mật khẩu, Đồng ý điều khoản) để tiếp tục.
+                     </div>
+                   )}
+
+                   <button 
+                     type="submit" 
+                     className="k-btn-primary" 
+                     disabled={!isFormValid || isLoading}
+                     style={{
+                       opacity: isFormValid ? 1 : 0.5,
+                       cursor: isFormValid ? 'pointer' : 'not-allowed',
+                       marginBottom: '16px'
+                     }}
+                   >
+                     {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
+                   </button>
+
+                   <div style={{ fontSize: '11px', color: '#7e8a9c', textAlign: 'center', lineHeight: '1.5' }}>
+                     Cùng với việc đăng ký, tôi tuyên bố rằng tôi đã đọc kỹ, hiểu và chấp nhận toàn bộ nội dung của <a href="#" style={{ color: '#a0a0a0' }}>Các văn bản pháp lý</a> và <a href="#" style={{ color: '#a0a0a0' }}>Chính sách bảo mật</a>.
+                   </div>
+                </form>
+              </>
+            ) : (
+              // Step 2: KYC Account Verification Interface (Like image 2)
+              <div className="k-kyc-form">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>Xác thực tài khoản</h3>
+                  <button 
+                    onClick={() => setStep(1)} 
+                    style={{ background: 'none', border: 'none', color: '#848e9c', fontSize: '12px', cursor: 'pointer', padding: '4px' }}
+                  >
+                    ← Quay lại
+                  </button>
+                </div>
+
+                <form onSubmit={handleFinalRegister}>
+                  {/* Selected region display */}
+                  <div className="k-input-group" style={{ marginBottom: '16px' }}>
+                    <span className="k-kyc-label">Khu vực cư trú</span>
+                    <div style={{
+                      backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '14px 16px',
+                      color: '#eaecef', fontSize: '14px', border: '1px solid rgba(255, 255, 255, 0.08)'
+                    }}>
+                      {selectedCountry}
+                    </div>
+                  </div>
+
+                  {/* ID Card Type select */}
+                  <div className="k-input-group" style={{ marginBottom: '16px' }}>
+                    <label className="k-kyc-label">Xác định loại</label>
+                    <select 
+                      className="k-kyc-select"
+                      value={idCardType}
+                      onChange={(e) => setIdCardType(e.target.value)}
+                    >
+                      <option value="Thẻ căn cước">Thẻ căn cước</option>
+                      <option value="Hộ chiếu">Hộ chiếu</option>
+                      <option value="Bằng lái xe">Bằng lái xe</option>
+                    </select>
+                  </div>
+
+                  {/* ID Card Number Input */}
+                  <div className="k-input-group" style={{ marginBottom: '20px' }}>
+                    <label className="k-kyc-label">Số chứng chỉ/hộ chiếu</label>
+                    <div className="k-kyc-input-wrapper">
+                      <input 
+                        type="text" 
+                        placeholder="Vui lòng nhập số ID/hộ chiếu của bạn"
+                        value={idNumber}
+                        onChange={(e) => setIdNumber(e.target.value)}
+                        style={{ paddingRight: '48px' }}
+                        required
+                      />
+                      {idNumber && (
+                        <button 
+                          type="button" 
+                          className="k-kyc-input-clear"
+                          onClick={() => setIdNumber('')}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Upload Photos */}
+                  <div className="k-kyc-label">Ảnh chứng nhận/Tải lên hộ chiếu</div>
+                  <div className="k-kyc-upload-container">
+                    
+                    {/* Front side upload box */}
+                    <div className="k-kyc-upload-item">
+                      <div 
+                        className="k-kyc-upload-box"
+                        onClick={() => frontInputRef.current.click()}
+                      >
+                        {idFrontPhoto ? (
+                          <div className="k-kyc-preview-overlay">
+                            <img src={idFrontPhoto} className="k-kyc-preview-img" alt="Front ID Preview" />
+                            <button 
+                              type="button" 
+                              className="k-kyc-preview-remove"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIdFrontPhoto('');
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                          </svg>
+                        )}
+                      </div>
+                      <span className="k-kyc-upload-subtext">Mặt trận thông tin xác thực</span>
+                    </div>
+
+                    {/* Back side upload box */}
+                    <div className="k-kyc-upload-item">
+                      <div 
+                        className="k-kyc-upload-box"
+                        onClick={() => backInputRef.current.click()}
+                      >
+                        {idBackPhoto ? (
+                          <div className="k-kyc-preview-overlay">
+                            <img src={idBackPhoto} className="k-kyc-preview-img" alt="Back ID Preview" />
+                            <button 
+                              type="button" 
+                              className="k-kyc-preview-remove"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIdBackPhoto('');
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                          </svg>
+                        )}
+                      </div>
+                      <span className="k-kyc-upload-subtext">Mặt trái của chứng chỉ</span>
+                    </div>
+
+                  </div>
+
+                  {/* Examples Section */}
+                  <div className="k-kyc-examples">
+                    <div className="k-kyc-examples-title">Ví dụ chụp</div>
+                    <div className="k-kyc-examples-container">
+                      
+                      {/* Front example card */}
+                      <div className="k-kyc-example-card">
+                        <div style={{ width: '100%', height: '100%', background: '#f5f7fa', borderRadius: '4px', border: '1px solid #e1e4e8', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '8px', color: '#000' }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ width: '22px', height: '26px', background: '#0088ff', borderRadius: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              <div style={{ height: '3px', width: '100%', background: '#ffaa66', borderRadius: '1px' }}></div>
+                              <div style={{ height: '3px', width: '80%', background: '#ffaa66', borderRadius: '1px' }}></div>
+                              <div style={{ height: '3px', width: '90%', background: '#ffaa66', borderRadius: '1px' }}></div>
+                            </div>
+                          </div>
+                          <div style={{ height: '3px', width: '100%', background: '#ffaa66', borderRadius: '1px' }}></div>
+                        </div>
+                      </div>
+
+                      {/* Back example card */}
+                      <div className="k-kyc-example-card">
+                        <div style={{ width: '100%', height: '100%', background: '#f5f7fa', borderRadius: '4px', border: '1px solid #e1e4e8', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '8px', color: '#000', position: 'relative' }}>
+                          <div style={{ height: '10px', width: '100%', background: '#7e6c5c', borderRadius: '1px', marginTop: '4px' }}></div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2.5px solid #a68b75', display: 'flex', alignItems: 'center', justifyContents: 'center' }}></div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', width: '40px' }}>
+                              <div style={{ height: '2px', width: '100%', background: '#ffaa66', borderRadius: '1px' }}></div>
+                              <div style={{ height: '2px', width: '70%', background: '#ffaa66', borderRadius: '1px' }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {serverError && <div style={{ color: '#d32f2f', fontSize: '13px', marginBottom: '16px' }}>{serverError}</div>}
+
+                  {/* Submit Button */}
+                  <button 
+                    type="submit" 
+                    className="k-kyc-btn-submit"
+                    disabled={isLoading || !idNumber}
+                    style={{
+                      opacity: (isLoading || !idNumber) ? 0.6 : 1,
+                      cursor: (isLoading || !idNumber) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isLoading ? 'Đang xử lý...' : 'Đăng ký xác thực'}
+                  </button>
+
+                  {/* Warning Footer Text */}
+                  <div className="k-kyc-warning-text">
+                    Không thể tải lên ảnh ID, vui lòng liên hệ với dịch vụ khách hàng để lấy địa chỉ email để gửi ảnh ID hoặc tải lên lại Ví dụ chụp.&nbsp;
+                    <a href="/support" className="k-kyc-warning-link" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ hỗ trợ trực tuyến để được trợ giúp tải lên ảnh ID!'); }}>
+                      Liên hệ với dịch vụ khách hàng
+                    </a>
+                  </div>
+
+                </form>
+              </div>
+            )}
+
           </div>
         </div>
       </div>

@@ -38,6 +38,31 @@ const connectDB = async () => {
                 PRINT '✅ [SQL Server] Đã tạo bảng AuditLogs'
             END
         `);
+
+        // Dynamic schema migration for KYC verification columns in Users table
+        await pool.request().query(`
+            IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'Country' AND Object_ID = Object_ID(N'Users'))
+            BEGIN
+                ALTER TABLE Users ADD Country NVARCHAR(100) NULL;
+            END
+            IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'IdCardType' AND Object_ID = Object_ID(N'Users'))
+            BEGIN
+                ALTER TABLE Users ADD IdCardType NVARCHAR(50) NULL;
+            END
+            IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'IdNumber' AND Object_ID = Object_ID(N'Users'))
+            BEGIN
+                ALTER TABLE Users ADD IdNumber NVARCHAR(50) NULL;
+            END
+            IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'IdFrontPhoto' AND Object_ID = Object_ID(N'Users'))
+            BEGIN
+                ALTER TABLE Users ADD IdFrontPhoto NVARCHAR(MAX) NULL;
+            END
+            IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'IdBackPhoto' AND Object_ID = Object_ID(N'Users'))
+            BEGIN
+                ALTER TABLE Users ADD IdBackPhoto NVARCHAR(MAX) NULL;
+            END
+        `);
+        console.log('✅ [SQL Server] Đã kiểm tra và cập nhật các cột KYC cho bảng Users');
         
         return pool;
     } catch (err) {
