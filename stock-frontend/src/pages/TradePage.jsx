@@ -901,9 +901,6 @@ export default function TradePage() {
 
       {/* Mobile Top Navigation Bar */}
       <div className="tp-m-topbar">
-        <button className="tp-m-nav-btn" onClick={() => navigate(-1)}>
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        </button>
         <button className="tp-m-nav-btn">
           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><line x1="3" y1="5" x2="21" y2="5"/><polyline points="7 23 3 19 7 15"/><line x1="21" y1="19" x2="3" y2="19"/></svg>
         </button>
@@ -1281,8 +1278,8 @@ export default function TradePage() {
         <div className="th-coin-info">
           <div className="th-ci-left">
             <div className="th-coin-identity">
-              <div className="th-coin-logo-circle" style={{background: '#ff9800', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff'}}>
-                <span className="th-coin-logo-char">{coin.charAt(0)}</span>
+              <div className="th-coin-logo-circle" style={{background: 'transparent', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                {renderKuCoinLogo(30)}
               </div>
               <div 
                 className="th-coin-names" 
@@ -1294,7 +1291,7 @@ export default function TradePage() {
                   onClick={() => setShowCoinSelector(!showCoinSelector)}
                   style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                 >
-                  {coin} <span style={{fontSize:'12px', color:'#848e9c', marginLeft:'4px'}}>▾</span>
+                  {coin}
                 </div>
                 <div className="th-coin-contract">
                   Fmj...pump <span>📋</span>
@@ -1659,20 +1656,21 @@ export default function TradePage() {
               </div>
             </div>
 
-            <div className="rp-input-row">
-              <div className="rp-label">
-                <span>Khả dụng</span>
-                <span style={{color:'#848e9c'}}>{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT</span>
+            <div className="rp-input-row" style={{ marginBottom: '14px' }}>
+              <div className="rp-label" style={{ marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Khả dụng</span>
+                <span style={{color:'#848e9c', fontSize: '12px'}}>{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT</span>
               </div>
-              <div className="rp-input-wrap">
-                <span className="rp-input-label-left">Số lượng</span>
+              <div className="rp-input-wrap" style={{ height: '52px', padding: '0 12px', borderRadius: '6px', border: '1px solid #474f59' }}>
+                <span className="rp-input-label-left" style={{ fontSize: '14px', fontWeight: 'bold', color: '#eaecef' }}>Số lượng</span>
                 <input 
                   type="number" 
                   placeholder="0.00" 
                   value={binaryAmount}
                   onChange={(e) => setBinaryAmount(e.target.value)}
+                  style={{ fontSize: '22px', fontWeight: '800', color: '#00FFA3', textAlign: 'right', flex: 1, paddingRight: '8px' }}
                 />
-                <span className="rp-input-unit">{coin}</span>
+                <span className="rp-input-unit" style={{ fontSize: '14px', fontWeight: 'bold', color: '#eaecef' }}>{coin}</span>
               </div>
             </div>
 
@@ -1722,24 +1720,24 @@ export default function TradePage() {
             </div>
 
             {/* Balance Big Display */}
-            <div style={{ background: 'linear-gradient(135deg, rgba(36,219,155,0.08), rgba(0,255,163,0.04))', borderRadius: '12px', padding: '16px', marginBottom: '14px', border: '1px solid rgba(36,219,155,0.15)' }}>
-              <div style={{ fontSize: '11px', color: '#848e9c', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span>Số dư</span>
+            <div style={{ background: 'linear-gradient(135deg, rgba(36,219,155,0.12), rgba(0,255,163,0.06))', borderRadius: '12px', padding: '20px', marginBottom: '14px', border: '1px solid rgba(0,255,163,0.25)', boxShadow: '0 4px 20px rgba(0,255,163,0.05)' }}>
+              <div style={{ fontSize: '13px', color: '#eaecef', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                <span>Số dư tài khoản</span>
                 <span
                   style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
                   onClick={() => setShowBalance(!showBalance)}
                 >
                   {showBalance ? (
-                    <svg width="13" height="13" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg width="15" height="15" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   ) : (
-                    <svg width="13" height="13" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <svg width="15" height="15" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                   )}
                 </span>
               </div>
-              <div style={{ fontSize: '28px', fontWeight: '800', color: '#24DB9B', letterSpacing: '-0.5px', fontFamily: 'monospace', lineHeight: 1 }}>
+              <div style={{ fontSize: '38px', fontWeight: '900', color: '#00FFA3', letterSpacing: '-0.5px', fontFamily: 'monospace', lineHeight: 1.1, textShadow: '0 0 12px rgba(0,255,163,0.3)' }}>
                 {showBalance ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '$••••••'}
               </div>
-              <div style={{ fontSize: '11px', color: '#848e9c', marginTop: '6px' }}>
+              <div style={{ fontSize: '13px', color: '#848e9c', marginTop: '8px', fontWeight: '500' }}>
                 ≈ {showBalance ? (balance / (btcCoin?.price || 77000)).toFixed(6) : '••••••'} BTC
               </div>
             </div>
@@ -1750,34 +1748,35 @@ export default function TradePage() {
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center', 
-                gap: '8px', 
-                padding: '16px', 
-                background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.06)' : 'rgba(246,70,93,0.06)', 
+                gap: '12px', 
+                padding: '20px', 
+                background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.08)' : 'rgba(246,70,93,0.08)', 
                 borderRadius: '12px', 
-                border: `1px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.15)' : 'rgba(246,70,93,0.15)'}`,
+                border: `1px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.25)' : 'rgba(246,70,93,0.25)'}`,
+                boxShadow: countdownBetType === 'UP' ? '0 0 20px rgba(0,255,163,0.08)' : '0 0 20px rgba(246,70,93,0.08)',
                 marginBottom: '14px'
               }}>
-                <div style={{ position: 'relative', width: '90px', height: '90px' }}>
-                  <svg width="90" height="90" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="45" cy="45" r="38" fill="none" stroke="#1e2329" strokeWidth="6" />
+                <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+                  <svg width="130" height="130" style={{ transform: 'rotate(-90deg)', filter: countdownBetType === 'UP' ? 'drop-shadow(0 0 8px rgba(0,255,163,0.3))' : 'drop-shadow(0 0 8px rgba(246,70,93,0.3))' }}>
+                    <circle cx="65" cy="65" r="54" fill="none" stroke="#1e2329" strokeWidth="8" />
                     <circle
-                      cx="45" cy="45" r="38"
+                      cx="65" cy="65" r="54"
                       fill="none"
                       stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
-                      strokeWidth="6"
+                      strokeWidth="8"
                       strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 38}`}
-                      strokeDashoffset={`${2 * Math.PI * 38 * (1 - countdownLeft / countdownTotal)}`}
+                      strokeDasharray={`${2 * Math.PI * 54}`}
+                      strokeDashoffset={`${2 * Math.PI * 54 * (1 - countdownLeft / countdownTotal)}`}
                       style={{ transition: 'stroke-dashoffset 0.95s linear' }}
                     />
                   </svg>
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                    <span style={{ fontSize: '24px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
-                    <span style={{ fontSize: '10px', color: '#848e9c', fontWeight: 600 }}>giây</span>
+                    <span style={{ fontSize: '36px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
+                    <span style={{ fontSize: '12px', color: '#848e9c', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>giây</span>
                   </div>
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: 'bold', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D' }}>
-                  {countdownBetType === 'UP' ? '▲ Đang chờ kết toán TĂNG' : '▼ Đang chờ kết toán GIẢM'}
+                <div style={{ fontSize: '14px', fontWeight: '800', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {countdownBetType === 'UP' ? 'Đang chờ kết toán TĂNG' : 'Đang chờ kết toán GIẢM'}
                 </div>
               </div>
             )}
