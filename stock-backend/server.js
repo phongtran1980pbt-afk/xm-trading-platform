@@ -11,6 +11,7 @@ import binaryRoutes from './routes/binaryRoutes.js';
 import { items } from './config/db.js';
 import { syncTime } from './timeService.js';
 import { startBinaryOrderJob } from './services/binaryOrderJob.js';
+import { runAutoMigrations } from './services/autoMigrate.js';
 
 const app = express();
 app.use(cors({
@@ -41,7 +42,7 @@ const swaggerOptions = {
       { url: process.env.BACKEND_URL || `http://localhost:${PORT}` }
     ],
   },
-  apis: ['./routes/*.js'], // Quét routes để tạo docs
+  apis: ['./routes/*.js'],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
@@ -55,7 +56,7 @@ app.use('/api/prices', priceRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/binary', binaryRoutes);
 
-// Items Route (Tạm thời để đây cho nhanh)
+// Items Route
 app.get('/api/items', (req, res) => res.json(items));
 
 // Kiểm tra Server có sống không
@@ -66,4 +67,5 @@ app.listen(PORT, async () => {
   console.log(`📄 Swagger Docs: http://localhost:${PORT}/swagger\n`);
   await syncTime();
   startBinaryOrderJob();
+  await runAutoMigrations();
 });

@@ -531,11 +531,12 @@ export const getBankInfo = async (req, res) => {
       .input('id', sql.Int, id)
       .query(`
         SELECT BankName, BankAccountNumber, BankAccountHolder, BankBranch
-        FROM Users WHERE Id = @id
+        FROM BankAccounts WHERE UserId = @id
       `);
 
     if (result.recordset.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+      // Không có thông tin ngân hàng — trả về rỗng
+      return res.json({ BankName: null, BankAccountNumber: null, BankAccountHolder: null, BankBranch: null });
     }
 
     res.json(result.recordset[0]);
@@ -557,22 +558,44 @@ export const saveBankInfo = async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    await pool.request()
-      .input('id', sql.Int, id)
-      .input('bankName', sql.NVarChar, bankName)
-      .input('bankAccountNumber', sql.NVarChar, bankAccountNumber)
-      .input('bankAccountHolder', sql.NVarChar, bankAccountHolder.toUpperCase())
-      .input('bankBranch', sql.NVarChar, bankBranch || '')
-      .query(`
-        UPDATE Users 
-        SET BankName = @bankName,
-            BankAccountNumber = @bankAccountNumber,
-            BankAccountHolder = @bankAccountHolder,
-            BankBranch = @bankBranch
-        WHERE Id = @id
-      `);
+    // Kiểm tra đã có bản ghi chưa (UPSERT)
+    const existing = await pool.request()
+      .input('userId', sql.Int, id)
+      .query('SELECT Id FROM BankAccounts WHERE UserId = @userId');
 
-    // Log
+    if (existing.recordset.length > 0) {
+      // UPDATE
+      await pool.request()
+        .input('userId', sql.Int, id)
+        .input('bankName', sql.NVarChar, bankName)
+        .input('bankAccountNumber', sql.NVarChar, bankAccountNumber)
+        .input('bankAccountHolder', sql.NVarChar, bankAccountHolder.toUpperCase())
+        .input('bankBranch', sql.NVarChar, bankBranch || '')
+        .input('updatedAt', sql.DateTime, getTrueTime())
+        .query(`
+          UPDATE BankAccounts 
+          SET BankName = @bankName,
+              BankAccountNumber = @bankAccountNumber,
+              BankAccountHolder = @bankAccountHolder,
+              BankBranch = @bankBranch,
+              UpdatedAt = @updatedAt
+          WHERE UserId = @userId
+        `);
+    } else {
+      // INSERT
+      await pool.request()
+        .input('userId', sql.Int, id)
+        .input('bankName', sql.NVarChar, bankName)
+        .input('bankAccountNumber', sql.NVarChar, bankAccountNumber)
+        .input('bankAccountHolder', sql.NVarChar, bankAccountHolder.toUpperCase())
+        .input('bankBranch', sql.NVarChar, bankBranch || '')
+        .query(`
+          INSERT INTO BankAccounts (UserId, BankName, BankAccountNumber, BankAccountHolder, BankBranch)
+          VALUES (@userId, @bankName, @bankAccountNumber, @bankAccountHolder, @bankBranch)
+        `);
+    }
+
+    // Ghi log
     const userRes = await pool.request().input('id', sql.Int, id).query('SELECT Email FROM Users WHERE Id = @id');
     const email = userRes.recordset[0]?.Email || 'Unknown';
 
@@ -604,10 +627,7 @@ export const createWithdrawRequest = async (req, res) => {
     // Kiểm tra user và số dư
     const userRes = await pool.request()
       .input('id', sql.Int, id)
-      .query(`
-        SELECT Email, FullName, Balance, BankName, BankAccountNumber, BankAccountHolder, BankBranch
-        FROM Users WHERE Id = @id
-      `);
+      .query('SELECT Email, FullName, Balance FROM Users WHERE Id = @id');
 
     if (userRes.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
@@ -615,10 +635,16 @@ export const createWithdrawRequest = async (req, res) => {
 
     const user = userRes.recordset[0];
 
-    // Kiểm tra tài khoản ngân hàng đã liên kết chưa
-    if (!user.BankAccountNumber) {
+    // Lấy thông tin ngân hàng từ BankAccounts
+    const bankRes = await pool.request()
+      .input('userId', sql.Int, id)
+      .query('SELECT BankName, BankAccountNumber, BankAccountHolder, BankBranch FROM BankAccounts WHERE UserId = @userId');
+
+    if (bankRes.recordset.length === 0 || !bankRes.recordset[0].BankAccountNumber) {
       return res.status(400).json({ message: 'Vui lòng liên kết tài khoản ngân hàng trước khi rút tiền!' });
     }
+
+    const bank = bankRes.recordset[0];
 
     // Kiểm tra số dư
     if (parseFloat(user.Balance) < parseFloat(amount)) {
@@ -631,10 +657,10 @@ export const createWithdrawRequest = async (req, res) => {
     await pool.request()
       .input('userId', sql.Int, id)
       .input('amount', sql.Decimal(18, 2), parseFloat(amount))
-      .input('bankName', sql.NVarChar, user.BankName || '')
-      .input('bankAccountNumber', sql.NVarChar, user.BankAccountNumber)
-      .input('bankAccountHolder', sql.NVarChar, user.BankAccountHolder || '')
-      .input('bankBranch', sql.NVarChar, user.BankBranch || '')
+      .input('bankName', sql.NVarChar, bank.BankName || '')
+      .input('bankAccountNumber', sql.NVarChar, bank.BankAccountNumber)
+      .input('bankAccountHolder', sql.NVarChar, bank.BankAccountHolder || '')
+      .input('bankBranch', sql.NVarChar, bank.BankBranch || '')
       .input('createdAt', sql.DateTime, getTrueTime())
       .query(`
         INSERT INTO WithdrawRequests (UserId, Amount, BankName, BankAccountNumber, BankAccountHolder, BankBranch, Status, CreatedAt)
@@ -644,7 +670,7 @@ export const createWithdrawRequest = async (req, res) => {
     // Ghi AuditLog để Admin thấy
     await pool.request()
       .input('action', sql.NVarChar, 'Yêu cầu rút tiền')
-      .input('details', sql.NVarChar, `Người dùng ${user.Email} (${user.FullName}) yêu cầu rút $${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} về ${user.BankName} - ${user.BankAccountNumber} (${user.BankAccountHolder})`)
+      .input('details', sql.NVarChar, `Người dùng ${user.Email} (${user.FullName}) yêu cầu rút $${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} về ${bank.BankName} - ${bank.BankAccountNumber} (${bank.BankAccountHolder})`)
       .input('createdAt', sql.DateTime, getTrueTime())
       .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
 
@@ -682,7 +708,5 @@ export const getWithdrawRequests = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 };
-
-
 
 
