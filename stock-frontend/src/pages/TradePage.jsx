@@ -948,15 +948,58 @@ export default function TradePage() {
 
       {/* Mobile Price Info Section */}
       <div className="tp-m-price-section">
-        <div className="tp-m-price-top-row">
-          <div className="tp-m-big-price" style={{ color: priceUp ? '#00FFA3' : '#F6465D' }}>
-            {livePrice >= 100 ? Math.round(livePrice).toLocaleString() : fmt(livePrice, 4)}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div>
+            <div className="tp-m-price-top-row" style={{ marginBottom: '2px' }}>
+              <div className="tp-m-big-price" style={{ color: priceUp ? '#00FFA3' : '#F6465D' }}>
+                {livePrice >= 100 ? Math.round(livePrice).toLocaleString() : fmt(livePrice, 4)}
+              </div>
+              <div className="tp-m-price-change" style={{ color: priceUp ? '#00FFA3' : '#F6465D' }}>
+                ≈ ${fmt(livePrice, 2)}&nbsp;&nbsp;{changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
+              </div>
+            </div>
+            <div className="tp-m-ref-price" style={{ marginBottom: 0 }}>Giá tham chiếu {fmt(livePrice * 0.9996, 2)}</div>
           </div>
-          <div className="tp-m-price-change" style={{ color: priceUp ? '#00FFA3' : '#F6465D' }}>
-            ≈ ${fmt(livePrice, 2)}&nbsp;&nbsp;{changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
-          </div>
+
+          {/* Mobile Price Section Countdown */}
+          {countdownActive && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.08)' : 'rgba(246,70,93,0.08)',
+              border: `1.2px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.3)' : 'rgba(246,70,93,0.3)'}`,
+              borderRadius: '10px',
+              padding: '6px 10px',
+              boxShadow: countdownBetType === 'UP' ? '0 0 12px rgba(0,255,163,0.1)' : '0 0 12px rgba(246,70,93,0.1)',
+            }}>
+              <div style={{ position: 'relative', width: '38px', height: '38px' }}>
+                <svg width="38" height="38" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="19" cy="19" r="16" fill="none" stroke="#1e2329" strokeWidth="3" />
+                  <circle
+                    cx="19" cy="19" r="16"
+                    fill="none"
+                    stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 16}`}
+                    strokeDashoffset={`${2 * Math.PI * 16 * (1 - countdownLeft / countdownTotal)}`}
+                    style={{ transition: 'stroke-dashoffset 0.95s linear' }}
+                  />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '8px', color: '#848e9c', fontWeight: 'bold', letterSpacing: '0.5px' }}>KẾT TOÁN</span>
+                <span style={{ fontSize: '10px', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  {countdownBetType === 'UP' ? '▲ TĂNG' : '▼ GIẢM'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="tp-m-ref-price">Giá tham chiếu {fmt(livePrice * 0.9996, 2)}</div>
         <div className="tp-m-stats-grid">
           <div className="tp-m-stats-col">
             <div className="tp-m-stat-item">
