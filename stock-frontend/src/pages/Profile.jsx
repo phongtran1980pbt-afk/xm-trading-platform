@@ -31,9 +31,6 @@ export default function Profile() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [loginHistory, setLoginHistory] = useState([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [errorHistory, setErrorHistory] = useState(null);
 
   const frontInputRef = React.useRef(null);
   const backInputRef = React.useRef(null);
@@ -66,26 +63,6 @@ export default function Profile() {
     }
   }, [location.pathname]);
 
-  const fetchLoginHistory = async () => {
-    if (!user || !user.id) return;
-    setIsLoadingHistory(true);
-    setErrorHistory(null);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/auth/profile/${user.id}/login-history`);
-      setLoginHistory(res.data || []);
-    } catch (error) {
-      console.error('Lỗi lấy lịch sử đăng nhập:', error);
-      setErrorHistory(error.response?.data?.message || error.message || 'Lỗi server không rõ');
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'security' && user && user.id) {
-      fetchLoginHistory();
-    }
-  }, [activeTab, user]);
 
   const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -637,139 +614,71 @@ export default function Profile() {
           <main className="k-profile-content">
             <h2 className="k-profile-content-title">An toàn & Bảo mật</h2>
 
-            <div className="k-profile-grid">
-              {/* Change Password Card */}
-              <div className="k-profile-card">
-                <h3 className="k-profile-card-title">Thiết lập mật khẩu</h3>
-                <p style={{ color: '#848e9c', fontSize: '13px', margin: '-10px 0 20px 0', lineHeight: 1.5 }}>
-                  Vui lòng cung cấp mật khẩu hiện tại trước khi tạo mật khẩu đăng nhập mới để đảm bảo tính an toàn.
-                </p>
-                
-                <form onSubmit={handleChangePasswordSubmit}>
-                  <div className="k-profile-info-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div className="k-input-group" style={{ margin: 0 }}>
-                      <label className="k-kyc-label" style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Mật khẩu cũ</label>
-                      <input 
-                        type="password" 
-                        placeholder="Nhập mật khẩu hiện tại"
-                        value={oldPassword}
-                        onChange={(e) => setOldPassword(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
-                      />
-                    </div>
-
-                    <div className="k-input-group" style={{ margin: 0 }}>
-                      <label className="k-kyc-label" style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Mật khẩu mới</label>
-                      <input 
-                        type="password" 
-                        placeholder="Tối thiểu 6 ký tự"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
-                      />
-                    </div>
-
-                    <div className="k-input-group" style={{ margin: 0 }}>
-                      <label className="k-kyc-label" style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Xác nhận mật khẩu mới</label>
-                      <input 
-                        type="password" 
-                        placeholder="Nhập lại mật khẩu mới"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
-                      />
-                    </div>
-
-                    <button 
-                      type="submit" 
-                      disabled={isChangingPassword}
-                      style={{
-                        padding: '12px',
-                        background: '#24DB9B',
-                        color: '#000',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: 'bold',
-                        cursor: isChangingPassword ? 'not-allowed' : 'pointer',
-                        opacity: isChangingPassword ? 0.6 : 1,
-                        fontSize: '14px',
-                        marginTop: '10px',
-                        transition: 'opacity 0.2s'
-                      }}
-                    >
-                      {isChangingPassword ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
-                    </button>
+            <div className="k-profile-card" style={{ maxWidth: '600px' }}>
+              <h3 className="k-profile-card-title">Thiết lập mật khẩu</h3>
+              <p style={{ color: '#848e9c', fontSize: '13px', margin: '-10px 0 20px 0', lineHeight: 1.5 }}>
+                Vui lòng cung cấp mật khẩu hiện tại trước khi tạo mật khẩu đăng nhập mới để đảm bảo tính an toàn.
+              </p>
+              
+              <form onSubmit={handleChangePasswordSubmit}>
+                <div className="k-profile-info-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="k-input-group" style={{ margin: 0 }}>
+                    <label className="k-kyc-label" style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Mật khẩu cũ</label>
+                    <input 
+                      type="password" 
+                      placeholder="Nhập mật khẩu hiện tại"
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
+                    />
                   </div>
-                </form>
-              </div>
 
-              {/* Login History Card */}
-              <div className="k-profile-card">
-                <h3 className="k-profile-card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Lịch sử đăng nhập</span>
+                  <div className="k-input-group" style={{ margin: 0 }}>
+                    <label className="k-kyc-label" style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Mật khẩu mới</label>
+                    <input 
+                      type="password" 
+                      placeholder="Tối thiểu 6 ký tự"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div className="k-input-group" style={{ margin: 0 }}>
+                    <label className="k-kyc-label" style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>Xác nhận mật khẩu mới</label>
+                    <input 
+                      type="password" 
+                      placeholder="Nhập lại mật khẩu mới"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '10px 14px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none' }}
+                    />
+                  </div>
+
                   <button 
-                    type="button"
-                    onClick={fetchLoginHistory}
-                    disabled={isLoadingHistory}
-                    style={{ background: 'none', border: 'none', color: '#24DB9B', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
+                    type="submit" 
+                    disabled={isChangingPassword}
+                    style={{
+                      padding: '12px',
+                      background: '#24DB9B',
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontWeight: 'bold',
+                      cursor: isChangingPassword ? 'not-allowed' : 'pointer',
+                      opacity: isChangingPassword ? 0.6 : 1,
+                      fontSize: '14px',
+                      marginTop: '10px',
+                      transition: 'opacity 0.2s'
+                    }}
                   >
-                    {isLoadingHistory ? 'Đang làm mới...' : 'Làm mới ↻'}
+                    {isChangingPassword ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
                   </button>
-                </h3>
-                
-                <div style={{ maxHeight: '350px', overflowY: 'auto', marginTop: '10px' }}>
-                  {errorHistory ? (
-                    <div style={{ color: '#F6465D', fontSize: '13px', textAlign: 'center', padding: '30px', background: 'rgba(246,70,93,0.05)', borderRadius: '8px', border: '1px dashed rgba(246,70,93,0.2)' }}>
-                      Gặp lỗi khi tải lịch sử: {errorHistory}
-                    </div>
-                  ) : loginHistory.length === 0 ? (
-                    <div style={{ color: '#848e9c', fontSize: '13px', textAlign: 'center', padding: '30px' }}>
-                      Chưa ghi nhận lịch sử đăng nhập nào.
-                    </div>
-                  ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid #2b3139', color: '#848e9c', textAlign: 'left' }}>
-                          <th style={{ padding: '8px 4px' }}>Thời gian</th>
-                          <th style={{ padding: '8px 4px' }}>IP</th>
-                          <th style={{ padding: '8px 4px' }}>Thiết bị / Trình duyệt</th>
-                          <th style={{ padding: '8px 4px', textAlign: 'right' }}>Trạng thái</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {loginHistory.map((item) => (
-                          <tr key={item.Id} style={{ borderBottom: '1px solid #1e2329', color: '#eaecef' }}>
-                            <td style={{ padding: '10px 4px' }}>
-                              {new Date(item.CreatedAt).toLocaleString('vi-VN', { hour12: false })}
-                            </td>
-                            <td style={{ padding: '10px 4px', fontFamily: 'monospace' }}>
-                              {item.IpAddress}
-                            </td>
-                            <td style={{ padding: '10px 4px' }}>
-                              {item.Device} - {item.Browser}
-                            </td>
-                            <td style={{ padding: '10px 4px', textAlign: 'right' }}>
-                              <span style={{
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: 'bold',
-                                fontSize: '10px',
-                                color: item.Status === 'Thành công' ? '#00FFA3' : '#F6465D',
-                                background: item.Status === 'Thành công' ? 'rgba(0, 255, 163, 0.1)' : 'rgba(246, 70, 93, 0.1)'
-                              }}>
-                                {item.Status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
                 </div>
-              </div>
+              </form>
             </div>
           </main>
         )}
