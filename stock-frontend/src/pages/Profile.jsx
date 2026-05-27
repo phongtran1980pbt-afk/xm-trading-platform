@@ -69,6 +69,7 @@ export default function Profile() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawRequests, setWithdrawRequests] = useState([]);
   const [loadingWithdrawReqs, setLoadingWithdrawReqs] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const fetchBankInfo = async () => {
     if (!user || !user.id) return;
@@ -101,6 +102,12 @@ export default function Profile() {
       setLoadingWithdrawReqs(false);
     }
   };
+
+  useEffect(() => {
+    if (user && user.id) {
+      fetchBankInfo();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (activeTab === 'bank' && user && user.id) {
@@ -476,7 +483,7 @@ export default function Profile() {
                 </div>
                 <div className="k-profile-assets-footer">
                   <Link to="/support/deposit" className="k-profile-action-btn">Nạp tiền</Link>
-                  <Link to="/support/deposit" className="k-profile-action-btn secondary">Rút tiền</Link>
+                  <button onClick={() => setShowWithdrawModal(true)} className="k-profile-action-btn secondary" style={{ border: 'none', cursor: 'pointer' }}>Rút tiền</button>
                 </div>
               </div>
 
@@ -1088,101 +1095,6 @@ export default function Profile() {
                 )}
               </div>
 
-              {/* Withdraw Request Form */}
-              <div className="k-profile-card" style={{ border: hasBankLinked ? '1px solid rgba(36, 219, 155, 0.15)' : '1px solid rgba(255,255,255,0.05)' }}>
-                <h3 className="k-profile-card-title">Yêu cầu rút tiền</h3>
-
-                {!hasBankLinked ? (
-                  <div style={{ textAlign: 'center', padding: '32px 0', color: '#848e9c' }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '12px', opacity: 0.4 }}><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                    <p style={{ fontSize: '14px', margin: '0 0 8px 0' }}>Chưa có ngân hàng liên kết</p>
-                    <p style={{ fontSize: '12px', margin: 0 }}>Vui lòng liên kết tài khoản ngân hàng ở trên trước khi rút tiền</p>
-                  </div>
-                ) : (
-                  <>
-
-                    {/* Withdraw amount */}
-                    <form onSubmit={handleWithdrawRequest}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div>
-                          <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>
-                            Số tiền cần rút (USDT) — Số dư hiện tại: <span style={{ color: '#24DB9B', fontWeight: 'bold' }}>${typeof data.Balance === 'number' ? data.Balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</span>
-                          </label>
-                          <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#848e9c', fontSize: '14px', fontWeight: 'bold' }}>$</span>
-                            <input
-                              type="number"
-                              placeholder="0.00"
-                              value={withdrawAmount}
-                              onChange={(e) => setWithdrawAmount(e.target.value)}
-                              min="1"
-                              step="0.01"
-                              required
-                              style={{ width: '100%', padding: '12px 14px 12px 28px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none', fontSize: '16px', fontFamily: 'monospace', boxSizing: 'border-box' }}
-                            />
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                            {[10, 50, 100, 500].map(amt => (
-                              <button
-                                key={amt}
-                                type="button"
-                                onClick={() => setWithdrawAmount(String(amt))}
-                                style={{ padding: '4px 12px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '6px', color: '#848e9c', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }}
-                                onMouseEnter={(e) => { e.target.style.borderColor = '#24DB9B'; e.target.style.color = '#24DB9B'; }}
-                                onMouseLeave={(e) => { e.target.style.borderColor = '#2b3139'; e.target.style.color = '#848e9c'; }}
-                              >${amt}</button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => setWithdrawAmount(String(typeof data.Balance === 'number' ? Math.floor(data.Balance * 100) / 100 : 0))}
-                              style={{ padding: '4px 12px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '6px', color: '#848e9c', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }}
-                              onMouseEnter={(e) => { e.target.style.borderColor = '#24DB9B'; e.target.style.color = '#24DB9B'; }}
-                              onMouseLeave={(e) => { e.target.style.borderColor = '#2b3139'; e.target.style.color = '#848e9c'; }}
-                            >Tất cả</button>
-                          </div>
-                        </div>
-
-                        <div style={{ background: 'rgba(240, 185, 11, 0.05)', border: '1px solid rgba(240, 185, 11, 0.15)', borderRadius: '8px', padding: '12px 16px', fontSize: '12px', color: '#848e9c', lineHeight: 1.6 }}>
-                          <span style={{ color: '#F0B90B', fontWeight: 'bold' }}>⚠ Lưu ý:</span> Yêu cầu rút tiền sẽ được xử lý trong vòng <strong style={{ color: '#eaecef' }}>1–3 ngày làm việc</strong>. Vui lòng không gửi nhiều yêu cầu cùng lúc.
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={isWithdrawing || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
-                          style={{
-                            padding: '14px',
-                            background: (!withdrawAmount || parseFloat(withdrawAmount) <= 0) ? '#1e2329' : '#24DB9B',
-                            color: (!withdrawAmount || parseFloat(withdrawAmount) <= 0) ? '#848e9c' : '#000',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: 'bold',
-                            cursor: (isWithdrawing || !withdrawAmount || parseFloat(withdrawAmount) <= 0) ? 'not-allowed' : 'pointer',
-                            opacity: isWithdrawing ? 0.6 : 1,
-                            fontSize: '15px',
-                            transition: 'all 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px'
-                          }}
-                        >
-                          {isWithdrawing ? (
-                            <>
-                              <div style={{ width: '16px', height: '16px', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%', animation: 'k-spin 0.8s linear infinite' }}></div>
-                              Đang gửi yêu cầu...
-                            </>
-                          ) : (
-                            <>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-                              {withdrawAmount && parseFloat(withdrawAmount) > 0 ? `Rút $${parseFloat(withdrawAmount).toFixed(2)}` : 'Nhập số tiền để rút'}
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </form>
-                  </>
-                )}
-              </div>
 
               {/* Withdraw History */}
               {withdrawRequests.length > 0 && (
@@ -1234,6 +1146,139 @@ export default function Profile() {
           </main>
         ) : null}
       </div>
+
+      {/* Withdraw Modal Overlay */}
+      {showWithdrawModal && (
+        <div className="k-modal-overlay" onClick={() => setShowWithdrawModal(false)}>
+          <div className="k-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="k-modal-close-btn" onClick={() => setShowWithdrawModal(false)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 20px 0', color: '#fff' }}>Yêu cầu rút tiền</h3>
+
+            {!hasBankLinked ? (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: '#848e9c' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '16px', opacity: 0.4 }}><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <p style={{ fontSize: '15px', margin: '0 0 12px 0', color: '#eaecef', fontWeight: '500' }}>Chưa liên kết ngân hàng</p>
+                <p style={{ fontSize: '13px', margin: '0 0 24px 0', lineHeight: 1.5 }}>Vui lòng liên kết tài khoản ngân hàng trước khi gửi yêu cầu rút tiền.</p>
+                <button
+                  onClick={() => {
+                    setShowWithdrawModal(false);
+                    handleTabChange('bank');
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: '#24DB9B',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Liên kết ngay
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={async (e) => {
+                await handleWithdrawRequest(e);
+                setShowWithdrawModal(false);
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Bank detail preview */}
+                  <div style={{ background: '#11141a', border: '1px solid #1e2329', borderRadius: '10px', padding: '12px 14px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(36,219,155,0.1)', color: '#24DB9B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}>
+                      🏦
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#eaecef' }}>{bankName}</div>
+                      <div style={{ fontSize: '11px', color: '#848e9c', marginTop: '2px' }}>{bankAccountNumber} — {bankAccountHolder}</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', color: '#848e9c', marginBottom: '6px', display: 'block' }}>
+                      Số tiền cần rút (USDT) — Số dư: <span style={{ color: '#24DB9B', fontWeight: 'bold' }}>${typeof data.Balance === 'number' ? data.Balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#848e9c', fontSize: '14px', fontWeight: 'bold' }}>$</span>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        min="1"
+                        step="0.01"
+                        required
+                        style={{ width: '100%', padding: '12px 14px 12px 28px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '8px', color: '#fff', outline: 'none', fontSize: '16px', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                      {[10, 50, 100, 500].map(amt => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setWithdrawAmount(String(amt))}
+                          style={{ padding: '4px 12px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '6px', color: '#848e9c', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }}
+                          onMouseEnter={(e) => { e.target.style.borderColor = '#24DB9B'; e.target.style.color = '#24DB9B'; }}
+                          onMouseLeave={(e) => { e.target.style.borderColor = '#2b3139'; e.target.style.color = '#848e9c'; }}
+                        >${amt}</button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setWithdrawAmount(String(typeof data.Balance === 'number' ? Math.floor(data.Balance * 100) / 100 : 0))}
+                        style={{ padding: '4px 12px', background: '#1e2329', border: '1px solid #2b3139', borderRadius: '6px', color: '#848e9c', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseEnter={(e) => { e.target.style.borderColor = '#24DB9B'; e.target.style.color = '#24DB9B'; }}
+                        onMouseLeave={(e) => { e.target.style.borderColor = '#2b3139'; e.target.style.color = '#848e9c'; }}
+                      >Tất cả</button>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(240, 185, 11, 0.05)', border: '1px solid rgba(240, 185, 11, 0.15)', borderRadius: '8px', padding: '12px 16px', fontSize: '12px', color: '#848e9c', lineHeight: 1.6 }}>
+                    <span style={{ color: '#F0B90B', fontWeight: 'bold' }}>⚠ Lưu ý:</span> Yêu cầu rút tiền sẽ được xử lý trong vòng <strong style={{ color: '#eaecef' }}>1–3 ngày làm việc</strong>.
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isWithdrawing || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
+                    style={{
+                      padding: '14px',
+                      background: (!withdrawAmount || parseFloat(withdrawAmount) <= 0) ? '#1e2329' : '#24DB9B',
+                      color: (!withdrawAmount || parseFloat(withdrawAmount) <= 0) ? '#848e9c' : '#000',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontWeight: 'bold',
+                      cursor: (isWithdrawing || !withdrawAmount || parseFloat(withdrawAmount) <= 0) ? 'not-allowed' : 'pointer',
+                      opacity: isWithdrawing ? 0.6 : 1,
+                      fontSize: '15px',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    {isWithdrawing ? (
+                      <>
+                        <div style={{ width: '16px', height: '16px', border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%', animation: 'k-spin 0.8s linear infinite' }}></div>
+                        Đang gửi yêu cầu...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                        {withdrawAmount && parseFloat(withdrawAmount) > 0 ? `Rút $${parseFloat(withdrawAmount).toFixed(2)}` : 'Nhập số tiền để rút'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
