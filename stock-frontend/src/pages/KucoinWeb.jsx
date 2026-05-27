@@ -468,7 +468,7 @@ function KucoinWeb() {
               🏆 Sàn Giao Dịch Tiền Điện Tử Số 1
             </div>
             <h1 className="k-hero-title">
-              Tìm ngọc ẩn Crypto<br />tại KuCoin
+              Tìm ngọc ẩn Crypto<br />tại Kanet
             </h1>
             <p className="k-hero-subtitle">
               Khám phá sàn giao dịch hàng đầu thế giới để mua, bán và tích lũy tiền điện tử an toàn. Tiếp cận hơn 700+ tài sản kỹ thuật số sớm nhất.
