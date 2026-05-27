@@ -65,10 +65,33 @@ function Register() {
   const isPasswordError = isPasswordTouched && password.length > 0 && !isPasswordValid;
   const isFormValid = isEmailValid && isPasswordValid && isTermsChecked;
 
-  const handleNextStep = (e) => {
+  const handleNextStep = async (e) => {
     e.preventDefault();
     if (isFormValid) {
+      setIsLoading(true);
       setServerError('');
+      try {
+        const checkRes = await axios.post(`${API_BASE_URL}/api/auth/check-user`, {
+          email: email
+        });
+        
+        if (checkRes.status === 200) {
+          setServerError(regType === 'email' 
+            ? 'Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.'
+            : 'Số điện thoại này đã được đăng ký. Vui lòng sử dụng số khác hoặc đăng nhập.'
+          );
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        if (err.response && err.response.status !== 404) {
+          setServerError(err.response.data?.message || 'Có lỗi xảy ra khi kiểm tra tài khoản!');
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      setIsLoading(false);
       if (regType === 'phone') {
         setPhoneNumber(email);
       }
@@ -117,12 +140,8 @@ function Register() {
       alert('Số CCCD bắt buộc phải nhập đúng 12 chữ số!');
       return;
     }
-    if (!idFrontPhoto) {
-      alert('Vui lòng tải lên ảnh mặt trước giấy tờ tùy thân của bạn!');
-      return;
-    }
-    if (!idBackPhoto) {
-      alert('Vui lòng tải lên ảnh mặt sau giấy tờ tùy thân của bạn!');
+    if (!idFrontPhoto || !idBackPhoto) {
+      alert('Vui lòng xác thực thông tin');
       return;
     }
     
@@ -629,10 +648,10 @@ function Register() {
                   <button 
                     type="submit" 
                     className="k-kyc-btn-submit"
-                    disabled={isLoading || !idNumber || idNumber.length !== 12 || !idFrontPhoto || !idBackPhoto}
+                    disabled={isLoading}
                     style={{
-                      opacity: (isLoading || !idNumber || idNumber.length !== 12 || !idFrontPhoto || !idBackPhoto) ? 0.6 : 1,
-                      cursor: (isLoading || !idNumber || idNumber.length !== 12 || !idFrontPhoto || !idBackPhoto) ? 'not-allowed' : 'pointer'
+                      opacity: isLoading ? 0.6 : 1,
+                      cursor: isLoading ? 'not-allowed' : 'pointer'
                     }}
                   >
                     {isLoading ? 'Đang xử lý...' : 'Đăng ký xác thực'}
