@@ -559,7 +559,9 @@ export default function TradePage() {
   // Hàm vẽ SVG logo KuCoin
   const renderKuCoinLogo = (size = 20) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 16.5H7.5V14.5H9.5V16.5ZM9.5 13.5H7.5V11.5H9.5V13.5ZM9.5 10.5H7.5V8.5H9.5V10.5ZM16.5 16.5H14.5V14.5H16.5V16.5ZM16.5 13.5H14.5V11.5H16.5V13.5ZM16.5 10.5H14.5V8.5H16.5V10.5ZM13 16.5H11V14.5H13V16.5ZM13 13.5H11V11.5H13V13.5ZM13 10.5H11V8.5H13V10.5Z" fill="#FCD535"/>
+      <path d="M7.5 4L4 7.5V16.5L7.5 20H10.5L7 16.5V7.5L10.5 4H7.5Z" fill="#24DB9B" />
+      <path d="M16.5 4L20 7.5V16.5L16.5 20H13.5L17 16.5V7.5L13.5 4H16.5Z" fill="#24DB9B" />
+      <path d="M12 10L14 12L12 14L10 12L12 10Z" fill="#24DB9B" />
     </svg>
   );
 
@@ -598,7 +600,7 @@ export default function TradePage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
-        kuToast('success', `Đã đặt lệnh ${type === 'UP' ? '▲ Mua lên' : '▼ Bán xuống'} ${Number(binaryAmount).toFixed(2)} USDT`);
+        kuToast('success', `Đã đặt lệnh ${type === 'UP' ? 'Mua lên' : 'Bán xuống'} ${Number(binaryAmount).toFixed(2)} USDT`);
         setBinaryAmount('');
         fetchBinaryHistory();
         fetchBalance();
