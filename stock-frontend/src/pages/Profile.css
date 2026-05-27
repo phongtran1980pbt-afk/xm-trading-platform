@@ -1,0 +1,411 @@
+/* ===== PROFILE PAGE STYLES ===== */
+.k-profile-page {
+  min-height: 100vh;
+  background-color: #0b0f14;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header style matching KuCoin */
+.k-profile-header {
+  background-color: #111419;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.k-profile-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.k-profile-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.k-profile-logo span {
+  font-weight: 850;
+  font-size: 20px;
+  color: #24DB9B;
+  letter-spacing: 0.5px;
+}
+
+.k-profile-back-link {
+  color: #848e9c;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.k-profile-back-link:hover {
+  color: #ffffff;
+}
+
+/* Main Container Layout */
+.k-profile-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px;
+  display: flex;
+  gap: 32px;
+  flex: 1;
+}
+
+/* Sidebar Styling */
+.k-profile-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.k-profile-sidebar-user {
+  background-color: #12161c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.k-profile-sidebar-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d2a1e 0%, #1a3a2a 100%);
+  border: 2px solid #24DB9B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #24DB9B;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: 0 0 10px rgba(36, 219, 155, 0.2);
+}
+
+.k-profile-sidebar-meta h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #eaecef;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.k-profile-sidebar-meta p {
+  font-size: 11px;
+  color: #848e9c;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.k-profile-sidebar-nav {
+  background-color: #12161c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.k-profile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #848e9c;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.k-profile-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+  color: #ffffff;
+}
+
+.k-profile-nav-item.active {
+  color: #24DB9B;
+  background-color: rgba(36, 219, 155, 0.05);
+  border-left-color: #24DB9B;
+  font-weight: 600;
+}
+
+.k-profile-logout-btn {
+  color: #f6465d;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  padding-top: 18px;
+}
+
+.k-profile-logout-btn:hover {
+  background-color: rgba(246, 70, 93, 0.05);
+  color: #ff6b7e;
+}
+
+/* Main Content Area */
+.k-profile-content {
+  flex: 1;
+}
+
+.k-profile-content-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 24px 0;
+  color: #ffffff;
+}
+
+.k-profile-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Cards */
+.k-profile-card {
+  background-color: #12161c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.k-profile-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #eaecef;
+  margin: 0 0 20px 0;
+  border-left: 3px solid #24DB9B;
+  padding-left: 10px;
+}
+
+/* Assets Card Specifics */
+.k-profile-assets-card {
+  background: radial-gradient(circle at 100% 0%, rgba(36, 219, 155, 0.08) 0%, transparent 60%), #12161c;
+  border: 1px solid rgba(36, 219, 155, 0.15);
+}
+
+.k-profile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.card-label {
+  font-size: 13px;
+  color: #848e9c;
+  font-weight: 500;
+}
+
+.k-profile-asset-val {
+  font-size: 36px;
+  font-weight: 850;
+  color: #ffffff;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, monospace;
+}
+
+.k-profile-asset-val .unit {
+  font-size: 16px;
+  color: #24DB9B;
+  font-weight: 700;
+}
+
+.k-profile-assets-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.k-profile-action-btn {
+  background-color: #24DB9B;
+  color: #0b0f14;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: 8px;
+  transition: opacity 0.2s;
+}
+
+.k-profile-action-btn:hover {
+  opacity: 0.9;
+}
+
+.k-profile-action-btn.secondary {
+  background-color: #1e2530;
+  color: #eaecef;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.k-profile-action-btn.secondary:hover {
+  background-color: #252e3c;
+}
+
+/* Refresh Button Spin Animation */
+.k-profile-refresh-btn {
+  background: none;
+  border: none;
+  color: #848e9c;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.k-profile-refresh-btn:hover {
+  color: #24DB9B;
+}
+
+.k-profile-refresh-btn.spinning svg {
+  animation: k-spin 0.8s linear infinite;
+}
+
+@keyframes k-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Info Rows List */
+.k-profile-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.k-profile-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.k-profile-info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #848e9c;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #eaecef;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-value.highlight {
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.info-value.monospace {
+  font-family: monospace;
+  font-size: 13.5px;
+}
+
+/* Badge and Small Buttons */
+.k-profile-copy-btn, .k-profile-eye-btn {
+  background: none;
+  border: none;
+  color: #848e9c;
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.7;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.k-profile-copy-btn:hover, .k-profile-eye-btn:hover {
+  opacity: 1;
+  color: #24DB9B;
+}
+
+.k-profile-kyc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(36, 219, 155, 0.1);
+  border: 1px solid rgba(36, 219, 155, 0.2);
+  color: #24DB9B;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.k-profile-kyc-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #24DB9B;
+  box-shadow: 0 0 6px #24DB9B;
+}
+
+/* Loading state styles */
+.k-profile-loading {
+  height: 100vh;
+  background-color: #0b0f14;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.k-profile-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(36, 219, 155, 0.1);
+  border-radius: 50%;
+  border-top-color: #24DB9B;
+  animation: k-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .k-profile-container {
+    flex-direction: column;
+  }
+  .k-profile-sidebar {
+    width: 100%;
+  }
+}

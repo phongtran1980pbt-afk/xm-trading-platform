@@ -150,6 +150,25 @@ export const getBalance = async (req, res) => {
   }
 };
 
+export const getProfile = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT Email, FullName, AccountCode, Country, IdCardType, IdNumber, Balance, PhoneNumber FROM Users WHERE Id = @id');
+    
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+    }
+    
+    res.json(result.recordset[0]);
+  } catch (error) {
+    console.error('Lỗi lấy profile:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy thông tin người dùng!' });
+  }
+};
+
 export const checkUserExists = async (req, res) => {
   const { email } = req.body;
   if (!email) {

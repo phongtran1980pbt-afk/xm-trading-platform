@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getBalance, checkUserExists } from '../controllers/authController.js';
+import { register, login, getBalance, checkUserExists, getProfile } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -43,5 +43,6 @@ router.post('/login', login);
 router.post('/check-user', checkUserExists);
 
 router.get('/balance/:id', getBalance);
+router.get('/profile/:id', getProfile);
 
 export default router;
