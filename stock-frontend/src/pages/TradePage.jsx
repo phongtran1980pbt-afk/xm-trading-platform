@@ -256,14 +256,14 @@ function VolumeChartComponent({ candles, volSeriesRef }) {
 export default function TradePage() {
   const { symbol } = useParams();
   
-  // Chuẩn hóa tên coin: nếu có đuôi 'USDT-M' hoặc '-M' (futures) hoặc 'USDT', chuyển thành symbol cơ bản để khớp với PriceContext (ví dụ: BTCUSDT-M -> BTC, BTCUSDT -> BTC)
+  // Chuẩn hóa tên coin: nếu có đuôi 'USDT-M' hoặc '-M' (futures) hoặc 'USDT', chuyển thành symbol cơ bản để khớp với PriceContext (ví dụ: BTCUSDT-M -> BTC, BTC-USDT -> BTC)
   const coin = useMemo(() => {
     let sym = symbol || 'BULL';
-    // Xóa đuôi USDT-M hoặc -M
-    sym = sym.replace(/usdt-m$/i, '').replace(/-m$/i, '');
-    // Xóa đuôi USDT nếu có (ví dụ BTCUSDT -> BTC) trừ phi coin đó chính là USDT
+    // Xóa đuôi USDT-M hoặc -M (chấp nhận cả có gạch ngang và không)
+    sym = sym.replace(/[-_]?usdt[-_]?m$/i, '').replace(/[-_]?m$/i, '');
+    // Xóa đuôi USDT nếu có (ví dụ BTC-USDT -> BTC) trừ phi coin đó chính là USDT
     if (sym.toLowerCase() !== 'usdt') {
-      sym = sym.replace(/usdt$/i, '');
+      sym = sym.replace(/[-_]?usdt$/i, '');
     }
     return sym;
   }, [symbol]);
