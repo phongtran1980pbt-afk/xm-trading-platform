@@ -410,3 +410,243 @@
   color: #24DB9B;
   border-color: #24DB9B;
 }
+
+/* ── Modal Overlay ── */
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Modal Content ── */
+.admin-modal-content {
+  background: #11141a;
+  border: 1px solid #2b3139;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: scaleIn 0.25s ease-out;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Header */
+.admin-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #1e2329;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-modal-header h3 {
+  margin: 0;
+  color: #eaecef;
+  font-size: 16px;
+  font-weight: 700;
+}
+.admin-modal-close {
+  background: none;
+  border: none;
+  color: #848e9c;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.admin-modal-close:hover {
+  color: #fff;
+}
+
+/* Body */
+.admin-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Details Grid */
+.admin-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 24px;
+  margin-bottom: 24px;
+}
+@media (max-width: 576px) {
+  .admin-details-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.admin-details-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.details-label {
+  color: #848e9c;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.details-value {
+  color: #eaecef;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.details-value.highlight-uid {
+  color: #00FFA3;
+  font-weight: 600;
+}
+.details-value.name-value {
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.details-value.balance-value {
+  color: #24DB9B;
+  font-weight: 700;
+}
+
+/* Badges */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.status-badge.admin {
+  background: rgba(36, 219, 155, 0.15);
+  color: #24DB9B;
+}
+.status-badge.active {
+  background: rgba(0, 255, 163, 0.1);
+  color: #00FFA3;
+}
+.status-badge.locked {
+  background: rgba(246, 70, 93, 0.1);
+  color: #F6465D;
+}
+
+/* Photos Section */
+.admin-photos-section {
+  border-top: 1px solid #1e2329;
+  padding-top: 20px;
+}
+.admin-photos-section h4 {
+  margin: 0 0 14px 0;
+  color: #eaecef;
+  font-size: 13px;
+  font-weight: 600;
+}
+.photos-row {
+  display: flex;
+  gap: 20px;
+}
+@media (max-width: 576px) {
+  .photos-row {
+    flex-direction: column;
+  }
+}
+
+.photo-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.photo-label {
+  color: #848e9c;
+  font-size: 11px;
+}
+.photo-box a {
+  position: relative;
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0e1117;
+  border: 1px dashed #2b3139;
+  transition: border-color 0.2s;
+}
+.photo-box a:hover {
+  border-color: #00FFA3;
+}
+.kyc-preview-img {
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.2s;
+}
+.photo-box a:hover .kyc-preview-img {
+  transform: scale(1.02);
+}
+.zoom-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #00FFA3;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.no-photo {
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0e1117;
+  border: 1px dashed #1e2329;
+  border-radius: 8px;
+  color: #5e6673;
+  font-size: 12px;
+}
+
+/* Footer */
+.admin-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #1e2329;
+  display: flex;
+  justify-content: flex-end;
+}
+.admin-btn-close-modal {
+  padding: 8px 20px;
+  background: #2b3139;
+  color: #eaecef;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-btn-close-modal:hover {
+  background: #363d47;
+  color: #fff;
+}
+
