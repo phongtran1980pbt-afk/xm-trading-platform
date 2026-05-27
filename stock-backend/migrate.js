@@ -47,6 +47,25 @@ async function migrate() {
             BEGIN
                 PRINT 'BinaryOrders table already exists.';
             END
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[LoginHistory]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE LoginHistory (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    UserId INT NOT NULL,
+                    IpAddress NVARCHAR(100),
+                    Device NVARCHAR(255),
+                    Browser NVARCHAR(100),
+                    Status NVARCHAR(50),
+                    CreatedAt DATETIME DEFAULT GETDATE(),
+                    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                );
+                PRINT 'LoginHistory table created.';
+            END
+            ELSE
+            BEGIN
+                PRINT 'LoginHistory table already exists.';
+            END
         `;
         
         await pool.request().query(query);

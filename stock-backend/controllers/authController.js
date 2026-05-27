@@ -104,12 +104,52 @@ export const login = async (req, res) => {
       `);
 
     const user = result.recordset[0];
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const cleanIp = ip.replace('::ffff:', '').replace('::1', '127.0.0.1');
+    const ua = req.headers['user-agent'] || '';
+    const { device, browser } = parseUserAgent(ua);
+
     if (!user) return res.status(400).json({ message: 'Tài khoản không tồn tại!' });
 
     const validPassword = await bcrypt.compare(password, user.PasswordHash);
-    if (!validPassword) return res.status(400).json({ message: 'Mật khẩu không đúng!' });
+    if (!validPassword) {
+      // Ghi nhận đăng nhập thất bại
+      try {
+        await pool.request()
+          .input('userId', sql.Int, user.Id)
+          .input('ipAddress', sql.NVarChar, cleanIp)
+          .input('device', sql.NVarChar, device)
+          .input('browser', sql.NVarChar, browser)
+          .input('status', sql.NVarChar, 'Thất bại')
+          .input('createdAt', sql.DateTime, getTrueTime())
+          .query(`
+            INSERT INTO LoginHistory (UserId, IpAddress, Device, Browser, Status, CreatedAt)
+            VALUES (@userId, @ipAddress, @device, @browser, @status, @createdAt)
+          `);
+      } catch (err) {
+        console.error('Lỗi ghi nhận lịch sử đăng nhập thất bại:', err);
+      }
+      return res.status(400).json({ message: 'Mật khẩu không đúng!' });
+    }
 
     if (!user.IsActive) return res.status(403).json({ message: 'Tài khoản của bạn đã bị khóa' });
+
+    // Ghi nhận đăng nhập thành công
+    try {
+      await pool.request()
+        .input('userId', sql.Int, user.Id)
+        .input('ipAddress', sql.NVarChar, cleanIp)
+        .input('device', sql.NVarChar, device)
+        .input('browser', sql.NVarChar, browser)
+        .input('status', sql.NVarChar, 'Thành công')
+        .input('createdAt', sql.DateTime, getTrueTime())
+        .query(`
+          INSERT INTO LoginHistory (UserId, IpAddress, Device, Browser, Status, CreatedAt)
+          VALUES (@userId, @ipAddress, @device, @browser, @status, @createdAt)
+        `);
+    } catch (err) {
+      console.error('Lỗi ghi nhận lịch sử đăng nhập thành công:', err);
+    }
 
     const role = user.RoleName || 'Customer';
     const token = jwt.sign(
@@ -268,6 +308,103 @@ export const updateKyc = async (req, res) => {
   } catch (error) {
     console.error('Lỗi cập nhật KYC:', error);
     res.status(500).json({ message: 'Lỗi server khi cập nhật KYC: ' + error.message });
+  }
+};
+
+function parseUserAgent(ua) {
+  if (!ua) return { device: 'Unknown Device', browser: 'Unknown Browser' };
+  let browser = 'Unknown Browser';
+  let device = 'PC / Desktop';
+
+  // Basic browser detection
+  if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('Chrome') && ua.includes('Safari')) {
+    if (ua.includes('Edg')) browser = 'Edge';
+    else if (ua.includes('OPR') || ua.includes('Opera')) browser = 'Opera';
+    else browser = 'Chrome';
+  }
+  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+  else if (ua.includes('MSIE') || ua.includes('Trident')) browser = 'Internet Explorer';
+
+  // Basic device/OS detection
+  if (ua.includes('Mobi') || ua.includes('Android') || ua.includes('iPhone') || ua.includes('iPad')) {
+    if (ua.includes('iPhone')) device = 'iPhone';
+    else if (ua.includes('iPad')) device = 'iPad';
+    else if (ua.includes('Android')) device = 'Android Mobile';
+    else device = 'Mobile Device';
+  } else {
+    if (ua.includes('Windows')) device = 'Windows PC';
+    else if (ua.includes('Macintosh')) device = 'macOS';
+    else if (ua.includes('Linux')) device = 'Linux PC';
+  }
+
+  return { device, browser };
+}
+
+export const changePassword = async (req, res) => {
+  const { id } = req.params;
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+    const pool = await poolPromise;
+    // Lấy user
+    const checkUser = await pool.request()
+      .input('id', sql.Int, id)
+      .query('SELECT PasswordHash, Email FROM Users WHERE Id = @id');
+
+    if (checkUser.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+    }
+
+    const user = checkUser.recordset[0];
+
+    // Kiểm tra mật khẩu cũ
+    const validPassword = await bcrypt.compare(oldPassword, user.PasswordHash);
+    if (!validPassword) {
+      return res.status(400).json({ message: 'Mật khẩu cũ không chính xác!' });
+    }
+
+    // Mã hóa mật khẩu mới
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    // Cập nhật
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('newPasswordHash', sql.NVarChar, newPasswordHash)
+      .query('UPDATE Users SET PasswordHash = @newPasswordHash WHERE Id = @id');
+
+    // Ghi log
+    await pool.request()
+      .input('action', 'Đổi mật khẩu')
+      .input('details', `Người dùng ${user.Email} đã đổi mật khẩu tài khoản`)
+      .input('createdAt', getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
+  } catch (error) {
+    console.error('Lỗi đổi mật khẩu:', error);
+    res.status(500).json({ message: 'Lỗi server khi đổi mật khẩu!' });
+  }
+};
+
+export const getLoginHistory = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT TOP 20 Id, IpAddress, Device, Browser, Status, CreatedAt 
+        FROM LoginHistory 
+        WHERE UserId = @id 
+        ORDER BY CreatedAt DESC
+      `);
+    
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Lỗi lấy lịch sử đăng nhập:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy lịch sử đăng nhập!' });
   }
 };
 
