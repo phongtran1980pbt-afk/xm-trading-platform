@@ -346,6 +346,7 @@ export default function TradePage() {
   const [countdownLeft, setCountdownLeft] = useState(0);
   const countdownIntervalRef = useRef(null);
   const [countdownBetType, setCountdownBetType] = useState('UP');
+  const [tick, setTick] = useState(0);
 
   // Fast Deposit state
   const [showFastDepositModal, setShowFastDepositModal] = useState(false);
@@ -457,6 +458,14 @@ export default function TradePage() {
       fetchBalance();
     }, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  // 1-second interval to force re-render for smooth order history countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   // Fetch notifications
@@ -930,37 +939,6 @@ export default function TradePage() {
             <span style={{ fontSize: '13px', color: '#FCD535', fontWeight: 700, marginTop: '2px' }}>
               ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
-            {countdownActive && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                right: '0',
-                marginTop: '6px',
-                zIndex: 9999,
-                background: countdownBetType === 'UP' ? 'rgba(0, 255, 163, 0.95)' : 'rgba(246, 70, 93, 0.95)',
-                borderRadius: '6px',
-                padding: '4px 8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                border: '1px solid rgba(255,255,255,0.2)',
-                whiteSpace: 'nowrap'
-              }}>
-                <svg width="16" height="16" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx="8" cy="8" r="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-                  <circle
-                    cx="8" cy="8" r="6"
-                    fill="none"
-                    stroke="#fff"
-                    strokeWidth="2"
-                    strokeDasharray={`${2 * Math.PI * 6}`}
-                    strokeDashoffset={`${2 * Math.PI * 6 * (1 - countdownLeft / countdownTotal)}`}
-                  />
-                </svg>
-                <span style={{ fontSize: '11px', fontWeight: '900', color: '#fff', fontFamily: 'monospace' }}>{countdownLeft}s</span>
-              </div>
-            )}
           </div>
         )}
         <button className="tp-m-nav-btn">
@@ -1621,166 +1599,162 @@ export default function TradePage() {
                   NGẪU NHIÊN
                 </button>
               </div>
-            ) : (
-              <>
-                {/* New Sub-tabs from screenshot */}
-            <div className="rp-sub-tabs" style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#848e9c', marginBottom: '8px' }}>
-              <span style={{ cursor: 'pointer' }}>Giao ngay</span>
-              <span style={{ cursor: 'pointer' }}>Ký quỹ Độc lập ▾</span>
-              <span style={{ cursor: 'pointer', color: '#eaecef', borderBottom: '2px solid #eaecef', paddingBottom: '4px' }}>Alpha</span>
-              <span style={{ cursor: 'pointer' }}>Hợp đồng ▾</span>
-            </div>
-
-            <div className="rp-buy-sell">
-              <button className={`rp-bs-btn buy ${tradeTab==='buy'?'active':''}`} onClick={()=>setTradeTab('buy')}>Mua</button>
-              <button className={`rp-bs-btn sell ${tradeTab==='sell'?'active':''}`} onClick={()=>setTradeTab('sell')}>Bán</button>
-            </div>
-
-            {/* Time Expiration Selector */}
-            <div className="rp-time-selector" style={{ margin: '12px 0 16px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#848e9c', marginBottom: '8px' }}>
-                <span>Thời gian kết toán</span>
-                <span style={{ color: '#EAECEF', fontWeight: '500' }}>{binaryDuration} giây</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
-                {[60, 120, 180, 360].map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setBinaryDuration(d)}
-                    style={{
-                      padding: '6px 0',
-                      background: binaryDuration === d ? '#1e2329' : 'transparent',
-                      border: `1px solid ${binaryDuration === d ? '#EAECEF' : '#2b3139'}`,
-                      borderRadius: '4px',
-                      color: binaryDuration === d ? '#EAECEF' : '#848e9c',
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {d}s
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="rp-order-type">
-              {['limit','market','condition'].map(t=>(
-                <button key={t} className={`rp-ot-btn ${orderType===t?'active':''}`} onClick={()=>setOrderType(t)}>
-                  {t==='limit'?'Giới hạn':t==='market'?'Thị trường':'Có điều kiện'}
-                </button>
-              ))}
-            </div>
-
-            <div className="rp-input-row">
-              <div className="rp-label">
-                <span>Giá hạn</span>
-                <span style={{color:'#00FFA3'}}>Mới nhất</span>
-              </div>
-              <div className="rp-input-wrap">
-                <span className="rp-input-label-left">Giá</span>
-                <input type="text" defaultValue={fmt(livePrice, 2)} key={fmt(livePrice,2)}/>
-                <span className="rp-input-unit">USDT</span>
-              </div>
-            </div>
-
-            <div className="rp-input-row" style={{ marginBottom: '14px' }}>
-              <div className="rp-label" style={{ marginBottom: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Khả dụng</span>
-                <span style={{color:'#848e9c', fontSize: '12px'}}>{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT</span>
-              </div>
-              <div className="rp-input-wrap" style={{ height: '52px', padding: '0 12px', borderRadius: '6px', border: '1px solid #474f59' }}>
-                <span className="rp-input-label-left" style={{ fontSize: '14px', fontWeight: 'bold', color: '#eaecef' }}>Số lượng</span>
-                <input 
-                  type="number" 
-                  placeholder="0.00" 
-                  value={binaryAmount}
-                  onChange={(e) => setBinaryAmount(e.target.value)}
-                  style={{ fontSize: '22px', fontWeight: '800', color: '#00FFA3', textAlign: 'right', flex: 1, paddingRight: '8px' }}
-                />
-                <span className="rp-input-unit" style={{ fontSize: '14px', fontWeight: 'bold', color: '#eaecef' }}>{coin}</span>
-              </div>
-            </div>
-
-            <div>
-              <input 
-                type="range" 
-                className="rp-slider" 
-                min="0" 
-                max="100" 
-                value={balance > 0 ? Math.min(100, Math.max(0, Math.round((Number(binaryAmount) || 0) / balance * 100))) : 0} 
-                onChange={(e) => {
-                  const pct = Number(e.target.value);
-                  const amount = ((balance * pct) / 100).toFixed(2);
-                  setBinaryAmount(amount);
-                }}
-              />
-              <div className="rp-pct-labels">
-                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(0)}>0%</span>
-                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(25)}>25%</span>
-                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(50)}>50%</span>
-                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(75)}>75%</span>
-                <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(100)}>100%</span>
-              </div>
-            </div>
-
-            <button
-              className={`rp-submit-btn ${tradeTab==='sell'?'sell-btn':''}`}
-              onClick={() => handleBinaryBet(tradeTab === 'buy' ? 'UP' : 'DOWN')}
-              disabled={binaryLoading || countdownActive}
-            >
-              {tradeTab === 'buy' ? `Mua ${coin}` : `Bán ${coin}`}
-            </button>
-
-            {/* Countdown Circle - hiện ngay dưới nút đặt cược */}
-            {countdownActive && (
+            ) : countdownActive ? (
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '10px',
-                padding: '16px 12px',
-                background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.08)' : 'rgba(246,70,93,0.08)',
+                justifyContent: 'center',
+                gap: '16px',
+                padding: '24px 12px',
+                background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.06)' : 'rgba(246,70,93,0.06)',
                 borderRadius: '12px',
-                border: `1px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.3)' : 'rgba(246,70,93,0.3)'}`,
-                boxShadow: countdownBetType === 'UP' ? '0 0 18px rgba(0,255,163,0.1)' : '0 0 18px rgba(246,70,93,0.1)',
-                marginTop: '8px',
+                border: `1.5px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.25)' : 'rgba(246,70,93,0.25)'}`,
+                boxShadow: countdownBetType === 'UP' ? '0 8px 32px rgba(0,255,163,0.08)' : '0 8px 32px rgba(246,70,93,0.08)',
+                margin: '12px 0 20px 0',
               }}>
-                <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-                  <svg width="120" height="120" style={{ transform: 'rotate(-90deg)', filter: countdownBetType === 'UP' ? 'drop-shadow(0 0 8px rgba(0,255,163,0.4))' : 'drop-shadow(0 0 8px rgba(246,70,93,0.4))' }}>
-                    <circle cx="60" cy="60" r="50" fill="none" stroke="#1e2329" strokeWidth="8" />
+                <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+                  <svg width="130" height="130" style={{ transform: 'rotate(-90deg)', filter: countdownBetType === 'UP' ? 'drop-shadow(0 0 10px rgba(0,255,163,0.45))' : 'drop-shadow(0 0 10px rgba(246,70,93,0.45))' }}>
+                    <circle cx="65" cy="65" r="54" fill="none" stroke="#1e2329" strokeWidth="8" />
                     <circle
-                      cx="60" cy="60" r="50"
+                      cx="65" cy="65" r="54"
                       fill="none"
                       stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
                       strokeWidth="8"
                       strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 50}`}
-                      strokeDashoffset={`${2 * Math.PI * 50 * (1 - countdownLeft / countdownTotal)}`}
+                      strokeDasharray={`${2 * Math.PI * 54}`}
+                      strokeDashoffset={`${2 * Math.PI * 54 * (1 - countdownLeft / countdownTotal)}`}
                       style={{ transition: 'stroke-dashoffset 0.95s linear' }}
                     />
                   </svg>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: '34px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
-                    <span style={{ fontSize: '11px', color: '#848e9c', fontWeight: 'bold', letterSpacing: '0.5px' }}>GIÂY</span>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                    <span style={{ fontSize: '38px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
+                    <span style={{ fontSize: '12px', color: '#848e9c', fontWeight: 'bold', letterSpacing: '1px' }}>GIÂY</span>
                   </div>
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center' }}>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', textTransform: 'uppercase', letterSpacing: '0.8px', textAlign: 'center' }}>
                   {countdownBetType === 'UP' ? '▲ Đang chờ kết toán TĂNG' : '▼ Đang chờ kết toán GIẢM'}
                 </div>
               </div>
-            )}
+            ) : (
+              <>
+                {/* New Sub-tabs from screenshot */}
+                <div className="rp-sub-tabs" style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#848e9c', marginBottom: '8px' }}>
+                  <span style={{ cursor: 'pointer' }}>Giao ngay</span>
+                  <span style={{ cursor: 'pointer' }}>Ký quỹ Độc lập ▾</span>
+                  <span style={{ cursor: 'pointer', color: '#eaecef', borderBottom: '2px solid #eaecef', paddingBottom: '4px' }}>Alpha</span>
+                  <span style={{ cursor: 'pointer' }}>Hợp đồng ▾</span>
+                </div>
 
-            {!countdownActive && (
-              <div className="rp-info-box">
-                <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                <span>Lệnh sẽ kết toán sau {binaryDuration} giây</span>
-              </div>
-            )}
-            </>
+                <div className="rp-buy-sell">
+                  <button className={`rp-bs-btn buy ${tradeTab==='buy'?'active':''}`} onClick={()=>setTradeTab('buy')}>Mua</button>
+                  <button className={`rp-bs-btn sell ${tradeTab==='sell'?'active':''}`} onClick={()=>setTradeTab('sell')}>Bán</button>
+                </div>
+
+                {/* Time Expiration Selector */}
+                <div className="rp-time-selector" style={{ margin: '12px 0 16px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#848e9c', marginBottom: '8px' }}>
+                    <span>Thời gian kết toán</span>
+                    <span style={{ color: '#EAECEF', fontWeight: '500' }}>{binaryDuration} giây</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                    {[60, 120, 180, 360].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setBinaryDuration(d)}
+                        style={{
+                          padding: '6px 0',
+                          background: binaryDuration === d ? '#1e2329' : 'transparent',
+                          border: `1px solid ${binaryDuration === d ? '#EAECEF' : '#2b3139'}`,
+                          borderRadius: '4px',
+                          color: binaryDuration === d ? '#EAECEF' : '#848e9c',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          textAlign: 'center'
+                        }}
+                      >
+                        {d}s
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rp-order-type">
+                  {['limit','market','condition'].map(t=>(
+                    <button key={t} className={`rp-ot-btn ${orderType===t?'active':''}`} onClick={()=>setOrderType(t)}>
+                      {t==='limit'?'Giới hạn':t==='market'?'Thị trường':'Có điều kiện'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="rp-input-row">
+                  <div className="rp-label">
+                    <span>Giá hạn</span>
+                    <span style={{color:'#00FFA3'}}>Mới nhất</span>
+                  </div>
+                  <div className="rp-input-wrap">
+                    <span className="rp-input-label-left">Giá</span>
+                    <input type="text" defaultValue={fmt(livePrice, 2)} key={fmt(livePrice,2)}/>
+                    <span className="rp-input-unit">USDT</span>
+                  </div>
+                </div>
+
+                <div className="rp-input-row" style={{ marginBottom: '14px' }}>
+                  <div className="rp-label" style={{ marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Khả dụng</span>
+                    <span style={{color:'#848e9c', fontSize: '12px'}}>{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT</span>
+                  </div>
+                  <div className="rp-input-wrap" style={{ height: '52px', padding: '0 12px', borderRadius: '6px', border: '1px solid #474f59' }}>
+                    <span className="rp-input-label-left" style={{ fontSize: '14px', fontWeight: 'bold', color: '#eaecef' }}>Số lượng</span>
+                    <input 
+                      type="number" 
+                      placeholder="0.00" 
+                      value={binaryAmount}
+                      onChange={(e) => setBinaryAmount(e.target.value)}
+                      style={{ fontSize: '22px', fontWeight: '800', color: '#00FFA3', textAlign: 'right', flex: 1, paddingRight: '8px' }}
+                    />
+                    <span className="rp-input-unit" style={{ fontSize: '14px', fontWeight: 'bold', color: '#eaecef' }}>{coin}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <input 
+                    type="range" 
+                    className="rp-slider" 
+                    min="0" 
+                    max="100" 
+                    value={balance > 0 ? Math.min(100, Math.max(0, Math.round((Number(binaryAmount) || 0) / balance * 100))) : 0} 
+                    onChange={(e) => {
+                      const pct = Number(e.target.value);
+                      const amount = ((balance * pct) / 100).toFixed(2);
+                      setBinaryAmount(amount);
+                    }}
+                  />
+                  <div className="rp-pct-labels">
+                    <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(0)}>0%</span>
+                    <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(25)}>25%</span>
+                    <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(50)}>50%</span>
+                    <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(75)}>75%</span>
+                    <span style={{ cursor: 'pointer' }} onClick={() => handlePercentClick(100)}>100%</span>
+                  </div>
+                </div>
+
+                <button
+                  className={`rp-submit-btn ${tradeTab==='sell'?'sell-btn':''}`}
+                  onClick={() => handleBinaryBet(tradeTab === 'buy' ? 'UP' : 'DOWN')}
+                  disabled={binaryLoading || countdownActive}
+                >
+                  {tradeTab === 'buy' ? `Mua ${coin}` : `Bán ${coin}`}
+                </button>
+
+                <div className="rp-info-box">
+                  <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  <span>Lệnh sẽ kết toán sau {binaryDuration} giây</span>
+                </div>
+              </>
             )}
           </div>
 
@@ -1815,44 +1789,7 @@ export default function TradePage() {
               </div>
             </div>
 
-            {/* ── Countdown Circle (hiển thị dưới Số dư khi đang chờ kết toán) ── */}
-            {countdownActive && (
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                gap: '12px', 
-                padding: '20px', 
-                background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.08)' : 'rgba(246,70,93,0.08)', 
-                borderRadius: '12px', 
-                border: `1px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.25)' : 'rgba(246,70,93,0.25)'}`,
-                boxShadow: countdownBetType === 'UP' ? '0 0 20px rgba(0,255,163,0.08)' : '0 0 20px rgba(246,70,93,0.08)',
-                marginBottom: '14px'
-              }}>
-                <div style={{ position: 'relative', width: '130px', height: '130px' }}>
-                  <svg width="130" height="130" style={{ transform: 'rotate(-90deg)', filter: countdownBetType === 'UP' ? 'drop-shadow(0 0 8px rgba(0,255,163,0.3))' : 'drop-shadow(0 0 8px rgba(246,70,93,0.3))' }}>
-                    <circle cx="65" cy="65" r="54" fill="none" stroke="#1e2329" strokeWidth="8" />
-                    <circle
-                      cx="65" cy="65" r="54"
-                      fill="none"
-                      stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 54}`}
-                      strokeDashoffset={`${2 * Math.PI * 54 * (1 - countdownLeft / countdownTotal)}`}
-                      style={{ transition: 'stroke-dashoffset 0.95s linear' }}
-                    />
-                  </svg>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                    <span style={{ fontSize: '36px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
-                    <span style={{ fontSize: '12px', color: '#848e9c', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>giây</span>
-                  </div>
-                </div>
-                <div style={{ fontSize: '14px', fontWeight: '800', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  {countdownBetType === 'UP' ? 'Đang chờ kết toán TĂNG' : 'Đang chờ kết toán GIẢM'}
-                </div>
-              </div>
-            )}
+
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0 4px 0', fontSize: '11px', color: '#848e9c' }}>
               <span>Tài khoản Giao dịch</span>
@@ -2068,10 +2005,47 @@ export default function TradePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {binaryBets.map((bet) => (
+                    {binaryBets.map((bet) => {
+                      // Calculate remaining seconds for PENDING bets
+                      const endMs = bet.EndTime ? new Date(bet.EndTime).getTime() : 0;
+                      const nowMs = Date.now();
+                      const remainSec = Math.max(0, Math.round((endMs - nowMs) / 1000));
+                      const totalSec = bet.Duration || countdownTotal || 60;
+                      const progress = totalSec > 0 ? Math.max(0, Math.min(1, remainSec / totalSec)) : 0;
+                      const r = 12;
+                      const circ = 2 * Math.PI * r;
+                      const isPending = bet.Status === 'PENDING' && remainSec > 0;
+                      const betColor = bet.BetType === 'UP' ? '#00FFA3' : '#F6465D';
+                      return (
                       <tr key={bet.Id} style={{ borderBottom: '1px solid #1e2329' }}>
                         <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.StartTime)}</td>
-                        <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.EndTime)}</td>
+                        <td style={{ padding: '10px 16px' }}>
+                          {isPending ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ position: 'relative', width: '32px', height: '32px', flexShrink: 0 }}>
+                                <svg width="32" height="32" style={{ transform: 'rotate(-90deg)' }}>
+                                  <circle cx="16" cy="16" r={r} fill="none" stroke="#1e2329" strokeWidth="3" />
+                                  <circle
+                                    cx="16" cy="16" r={r}
+                                    fill="none"
+                                    stroke={betColor}
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                    strokeDasharray={`${circ}`}
+                                    strokeDashoffset={`${circ * (1 - progress)}`}
+                                    style={{ transition: 'stroke-dashoffset 0.9s linear' }}
+                                  />
+                                </svg>
+                                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <span style={{ fontSize: '9px', fontWeight: '900', color: betColor, fontFamily: 'monospace', lineHeight: 1 }}>{remainSec}</span>
+                                </div>
+                              </div>
+                              <span style={{ color: betColor, fontWeight: 'bold', fontSize: '12px' }}>{remainSec}s</span>
+                            </div>
+                          ) : (
+                            formatDateTime(bet.EndTime)
+                          )}
+                        </td>
                         <td style={{ padding: '10px 16px' }}>{bet.Symbol}</td>
                         <td style={{ padding: '10px 16px', color: bet.BetType === 'UP' ? '#00FFA3' : '#F6465D' }}>{bet.BetType}</td>
                         <td style={{ padding: '10px 16px' }}>{fmtP(bet.StartPrice)}</td>
@@ -2085,7 +2059,8 @@ export default function TradePage() {
                           {bet.Status === 'TIE' && <span style={{ color: '#EAECEF' }}>Hòa</span>}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                     {binaryBets.length === 0 && (
                       <tr>
                         <td colSpan="9" style={{ textAlign: 'center', padding: '20px', color: '#848e9c' }}>Chưa có lệnh quyền chọn nào</td>
@@ -2124,50 +2099,7 @@ export default function TradePage() {
         </div>
       )}
 
-      {/* Floating Countdown for Mobile - TOP RIGHT CORNER */}
-      {countdownActive && (
-        <div className="tp-m-floating-countdown" style={{
-          position: 'fixed',
-          top: '50px',
-          right: '10px',
-          zIndex: 9999,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '4px',
-          background: 'rgba(11, 14, 17, 0.97)',
-          border: `1.5px solid ${countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}`,
-          borderRadius: '12px',
-          padding: '8px 12px',
-          boxShadow: countdownBetType === 'UP'
-            ? '0 4px 20px rgba(0,255,163,0.25)'
-            : '0 4px 20px rgba(246,70,93,0.25)',
-          backdropFilter: 'blur(10px)',
-          minWidth: '80px',
-        }}>
-          <div style={{ position: 'relative', width: '56px', height: '56px' }}>
-            <svg width="56" height="56" style={{ transform: 'rotate(-90deg)', filter: countdownBetType === 'UP' ? 'drop-shadow(0 0 6px rgba(0,255,163,0.5))' : 'drop-shadow(0 0 6px rgba(246,70,93,0.5))' }}>
-              <circle cx="28" cy="28" r="24" fill="none" stroke="#1e2329" strokeWidth="4" />
-              <circle
-                cx="28" cy="28" r="24"
-                fill="none"
-                stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 24}`}
-                strokeDashoffset={`${2 * Math.PI * 24 * (1 - countdownLeft / countdownTotal)}`}
-                style={{ transition: 'stroke-dashoffset 0.95s linear' }}
-              />
-            </svg>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '16px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
-            </div>
-          </div>
-          <span style={{ fontSize: '9px', color: '#eaecef', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.3px', textAlign: 'center' }}>
-            KẾT TOÁN {countdownBetType === 'UP' ? 'TĂNG' : 'GIẢM'}
-          </span>
-        </div>
-      )}
+
 
       {/* ═══════════ MOBILE TRADE BOTTOM SHEET MODAL ═══════════ */}
       {showMobileTradeModal && (
