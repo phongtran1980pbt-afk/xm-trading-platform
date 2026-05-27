@@ -1734,10 +1734,52 @@ export default function TradePage() {
             >
               {tradeTab === 'buy' ? `Mua ${coin}` : `Bán ${coin}`}
             </button>
-            <div className="rp-info-box">
-              <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>Lệnh sẽ kết toán sau {binaryDuration} giây</span>
-            </div>
+
+            {/* Countdown Circle - hiện ngay dưới nút đặt cược */}
+            {countdownActive && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '16px 12px',
+                background: countdownBetType === 'UP' ? 'rgba(0,255,163,0.08)' : 'rgba(246,70,93,0.08)',
+                borderRadius: '12px',
+                border: `1px solid ${countdownBetType === 'UP' ? 'rgba(0,255,163,0.3)' : 'rgba(246,70,93,0.3)'}`,
+                boxShadow: countdownBetType === 'UP' ? '0 0 18px rgba(0,255,163,0.1)' : '0 0 18px rgba(246,70,93,0.1)',
+                marginTop: '8px',
+              }}>
+                <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                  <svg width="120" height="120" style={{ transform: 'rotate(-90deg)', filter: countdownBetType === 'UP' ? 'drop-shadow(0 0 8px rgba(0,255,163,0.4))' : 'drop-shadow(0 0 8px rgba(246,70,93,0.4))' }}>
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="#1e2329" strokeWidth="8" />
+                    <circle
+                      cx="60" cy="60" r="50"
+                      fill="none"
+                      stroke={countdownBetType === 'UP' ? '#00FFA3' : '#F6465D'}
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 50}`}
+                      strokeDashoffset={`${2 * Math.PI * 50 * (1 - countdownLeft / countdownTotal)}`}
+                      style={{ transition: 'stroke-dashoffset 0.95s linear' }}
+                    />
+                  </svg>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: '34px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
+                    <span style={{ fontSize: '11px', color: '#848e9c', fontWeight: 'bold', letterSpacing: '0.5px' }}>GIÂY</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center' }}>
+                  {countdownBetType === 'UP' ? '▲ Đang chờ kết toán TĂNG' : '▼ Đang chờ kết toán GIẢM'}
+                </div>
+              </div>
+            )}
+
+            {!countdownActive && (
+              <div className="rp-info-box">
+                <svg width="14" height="14" fill="none" stroke="#848e9c" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>Lệnh sẽ kết toán sau {binaryDuration} giây</span>
+              </div>
+            )}
             </>
             )}
           </div>
