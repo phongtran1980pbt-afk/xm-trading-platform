@@ -66,6 +66,55 @@ async function migrate() {
             BEGIN
                 PRINT 'LoginHistory table already exists.';
             END
+
+            -- Add bank info columns to Users table if not exists
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'BankName')
+            BEGIN
+                ALTER TABLE Users ADD BankName NVARCHAR(200);
+                PRINT 'BankName column added to Users.';
+            END
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'BankAccountNumber')
+            BEGIN
+                ALTER TABLE Users ADD BankAccountNumber NVARCHAR(50);
+                PRINT 'BankAccountNumber column added to Users.';
+            END
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'BankAccountHolder')
+            BEGIN
+                ALTER TABLE Users ADD BankAccountHolder NVARCHAR(200);
+                PRINT 'BankAccountHolder column added to Users.';
+            END
+
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'BankBranch')
+            BEGIN
+                ALTER TABLE Users ADD BankBranch NVARCHAR(200);
+                PRINT 'BankBranch column added to Users.';
+            END
+
+            -- Create WithdrawRequests table
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WithdrawRequests]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE WithdrawRequests (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    UserId INT NOT NULL,
+                    Amount DECIMAL(18,2) NOT NULL,
+                    BankName NVARCHAR(200),
+                    BankAccountNumber NVARCHAR(50),
+                    BankAccountHolder NVARCHAR(200),
+                    BankBranch NVARCHAR(200),
+                    Status NVARCHAR(20) DEFAULT 'PENDING', -- 'PENDING', 'APPROVED', 'REJECTED'
+                    Note NVARCHAR(500),
+                    CreatedAt DATETIME DEFAULT GETDATE(),
+                    UpdatedAt DATETIME,
+                    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                );
+                PRINT 'WithdrawRequests table created.';
+            END
+            ELSE
+            BEGIN
+                PRINT 'WithdrawRequests table already exists.';
+            END
         `;
         
         await pool.request().query(query);
@@ -78,3 +127,4 @@ async function migrate() {
 }
 
 migrate();
+

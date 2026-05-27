@@ -522,5 +522,167 @@ export const getTransactionHistory = async (req, res) => {
   }
 };
 
+// GET /api/auth/profile/:id/bank-info
+export const getBankInfo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT BankName, BankAccountNumber, BankAccountHolder, BankBranch
+        FROM Users WHERE Id = @id
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+    }
+
+    res.json(result.recordset[0]);
+  } catch (error) {
+    console.error('Lỗi lấy thông tin ngân hàng:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy thông tin ngân hàng: ' + error.message });
+  }
+};
+
+// POST /api/auth/profile/:id/bank-info
+export const saveBankInfo = async (req, res) => {
+  const { id } = req.params;
+  const { bankName, bankAccountNumber, bankAccountHolder, bankBranch } = req.body;
+
+  if (!bankName || !bankAccountNumber || !bankAccountHolder) {
+    return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin ngân hàng!' });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('bankName', sql.NVarChar, bankName)
+      .input('bankAccountNumber', sql.NVarChar, bankAccountNumber)
+      .input('bankAccountHolder', sql.NVarChar, bankAccountHolder.toUpperCase())
+      .input('bankBranch', sql.NVarChar, bankBranch || '')
+      .query(`
+        UPDATE Users 
+        SET BankName = @bankName,
+            BankAccountNumber = @bankAccountNumber,
+            BankAccountHolder = @bankAccountHolder,
+            BankBranch = @bankBranch
+        WHERE Id = @id
+      `);
+
+    // Log
+    const userRes = await pool.request().input('id', sql.Int, id).query('SELECT Email FROM Users WHERE Id = @id');
+    const email = userRes.recordset[0]?.Email || 'Unknown';
+
+    await pool.request()
+      .input('action', sql.NVarChar, 'Cập nhật ngân hàng')
+      .input('details', sql.NVarChar, `Người dùng ${email} đã cập nhật thông tin ngân hàng: ${bankName} - ${bankAccountNumber}`)
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    res.json({ success: true, message: 'Cập nhật thông tin ngân hàng thành công!' });
+  } catch (error) {
+    console.error('Lỗi lưu thông tin ngân hàng:', error);
+    res.status(500).json({ message: 'Lỗi server khi lưu thông tin ngân hàng: ' + error.message });
+  }
+};
+
+// POST /api/auth/profile/:id/withdraw-request
+export const createWithdrawRequest = async (req, res) => {
+  const { id } = req.params;
+  const { amount } = req.body;
+
+  if (!amount || parseFloat(amount) <= 0) {
+    return res.status(400).json({ message: 'Số tiền rút không hợp lệ!' });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // Kiểm tra user và số dư
+    const userRes = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT Email, FullName, Balance, BankName, BankAccountNumber, BankAccountHolder, BankBranch
+        FROM Users WHERE Id = @id
+      `);
+
+    if (userRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+    }
+
+    const user = userRes.recordset[0];
+
+    // Kiểm tra tài khoản ngân hàng đã liên kết chưa
+    if (!user.BankAccountNumber) {
+      return res.status(400).json({ message: 'Vui lòng liên kết tài khoản ngân hàng trước khi rút tiền!' });
+    }
+
+    // Kiểm tra số dư
+    if (parseFloat(user.Balance) < parseFloat(amount)) {
+      return res.status(400).json({ 
+        message: `Số dư không đủ! Số dư hiện tại: $${parseFloat(user.Balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` 
+      });
+    }
+
+    // Tạo yêu cầu rút tiền
+    await pool.request()
+      .input('userId', sql.Int, id)
+      .input('amount', sql.Decimal(18, 2), parseFloat(amount))
+      .input('bankName', sql.NVarChar, user.BankName || '')
+      .input('bankAccountNumber', sql.NVarChar, user.BankAccountNumber)
+      .input('bankAccountHolder', sql.NVarChar, user.BankAccountHolder || '')
+      .input('bankBranch', sql.NVarChar, user.BankBranch || '')
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query(`
+        INSERT INTO WithdrawRequests (UserId, Amount, BankName, BankAccountNumber, BankAccountHolder, BankBranch, Status, CreatedAt)
+        VALUES (@userId, @amount, @bankName, @bankAccountNumber, @bankAccountHolder, @bankBranch, 'PENDING', @createdAt)
+      `);
+
+    // Ghi AuditLog để Admin thấy
+    await pool.request()
+      .input('action', sql.NVarChar, 'Yêu cầu rút tiền')
+      .input('details', sql.NVarChar, `Người dùng ${user.Email} (${user.FullName}) yêu cầu rút $${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} về ${user.BankName} - ${user.BankAccountNumber} (${user.BankAccountHolder})`)
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
+
+    // Gửi thông báo cho user
+    await pool.request()
+      .input('userId', sql.Int, id)
+      .input('msg', sql.NVarChar, `Yêu cầu rút $${parseFloat(amount).toFixed(2)} đang được xử lý. Vui lòng chờ bộ phận hỗ trợ xác nhận.`)
+      .input('createdAt', sql.DateTime, getTrueTime())
+      .query('INSERT INTO Notifications (UserId, Message, CreatedAt) VALUES (@userId, @msg, @createdAt)');
+
+    res.json({ success: true, message: `Yêu cầu rút $${parseFloat(amount).toFixed(2)} đã được gửi thành công! Vui lòng chờ xác nhận.` });
+  } catch (error) {
+    console.error('Lỗi tạo yêu cầu rút tiền:', error);
+    res.status(500).json({ message: 'Lỗi server khi tạo yêu cầu rút tiền: ' + error.message });
+  }
+};
+
+// GET /api/auth/profile/:id/withdraw-requests
+export const getWithdrawRequests = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT TOP 20 Id, Amount, BankName, BankAccountNumber, BankAccountHolder, BankBranch, Status, Note, CreatedAt, UpdatedAt
+        FROM WithdrawRequests
+        WHERE UserId = @id
+        ORDER BY CreatedAt DESC
+      `);
+
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Lỗi lấy lịch sử rút tiền:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+};
+
+
 
 

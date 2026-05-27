@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getBalance, checkUserExists, getProfile, updateKyc, changePassword, getLoginHistory, getTransactionHistory } from '../controllers/authController.js';
+import { register, login, getBalance, checkUserExists, getProfile, updateKyc, changePassword, getLoginHistory, getTransactionHistory, getBankInfo, saveBankInfo, createWithdrawRequest, getWithdrawRequests } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -48,6 +48,11 @@ router.post('/profile/:id/update-kyc', updateKyc);
 router.post('/profile/:id/change-password', changePassword);
 router.get('/profile/:id/login-history', getLoginHistory);
 router.get('/profile/:id/transactions', getTransactionHistory);
+router.get('/profile/:id/bank-info', getBankInfo);
+router.post('/profile/:id/bank-info', saveBankInfo);
+router.post('/profile/:id/withdraw-request', createWithdrawRequest);
+router.get('/profile/:id/withdraw-requests', getWithdrawRequests);
+
 
 
 export default router;
