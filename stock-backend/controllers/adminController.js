@@ -42,7 +42,7 @@ export const getUsers = async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request().query(`
       SELECT u.Id, u.Email, u.FullName, u.IsActive, u.Balance, u.AccountCode,
-             u.Country, u.IdCardType, u.IdNumber, u.IdFrontPhoto, u.IdBackPhoto,
+             u.Country, u.IdCardType, u.IdNumber, u.IdFrontPhoto, u.IdBackPhoto, u.PhoneNumber,
              CASE WHEN EXISTS (
                  SELECT 1 FROM UserRoles ur 
                  JOIN Roles r ON ur.RoleId = r.Id 

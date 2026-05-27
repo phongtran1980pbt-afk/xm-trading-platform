@@ -61,6 +61,10 @@ const connectDB = async () => {
             BEGIN
                 ALTER TABLE Users ADD IdBackPhoto NVARCHAR(MAX) NULL;
             END
+            IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'PhoneNumber' AND Object_ID = Object_ID(N'Users'))
+            BEGIN
+                ALTER TABLE Users ADD PhoneNumber NVARCHAR(20) NULL;
+            END
         `);
         console.log('✅ [SQL Server] Đã kiểm tra và cập nhật các cột KYC cho bảng Users');
         

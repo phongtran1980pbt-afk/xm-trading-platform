@@ -5,7 +5,7 @@ import { poolPromise, SECRET_KEY } from '../config/db.js';
 import { getTrueTime } from '../timeService.js';
 
 export const register = async (req, res) => {
-  const { email, password, fullName, country, idCardType, idNumber, idFrontPhoto, idBackPhoto } = req.body;
+  const { email, password, fullName, country, idCardType, idNumber, idFrontPhoto, idBackPhoto, phoneNumber } = req.body;
   
   try {
     const pool = await poolPromise;
@@ -31,23 +31,24 @@ export const register = async (req, res) => {
     // Generate 8-digit AccountCode
     const accountCode = Math.floor(10000000 + Math.random() * 90000000).toString();
 
-    // 2. Lưu vào bảng Users với các trường KYC
+    // 2. Lưu vào bảng Users với các trường KYC và PhoneNumber
     const insertUser = await pool.request()
       .input('email', sql.NVarChar, email)
       .input('password', sql.NVarChar, hashedPassword)
-      .input('fullName', sql.NVarChar, fullName || 'Nhà giao dịch KANET')
+      .input('fullName', sql.NVarChar, fullName ? fullName.toUpperCase() : 'NHÀ GIAO DỊCH KANET')
       .input('accountCode', sql.NVarChar, accountCode)
       .input('country', sql.NVarChar, country || 'Vietnam')
       .input('idCardType', sql.NVarChar, idCardType || 'Thẻ căn cước')
       .input('idNumber', sql.NVarChar, idNumber || '')
       .input('idFrontPhoto', sql.NVarChar, idFrontPhoto || '')
       .input('idBackPhoto', sql.NVarChar, idBackPhoto || '')
+      .input('phoneNumber', sql.NVarChar, phoneNumber || '')
       .query(`
         INSERT INTO Users 
-        (Email, PasswordHash, FullName, AccountCode, IsActive, Country, IdCardType, IdNumber, IdFrontPhoto, IdBackPhoto) 
+        (Email, PasswordHash, FullName, AccountCode, IsActive, Country, IdCardType, IdNumber, IdFrontPhoto, IdBackPhoto, PhoneNumber) 
         OUTPUT INSERTED.Id 
         VALUES 
-        (@email, @password, @fullName, @accountCode, 1, @country, @idCardType, @idNumber, @idFrontPhoto, @idBackPhoto)
+        (@email, @password, @fullName, @accountCode, 1, @country, @idCardType, @idNumber, @idFrontPhoto, @idBackPhoto, @phoneNumber)
       `);
 
     const newUserId = insertUser.recordset[0].Id;

@@ -38,7 +38,9 @@ function Register() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [serverError, setServerError] = React.useState('');
 
-  // KYC States
+  // KYC & Personal Info States (Step 2)
+  const [fullName, setFullName] = React.useState('');
+  const [phoneNumber, setPhoneNumber] = React.useState('');
   const [idCardType, setIdCardType] = React.useState("Thẻ căn cước");
   const [idNumber, setIdNumber] = React.useState("");
   const [idFrontPhoto, setIdFrontPhoto] = React.useState("");
@@ -83,10 +85,30 @@ function Register() {
     }
   };
 
+  const handleIdNumberChange = (e) => {
+    // Only allow digits
+    const val = e.target.value.replace(/\D/g, '');
+    if (val.length <= 12) {
+      setIdNumber(val);
+    }
+  };
+
   const handleFinalRegister = async (e) => {
     e.preventDefault();
-    if (!idNumber.trim()) {
-      alert('Vui lòng nhập số ID/hộ chiếu của bạn!');
+    if (!fullName.trim()) {
+      alert('Vui lòng nhập họ và tên của bạn!');
+      return;
+    }
+    if (!selectedCountry.trim()) {
+      alert('Vui lòng nhập khu vực cư trú!');
+      return;
+    }
+    if (!phoneNumber.trim()) {
+      alert('Vui lòng nhập số điện thoại của bạn!');
+      return;
+    }
+    if (idNumber.length !== 12) {
+      alert('Số CCCD bắt buộc phải nhập đúng 12 chữ số!');
       return;
     }
     
@@ -96,12 +118,13 @@ function Register() {
       const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
         email: email,
         password: password,
-        fullName: 'Nhà giao dịch KANET',
+        fullName: fullName.toUpperCase(),
         country: selectedCountry,
         idCardType: idCardType,
         idNumber: idNumber,
         idFrontPhoto: idFrontPhoto,
-        idBackPhoto: idBackPhoto
+        idBackPhoto: idBackPhoto,
+        phoneNumber: phoneNumber
       });
 
       if (response.status === 201) {
@@ -361,15 +384,40 @@ function Register() {
                 </div>
 
                 <form onSubmit={handleFinalRegister}>
-                  {/* Selected region display */}
+                  {/* Họ tên input (forced to uppercase) */}
+                  <div className="k-input-group" style={{ marginBottom: '16px' }}>
+                    <label className="k-kyc-label">Họ và tên (Viết hoa toàn bộ)</label>
+                    <input 
+                      type="text" 
+                      placeholder="VUI LÒNG NHẬP HỌ TÊN VIẾT HOA"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value.toUpperCase())}
+                      required
+                    />
+                  </div>
+
+                  {/* Selected region display (Editable) */}
                   <div className="k-input-group" style={{ marginBottom: '16px' }}>
                     <span className="k-kyc-label">Khu vực cư trú</span>
-                    <div style={{
-                      backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '14px 16px',
-                      color: '#eaecef', fontSize: '14px', border: '1px solid rgba(255, 255, 255, 0.08)'
-                    }}>
-                      {selectedCountry}
-                    </div>
+                    <input 
+                      type="text"
+                      placeholder="Nhập khu vực cư trú của bạn"
+                      value={selectedCountry}
+                      onChange={(e) => setSelectedCountry(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* Phone number input */}
+                  <div className="k-input-group" style={{ marginBottom: '16px' }}>
+                    <label className="k-kyc-label">Số điện thoại</label>
+                    <input 
+                      type="tel" 
+                      placeholder="Vui lòng nhập số điện thoại của bạn"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      required
+                    />
                   </div>
 
                   {/* ID Card Type select */}
@@ -386,15 +434,15 @@ function Register() {
                     </select>
                   </div>
 
-                  {/* ID Card Number Input */}
+                  {/* ID Card Number Input (strict 12 digits for CCCD) */}
                   <div className="k-input-group" style={{ marginBottom: '20px' }}>
-                    <label className="k-kyc-label">Số chứng chỉ/hộ chiếu</label>
+                    <label className="k-kyc-label">Số chứng chỉ/hộ chiếu (đúng 12 số cho CCCD)</label>
                     <div className="k-kyc-input-wrapper">
                       <input 
                         type="text" 
-                        placeholder="Vui lòng nhập số ID/hộ chiếu của bạn"
+                        placeholder="Vui lòng nhập số ID/hộ chiếu của bạn (12 số)"
                         value={idNumber}
-                        onChange={(e) => setIdNumber(e.target.value)}
+                        onChange={handleIdNumberChange}
                         style={{ paddingRight: '48px' }}
                         required
                       />
@@ -521,10 +569,10 @@ function Register() {
                   <button 
                     type="submit" 
                     className="k-kyc-btn-submit"
-                    disabled={isLoading || !idNumber}
+                    disabled={isLoading || !idNumber || idNumber.length !== 12}
                     style={{
-                      opacity: (isLoading || !idNumber) ? 0.6 : 1,
-                      cursor: (isLoading || !idNumber) ? 'not-allowed' : 'pointer'
+                      opacity: (isLoading || !idNumber || idNumber.length !== 12) ? 0.6 : 1,
+                      cursor: (isLoading || !idNumber || idNumber.length !== 12) ? 'not-allowed' : 'pointer'
                     }}
                   >
                     {isLoading ? 'Đang xử lý...' : 'Đăng ký xác thực'}
