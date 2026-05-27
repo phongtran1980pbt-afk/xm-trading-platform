@@ -344,6 +344,60 @@
   opacity: 1;
 }
 
+/* Menu navigation items */
+.k-udrop-menu {
+  padding: 4px 0;
+}
+
+.k-udrop-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: #cdd5e0;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+.k-udrop-menu-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #eaecef;
+}
+
+.k-udrop-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #7e8a9c;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.k-udrop-menu-item:hover .k-udrop-menu-icon {
+  color: #24DB9B;
+}
+
+.k-udrop-menu-item > span:nth-child(2) {
+  flex: 1;
+}
+
+.k-udrop-menu-arrow {
+  color: #3c4452;
+  transition: color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.k-udrop-menu-item:hover .k-udrop-menu-arrow {
+  color: #7e8a9c;
+  transform: translateX(2px);
+}
+
 .k-user-dropdown-divider {
   height: 1px;
   background: rgba(255,255,255,0.06);

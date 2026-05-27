@@ -364,14 +364,57 @@ function KucoinWeb() {
 
                   <div className="k-user-dropdown-divider" />
 
+                  {/* Menu items */}
+                  <div className="k-udrop-menu">
+                    <Link to="/profile" className="k-udrop-menu-item">
+                      <span className="k-udrop-menu-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </span>
+                      <span>Thông tin cá nhân</span>
+                      <svg className="k-udrop-menu-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </Link>
+
+                    <Link to="/security" className="k-udrop-menu-item">
+                      <span className="k-udrop-menu-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      </span>
+                      <span>An toàn</span>
+                      <svg className="k-udrop-menu-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </Link>
+
+                    <Link to="/kyc" className="k-udrop-menu-item">
+                      <span className="k-udrop-menu-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                      </span>
+                      <span>Xác thực</span>
+                      <svg className="k-udrop-menu-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </Link>
+
+                    <Link to="/referral" className="k-udrop-menu-item">
+                      <span className="k-udrop-menu-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      </span>
+                      <span>Chương trình giới thiệu</span>
+                      <svg className="k-udrop-menu-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </Link>
+
+                    <Link to="/history" className="k-udrop-menu-item">
+                      <span className="k-udrop-menu-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                      </span>
+                      <span>Lịch sử giao dịch</span>
+                      <svg className="k-udrop-menu-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </Link>
+                  </div>
+
+                  <div className="k-user-dropdown-divider" />
+
                   {user.isAdmin && (
                     <Link to="/admin" className="k-user-dropdown-item k-user-dropdown-admin">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                       Quản trị viên
                     </Link>
                   )}
-
-                  <div className="k-user-dropdown-divider" />
 
                   <button onClick={handleLogout} className="k-user-dropdown-item k-user-dropdown-logout">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
