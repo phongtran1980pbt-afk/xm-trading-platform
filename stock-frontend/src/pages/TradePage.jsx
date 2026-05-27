@@ -2049,7 +2049,8 @@ export default function TradePage() {
                   <tbody>
                     {binaryBets.map((bet) => {
                       // Calculate remaining seconds for PENDING bets
-                      const endMs = bet.EndTime ? new Date(bet.EndTime).getTime() : 0;
+                      const cleanEndStr = bet.EndTime ? (bet.EndTime.endsWith('Z') ? bet.EndTime : `${bet.EndTime}Z`) : '';
+                      const endMs = cleanEndStr ? new Date(cleanEndStr).getTime() : 0;
                       const nowMs = Date.now();
                       const remainSec = Math.max(0, Math.round((endMs - nowMs) / 1000));
                       const totalSec = bet.Duration || countdownTotal || 60;
