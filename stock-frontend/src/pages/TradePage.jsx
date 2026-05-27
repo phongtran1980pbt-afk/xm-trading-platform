@@ -2063,26 +2063,22 @@ export default function TradePage() {
                         <td style={{ padding: '10px 16px' }}>{formatDateTime(bet.StartTime)}</td>
                         <td style={{ padding: '10px 16px' }}>
                           {isPending ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ position: 'relative', width: '32px', height: '32px', flexShrink: 0 }}>
-                                <svg width="32" height="32" style={{ transform: 'rotate(-90deg)' }}>
-                                  <circle cx="16" cy="16" r={r} fill="none" stroke="#1e2329" strokeWidth="3" />
-                                  <circle
-                                    cx="16" cy="16" r={r}
-                                    fill="none"
-                                    stroke={betColor}
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                    strokeDasharray={`${circ}`}
-                                    strokeDashoffset={`${circ * (1 - progress)}`}
-                                    style={{ transition: 'stroke-dashoffset 0.9s linear' }}
-                                  />
-                                </svg>
-                                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <span style={{ fontSize: '9px', fontWeight: '900', color: betColor, fontFamily: 'monospace', lineHeight: 1 }}>{remainSec}</span>
-                                </div>
-                              </div>
-                              <span style={{ color: betColor, fontWeight: 'bold', fontSize: '12px' }}>{remainSec}s</span>
+                            <div style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              background: bet.BetType === 'UP' ? 'rgba(0,255,163,0.08)' : 'rgba(246,70,93,0.08)',
+                              border: `1.2px solid ${betColor}`,
+                              color: betColor,
+                              fontWeight: '900',
+                              fontSize: '12px',
+                              fontFamily: 'monospace',
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              boxShadow: bet.BetType === 'UP' ? '0 0 8px rgba(0,255,163,0.15)' : '0 0 8px rgba(246,70,93,0.15)',
+                            }}>
+                              <span style={{ fontSize: '11px' }}>⏱</span>
+                              <span>{remainSec} giây</span>
                             </div>
                           ) : (
                             formatDateTime(bet.EndTime)
