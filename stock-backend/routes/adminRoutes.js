@@ -3,7 +3,7 @@ import {
   getAuditLogs, getUsers, depositUser, depositUserByCode, 
   getTradeStats, toggleUserStatus, withdrawUser, deleteNonAdminUsers, 
   clearAllChats, deleteUser, clearAuditLogs, deleteChatSession, deleteAuditLog,
-  getAdminWithdrawRequests, approveWithdrawRequest, rejectWithdrawRequest
+  getAdminWithdrawRequests, approveWithdrawRequest, rejectWithdrawRequest, deleteWithdrawRequest
 } from '../controllers/adminController.js';
 
 const router = express.Router();
@@ -25,5 +25,6 @@ router.get('/trade-stats', getTradeStats);
 router.get('/withdraw-requests', getAdminWithdrawRequests);
 router.post('/withdraw-requests/:id/approve', approveWithdrawRequest);
 router.post('/withdraw-requests/:id/reject', rejectWithdrawRequest);
+router.delete('/withdraw-requests/:id', deleteWithdrawRequest);
 
 export default router;

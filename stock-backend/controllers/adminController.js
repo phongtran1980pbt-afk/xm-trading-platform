@@ -637,3 +637,21 @@ export const rejectWithdrawRequest = async (req, res) => {
   }
 };
 
+// DELETE /api/admin/withdraw-requests/:id
+export const deleteWithdrawRequest = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM WithdrawRequests WHERE Id = @id');
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy yêu cầu rút tiền này!' });
+    }
+    res.json({ success: true, message: 'Đã xoá yêu cầu rút tiền thành công!' });
+  } catch (error) {
+    console.error('Lỗi xoá yêu cầu rút tiền:', error);
+    res.status(500).json({ message: 'Lỗi server khi xoá yêu cầu rút tiền: ' + error.message });
+  }
+};
+

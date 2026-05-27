@@ -259,6 +259,28 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteWithdraw = async (id) => {
+    if (!window.confirm('Bạn có chắc chắn muốn XÓA yêu cầu rút tiền này khỏi danh sách hệ thống?')) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/withdraw-requests/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Đã xoá yêu cầu rút tiền thành công!');
+        fetchWithdraws();
+        if (selectedWithdrawForDetail && selectedWithdrawForDetail.Id === id) {
+          setSelectedWithdrawForDetail(null);
+        }
+      } else {
+        toast.error(data.message || 'Có lỗi xảy ra!');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Không thể kết nối đến máy chủ!');
+    }
+  };
+
   async function handleSetTrend(newTrend) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/prices/trend`, {
@@ -1286,12 +1308,18 @@ export default function AdminDashboard() {
                                 </button>
                                 <button
                                   onClick={() => handleRejectWithdraw(req.Id, req.Amount, req.Email)}
-                                  style={{ padding: '6px 12px', background: '#F6465D', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                                  style={{ padding: '6px 12px', background: '#F6465D', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', cursor: 'pointer', marginRight: '8px', fontWeight: 'bold' }}
                                 >
                                   Từ chối
                                 </button>
                               </>
                             )}
+                            <button
+                              onClick={() => handleDeleteWithdraw(req.Id)}
+                              style={{ padding: '6px 12px', background: '#2c161a', border: '1px solid #F6465D', borderRadius: '6px', color: '#F6465D', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                            >
+                              Xóa
+                            </button>
                           </td>
                         </tr>
                       );
@@ -1368,7 +1396,7 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
-                    {selectedWithdrawForDetail.Status === 'PENDING' && (
+                    {selectedWithdrawForDetail.Status === 'PENDING' ? (
                       <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
                         <button
                           onClick={() => {
@@ -1385,6 +1413,25 @@ export default function AdminDashboard() {
                           style={{ flex: 1, padding: '12px', background: '#F6465D', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
                         >
                           Từ chối
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleDeleteWithdraw(selectedWithdrawForDetail.Id);
+                          }}
+                          style={{ flex: 0.5, padding: '12px', background: '#2c161a', border: '1px solid #F6465D', borderRadius: '8px', color: '#F6465D', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                        <button
+                          onClick={() => {
+                            handleDeleteWithdraw(selectedWithdrawForDetail.Id);
+                          }}
+                          style={{ flex: 1, padding: '12px', background: '#2c161a', border: '1px solid #F6465D', borderRadius: '8px', color: '#F6465D', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                        >
+                          Xóa yêu cầu rút tiền này
                         </button>
                       </div>
                     )}
