@@ -33,6 +33,7 @@ export default function Profile() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [loginHistory, setLoginHistory] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [errorHistory, setErrorHistory] = useState(null);
 
   const frontInputRef = React.useRef(null);
   const backInputRef = React.useRef(null);
@@ -68,11 +69,13 @@ export default function Profile() {
   const fetchLoginHistory = async () => {
     if (!user || !user.id) return;
     setIsLoadingHistory(true);
+    setErrorHistory(null);
     try {
       const res = await axios.get(`${API_BASE_URL}/api/auth/profile/${user.id}/login-history`);
       setLoginHistory(res.data || []);
     } catch (error) {
       console.error('Lỗi lấy lịch sử đăng nhập:', error);
+      setErrorHistory(error.response?.data?.message || error.message || 'Lỗi server không rõ');
     } finally {
       setIsLoadingHistory(false);
     }
@@ -718,7 +721,11 @@ export default function Profile() {
                 </h3>
                 
                 <div style={{ maxHeight: '350px', overflowY: 'auto', marginTop: '10px' }}>
-                  {loginHistory.length === 0 ? (
+                  {errorHistory ? (
+                    <div style={{ color: '#F6465D', fontSize: '13px', textAlign: 'center', padding: '30px', background: 'rgba(246,70,93,0.05)', borderRadius: '8px', border: '1px dashed rgba(246,70,93,0.2)' }}>
+                      Gặp lỗi khi tải lịch sử: {errorHistory}
+                    </div>
+                  ) : loginHistory.length === 0 ? (
                     <div style={{ color: '#848e9c', fontSize: '13px', textAlign: 'center', padding: '30px' }}>
                       Chưa ghi nhận lịch sử đăng nhập nào.
                     </div>
