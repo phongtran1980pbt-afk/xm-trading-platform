@@ -404,7 +404,7 @@ export const getLoginHistory = async (req, res) => {
     res.json(result.recordset);
   } catch (error) {
     console.error('Lỗi lấy lịch sử đăng nhập:', error);
-    res.status(500).json({ message: 'Lỗi server khi lấy lịch sử đăng nhập!' });
+    res.status(500).json({ message: 'Lỗi server khi lấy lịch sử đăng nhập: ' + error.message });
   }
 };
 
