@@ -324,46 +324,57 @@ function KucoinWeb() {
             
             {user ? (
               <div className="k-user-menu">
-                {/* Avatar + name (always visible) */}
-                <div className="k-user-trigger" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className="k-user-avatar" style={{ width: '28px', height: '28px', fontSize: '14px', background: 'transparent', border: '1px solid #24DB9B', color: '#24DB9B' }}>
-                    {(user.username || user.email || 'U').charAt(0).toUpperCase()}
+                {/* Avatar trigger (always visible) */}
+                <div className="k-user-trigger">
+                  <div className="k-user-avatar-wrap">
+                    <div className="k-user-avatar-circle">
+                      {(user.username || user.email || 'U').charAt(0).toUpperCase()}
+                    </div>
                   </div>
-                  <span className="k-user-name" style={{ fontSize: '12px', color: '#eaecef', fontWeight: '500' }}>
-                    {(user.username || user.fullName || user.email).length > 15 ? (user.username || user.fullName || user.email).substring(0, 15) + '...' : (user.username || user.fullName || user.email)}
-                  </span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#848e9c" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
 
                 {/* Dropdown (visible on hover) */}
                 <div className="k-user-dropdown">
-                  <div className="k-user-dropdown-header">
-                    <div className="k-user-avatar k-user-avatar-lg">
+                  {/* Profile header */}
+                  <div className="k-udrop-profile">
+                    <div className="k-udrop-avatar">
                       {(user.username || user.email || 'U').charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <div style={{ color: '#eaecef', fontWeight: 600, fontSize: '13px' }}>
-                        {user.username || user.fullName || user.email}
-                      </div>
-                      <div style={{ color: '#848e9c', fontSize: '11px' }}>
-                        {user.email}
-                      </div>
+                    <div className="k-udrop-info">
+                      <div className="k-udrop-title">Nhà giao dịch KANET</div>
+                      <div className="k-udrop-email">{user.email}</div>
                       {user.accountCode && (
-                        <div style={{ color: '#00FFA3', fontSize: '11px', marginTop: '4px', fontWeight: 600, display: 'inline-block', background: 'rgba(0, 255, 163, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                          UID: {user.accountCode}
+                        <div className="k-udrop-uid">
+                          <span>UID: {user.accountCode}</span>
+                          <button
+                            className="k-udrop-copy-btn"
+                            title="Copy UID"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(user.accountCode);
+                            }}
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
+
                   <div className="k-user-dropdown-divider" />
+
                   {user.isAdmin && (
                     <Link to="/admin" className="k-user-dropdown-item k-user-dropdown-admin">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                       Quản trị viên
                     </Link>
                   )}
+
+                  <div className="k-user-dropdown-divider" />
+
                   <button onClick={handleLogout} className="k-user-dropdown-item k-user-dropdown-logout">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     Đăng xuất
                   </button>
                 </div>
