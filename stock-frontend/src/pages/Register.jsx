@@ -117,6 +117,14 @@ function Register() {
       alert('Số CCCD bắt buộc phải nhập đúng 12 chữ số!');
       return;
     }
+    if (!idFrontPhoto) {
+      alert('Vui lòng tải lên ảnh mặt trước giấy tờ tùy thân của bạn!');
+      return;
+    }
+    if (!idBackPhoto) {
+      alert('Vui lòng tải lên ảnh mặt sau giấy tờ tùy thân của bạn!');
+      return;
+    }
     
     setIsLoading(true);
     setServerError('');
@@ -621,10 +629,10 @@ function Register() {
                   <button 
                     type="submit" 
                     className="k-kyc-btn-submit"
-                    disabled={isLoading || !idNumber || idNumber.length !== 12}
+                    disabled={isLoading || !idNumber || idNumber.length !== 12 || !idFrontPhoto || !idBackPhoto}
                     style={{
-                      opacity: (isLoading || !idNumber || idNumber.length !== 12) ? 0.6 : 1,
-                      cursor: (isLoading || !idNumber || idNumber.length !== 12) ? 'not-allowed' : 'pointer'
+                      opacity: (isLoading || !idNumber || idNumber.length !== 12 || !idFrontPhoto || !idBackPhoto) ? 0.6 : 1,
+                      cursor: (isLoading || !idNumber || idNumber.length !== 12 || !idFrontPhoto || !idBackPhoto) ? 'not-allowed' : 'pointer'
                     }}
                   >
                     {isLoading ? 'Đang xử lý...' : 'Đăng ký xác thực'}
