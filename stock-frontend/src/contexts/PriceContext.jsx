@@ -3,6 +3,9 @@ import { API_BASE_URL } from '../config';
 
 /* ── Danh sách tất cả coin với giá khởi đầu ── */
 const INITIAL_COINS = {
+  // All markets
+  BTC:   { price: 77390.98 },
+  ETH:   { price: 2127.08  },
   // Alpha
   BULL:      { price: 0.00479   },
   DEGEN:     { price: 0.001735  },
@@ -30,9 +33,6 @@ const INITIAL_COINS = {
   chudhouse: { price: 0.000121  },
   GME:       { price: 0.000822  },
   quq:       { price: 0.003109  },
-  // All markets
-  BTC:   { price: 77390.98 },
-  ETH:   { price: 2127.08  },
   ZEC:   { price: 582.76   },
   XMR:   { price: 338.20   },
   AAVE:  { price: 87.68    },

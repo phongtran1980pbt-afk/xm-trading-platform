@@ -1,5 +1,8 @@
 // Global in-memory price state
 const INITIAL_COINS = {
+  // All markets
+  BTC:   { price: 77390.98, name: 'BTC'   },
+  ETH:   { price: 2127.08,  name: 'ETH'   },
   // Alpha
   BULL:      { price: 0.00479,   name: 'BULL'      },
   DEGEN:     { price: 0.001735,  name: 'DEGEN'     },
@@ -27,9 +30,6 @@ const INITIAL_COINS = {
   chudhouse: { price: 0.000121,  name: 'chudhouse' },
   GME:       { price: 0.000822,  name: 'GME'       },
   quq:       { price: 0.003109,  name: 'quq'       },
-  // All markets
-  BTC:   { price: 77390.98, name: 'BTC'   },
-  ETH:   { price: 2127.08,  name: 'ETH'   },
   ZEC:   { price: 582.76,   name: 'ZEC'   },
   XMR:   { price: 338.20,   name: 'XMR'   },
   AAVE:  { price: 87.68,    name: 'AAVE'  },
