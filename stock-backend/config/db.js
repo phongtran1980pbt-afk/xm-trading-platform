@@ -19,8 +19,20 @@ const dbConfig = {
     connectionTimeout: 10000 
 };
 
-// Hàm kết nối
+// Hàm kết nối với cơ chế tự động kết nối lại (Auto-reconnect)
+let activePool = null;
+let isConnecting = false;
+
 const connectDB = async () => {
+    if (activePool) return activePool;
+    if (isConnecting) {
+        // Đợi tiến trình kết nối hiện tại hoàn thành
+        for (let i = 0; i < 10; i++) {
+            await new Promise(r => setTimeout(r, 500));
+            if (activePool) return activePool;
+        }
+    }
+    isConnecting = true;
     try {
         const pool = await sql.connect(dbConfig);
         console.log('✅ [SQL Server] Đã kết nối thành công tới database StockTradingDB');
@@ -68,14 +80,31 @@ const connectDB = async () => {
         `);
         console.log('✅ [SQL Server] Đã kiểm tra và cập nhật các cột KYC cho bảng Users');
         
+        activePool = pool;
+        isConnecting = false;
         return pool;
     } catch (err) {
         console.error('❌ [SQL Server] LỖI KẾT NỐI CHI TIẾT:', err.message);
-        return null; // Trả về null thay vì báo lỗi chết server
+        activePool = null;
+        isConnecting = false;
+        return null;
     }
 };
 
-export const poolPromise = connectDB();
+// Thực hiện kết nối thử khi khởi động
+connectDB();
+
+// Thenable object proxy để tự động thử lại kết nối mỗi khi query nếu trước đó bị lỗi
+export const poolPromise = {
+  then: async (resolve, reject) => {
+    try {
+      const pool = await connectDB();
+      resolve(pool);
+    } catch (err) {
+      reject(err);
+    }
+  }
+};
 export const SECRET_KEY = process.env.JWT_SECRET || 'KHOA_BAO_MAT_CUA_BAN_123';
 
 // Mock items data (nếu cần dùng)
