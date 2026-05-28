@@ -1236,6 +1236,32 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td style={{ padding: '12px' }}>{log.Details}</td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleDeleteSingleLog(log.Id)}
+                          style={{
+                            background: 'rgba(246, 70, 93, 0.15)',
+                            color: '#F6465D',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = '#F6465D';
+                            e.target.style.color = '#000';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = 'rgba(246, 70, 93, 0.15)';
+                            e.target.style.color = '#F6465D';
+                          }}
+                        >
+                          Xóa
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
