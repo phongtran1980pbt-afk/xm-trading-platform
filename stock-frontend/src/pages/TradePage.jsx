@@ -990,9 +990,8 @@ export default function TradePage() {
                   <span style={{ fontSize: '12px', fontWeight: '900', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontFamily: 'monospace', lineHeight: 1 }}>{countdownLeft}</span>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '8px', color: '#848e9c', fontWeight: 'bold', letterSpacing: '0.5px' }}>KẾT TOÁN</span>
-                <span style={{ fontSize: '10px', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', color: countdownBetType === 'UP' ? '#00FFA3' : '#F6465D', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '2px' }}>
                   {countdownBetType === 'UP' ? '▲ TĂNG' : '▼ GIẢM'}
                 </span>
               </div>
