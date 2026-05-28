@@ -1173,6 +1173,34 @@ export default function TradePage() {
 
             <div style={{ width: '1px', height: '14px', background: '#2b3139', margin: '0 4px' }}></div>
 
+            {currentUser?.isAdmin && (
+              <Link
+                to="/admin"
+                style={{
+                  background: 'linear-gradient(135deg, #F6465D, #d43a4e)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  margin: '0 10px',
+                  boxShadow: '0 2px 8px rgba(246,70,93,0.3)',
+                  transition: 'all 0.2s',
+                  height: '28px'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
+                onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Trang Quản Trị
+              </Link>
+            )}
+
             {/* User Avatar & Name */}
             {currentUser ? (
               <div className="k-user-menu">
