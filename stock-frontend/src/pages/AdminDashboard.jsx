@@ -78,6 +78,7 @@ export default function AdminDashboard() {
   const [amountInput, setAmountInput] = useState('');
   const [tradeStats, setTradeStats] = useState({ upUsers: 0, upAmount: 0, downUsers: 0, downAmount: 0 });
   const [trend, setTrend] = useState('neutral');
+  const [selectedCoin, setSelectedCoin] = useState('quq');
   const [selectedUserForView, setSelectedUserForView] = useState(null);
   const [adminWithdrawRequests, setAdminWithdrawRequests] = useState([]);
   const [selectedWithdrawForDetail, setSelectedWithdrawForDetail] = useState(null);
@@ -180,7 +181,7 @@ export default function AdminDashboard() {
             const stats = await statsRes.json();
             setTradeStats(stats);
           }
-          const trendRes = await fetch(`${API_BASE_URL}/api/prices/trend`);
+          const trendRes = await fetch(`${API_BASE_URL}/api/prices/trend?symbol=${selectedCoin}`);
           if (trendRes.ok) {
             const trendData = await trendRes.json();
             setTrend(trendData.trend);
@@ -191,7 +192,7 @@ export default function AdminDashboard() {
       const id = setInterval(fetchTradeData, 2000);
       return () => clearInterval(id);
     }
-  }, [view]);
+  }, [view, selectedCoin]);
 
   const fetchWithdraws = () => {
     fetch(`${API_BASE_URL}/api/admin/withdraw-requests`)
@@ -286,11 +287,11 @@ export default function AdminDashboard() {
       const res = await fetch(`${API_BASE_URL}/api/prices/trend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trend: newTrend })
+        body: JSON.stringify({ symbol: selectedCoin, trend: newTrend })
       });
       if (res.ok) {
         setTrend(newTrend);
-        toast.success(`Đã đổi xu hướng thành: ${newTrend === 'up' ? 'TĂNG' : newTrend === 'down' ? 'GIẢM' : 'NGẪU NHIÊN'}`);
+        toast.success(`Đã đổi xu hướng của ${selectedCoin.toUpperCase()} thành: ${newTrend === 'up' ? 'TĂNG' : newTrend === 'down' ? 'GIẢM' : 'NGẪU NHIÊN'}`);
       }
     } catch (e) {
       toast.error('Lỗi khi đổi xu hướng');
@@ -975,6 +976,36 @@ export default function AdminDashboard() {
                 <svg width="16" height="16" fill="none" stroke="#00FFA3" strokeWidth="2" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
                 Điều khiển xu hướng biểu đồ
               </h3>
+
+              {/* Coin Symbol Selector Dropdown */}
+              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '13px', color: '#848e9c', fontWeight: 600 }}>Cặp giao dịch:</span>
+                <select
+                  value={selectedCoin}
+                  onChange={(e) => setSelectedCoin(e.target.value)}
+                  style={{
+                    background: '#1e2329',
+                    color: '#eaecef',
+                    border: '1px solid #475262',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    outline: 'none',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#00FFA3'}
+                  onBlur={(e) => e.target.style.borderColor = '#475262'}
+                >
+                  {['quq', 'BTC', 'ETH', 'SHIB', 'PEPE', 'DEGEN', 'BULL', 'ASTEROID'].map((sym) => (
+                    <option key={sym} value={sym} style={{ background: '#1e2329', color: '#eaecef' }}>
+                      {sym.toUpperCase()}/USDT
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Current trend indicator */}
               <div style={{ marginBottom: '12px', fontSize: '12px', color: '#848e9c', display: 'flex', alignItems: 'center', gap: '8px' }}>
