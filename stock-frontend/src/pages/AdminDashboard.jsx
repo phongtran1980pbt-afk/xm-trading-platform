@@ -1562,6 +1562,32 @@ export default function AdminDashboard() {
           </div>
         ) : !activeId ? (
           <div className="admin-no-convo">
+            {!showSidebarMobile && (
+              <button
+                onClick={() => setShowSidebarMobile(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#1e2329',
+                  border: '1px solid #475262',
+                  borderRadius: '8px',
+                  color: '#eaecef',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginBottom: '20px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Quay lại danh sách khách hàng
+              </button>
+            )}
             <svg width="80" height="80" fill="none" stroke="currentColor" strokeWidth="0.8" viewBox="0 0 24 24">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
