@@ -443,23 +443,41 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// DELETE /api/admin/audit-logs/cleanup - Xoá sạch nhật ký hệ thống
+// DELETE /api/admin/audit-logs/cleanup - Xoá sạch nhật ký hệ thống (hỗ trợ phân loại)
 export const clearAuditLogs = async (req, res) => {
+  const { type } = req.query;
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query(`
-      DELETE FROM AuditLogs 
-      WHERE Action NOT IN ('PLACE_BINARY_ORDER', 'SETTLE_BINARY_ORDER')
-    `);
+    let queryStr = `DELETE FROM AuditLogs WHERE Action NOT IN ('PLACE_BINARY_ORDER', 'SETTLE_BINARY_ORDER', 'CLEANUP_LOGS')`;
+    let logDetail = 'Đã xoá sạch toàn bộ nhật ký hệ thống';
+
+    if (type === 'register') {
+      queryStr = `DELETE FROM AuditLogs WHERE Action = 'Tạo tài khoản'`;
+      logDetail = 'Đã xoá sạch nhật ký tạo tài khoản';
+    } else if (type === 'deposit') {
+      queryStr = `DELETE FROM AuditLogs WHERE Action IN ('Nạp tiền', 'Nạp tiền (UID)')`;
+      logDetail = 'Đã xoá sạch nhật ký nạp tiền';
+    } else if (type === 'withdraw') {
+      queryStr = `DELETE FROM AuditLogs WHERE Action = 'Rút tiền'`;
+      logDetail = 'Đã xoá sạch nhật ký rút tiền';
+    } else if (type === 'other') {
+      queryStr = `
+        DELETE FROM AuditLogs 
+        WHERE Action NOT IN ('Tạo tài khoản', 'Nạp tiền', 'Nạp tiền (UID)', 'Rút tiền', 'PLACE_BINARY_ORDER', 'SETTLE_BINARY_ORDER', 'CLEANUP_LOGS')
+      `;
+      logDetail = 'Đã xoá sạch nhật ký khác';
+    }
+
+    const result = await pool.request().query(queryStr);
     
     // Ghi log hành động dọn dẹp
     await pool.request()
       .input('action', 'CLEANUP_LOGS')
-      .input('details', `Đã xoá sạch ${result.rowsAffected[0]} nhật ký hệ thống`)
+      .input('details', `${logDetail} (Đã xoá ${result.rowsAffected[0]} bản ghi)`)
       .input('createdAt', getTrueTime())
       .query('INSERT INTO AuditLogs (Action, Details, CreatedAt) VALUES (@action, @details, @createdAt)');
 
-    res.json({ success: true, message: `Đã xoá sạch ${result.rowsAffected[0]} nhật ký hệ thống!` });
+    res.json({ success: true, message: `${logDetail} thành công!` });
   } catch (error) {
     console.error('Lỗi xoá nhật ký hệ thống:', error);
     res.status(500).json({ message: 'Lỗi server khi xoá nhật ký hệ thống: ' + error.message });

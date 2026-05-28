@@ -535,6 +535,37 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleClearCategoryLogs = async () => {
+    let confirmMsg = 'Xoá tất cả nhật ký hệ thống?';
+    if (logTab === 'register') confirmMsg = 'Xoá tất cả nhật ký tạo tài khoản?';
+    else if (logTab === 'deposit') confirmMsg = 'Xoá tất cả nhật ký nạp tiền?';
+    else if (logTab === 'withdraw') confirmMsg = 'Xoá tất cả nhật ký rút tiền?';
+    else if (logTab === 'other') confirmMsg = 'Xoá tất cả nhật ký khác?';
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/audit-logs/cleanup?type=${logTab}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Đã xoá sạch nhật ký!');
+        // Tải lại danh sách nhật ký mới
+        const logsRes = await fetch(`${API_BASE_URL}/api/admin/audit-logs`);
+        if (logsRes.ok) {
+          const logsData = await logsRes.ok ? await logsRes.json() : [];
+          setAuditLogs(logsData);
+        }
+      } else {
+        toast.error(data.message || 'Lỗi khi xoá nhật ký');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Lỗi kết nối server');
+    }
+  };
+
   const prevMessagesLength = useRef(0);
   const prevActiveId = useRef(null);
 
@@ -1187,6 +1218,37 @@ export default function AdminDashboard() {
                 onClick={() => setLogTab('other')}
               >
                 Khác
+              </button>
+
+              <button 
+                onClick={handleClearCategoryLogs}
+                style={{
+                  marginLeft: 'auto',
+                  padding: '6px 14px',
+                  background: 'rgba(246, 70, 93, 0.15)',
+                  color: '#F6465D',
+                  border: '1px solid rgba(246, 70, 93, 0.3)',
+                  borderRadius: '20px',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#F6465D';
+                  e.target.style.color = '#000';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = 'rgba(246, 70, 93, 0.15)';
+                  e.target.style.color = '#F6465D';
+                }}
+              >
+                Xóa tất cả {
+                  logTab === 'all' ? 'nhật ký' : 
+                  logTab === 'register' ? 'tạo tài khoản' : 
+                  logTab === 'deposit' ? 'nạp tiền' : 
+                  logTab === 'withdraw' ? 'rút tiền' : 'khác'
+                }
               </button>
             </div>
 
