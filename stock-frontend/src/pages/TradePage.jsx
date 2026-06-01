@@ -1262,8 +1262,8 @@ export default function TradePage() {
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Link to="/login" style={{ color: '#fff', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>Đăng nhập</Link>
-                <Link to="/register" style={{ color: '#24DB9B', textDecoration: 'none', fontSize: '12px', fontWeight: '500' }}>Đăng ký</Link>
+                <Link to="/login" style={{ color: '#fff', textDecoration: 'none', fontSize: '12px', fontWeight: '500', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>Đăng nhập</Link>
+                <Link to="/register" style={{ color: '#24DB9B', textDecoration: 'none', fontSize: '12px', fontWeight: '500', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>Đăng ký</Link>
               </div>
             )}
 

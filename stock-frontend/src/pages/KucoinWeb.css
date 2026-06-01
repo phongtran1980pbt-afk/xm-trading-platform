@@ -135,15 +135,16 @@
   flex-shrink: 0;
 }
 
-.k-login-link {
+.k-login-link, .k-register-link {
   color: #ffffff;
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
   transition: color 0.2s;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.k-login-link:hover {
+.k-login-link:hover, .k-register-link:hover {
   color: #24DB9B;
 }
 
