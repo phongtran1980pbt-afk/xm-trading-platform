@@ -39,16 +39,16 @@ export const register = async (req, res) => {
 
     // 2. Lưu vào bảng Users với các trường KYC và PhoneNumber
     const insertUser = await pool.request()
-      .input('email', sql.NVarChar, email)
-      .input('password', sql.NVarChar, hashedPassword)
-      .input('fullName', sql.NVarChar, fullName ? fullName.toUpperCase() : 'NHÀ GIAO DỊCH KANET')
-      .input('accountCode', sql.NVarChar, accountCode)
-      .input('country', sql.NVarChar, country || 'Vietnam')
-      .input('idCardType', sql.NVarChar, idCardType || 'Thẻ căn cước')
-      .input('idNumber', sql.NVarChar, idNumber || '')
-      .input('idFrontPhoto', sql.NVarChar, idFrontPhoto || '')
-      .input('idBackPhoto', sql.NVarChar, idBackPhoto || '')
-      .input('phoneNumber', sql.NVarChar, phoneNumber || '')
+      .input('email', sql.NVarChar(500), email)
+      .input('password', sql.NVarChar(500), hashedPassword)
+      .input('fullName', sql.NVarChar(500), fullName ? fullName.toUpperCase() : 'NHÀ GIAO DỊCH KANET')
+      .input('accountCode', sql.NVarChar(50), accountCode)
+      .input('country', sql.NVarChar(200), country || 'Vietnam')
+      .input('idCardType', sql.NVarChar(100), idCardType || 'Thẻ căn cước')
+      .input('idNumber', sql.NVarChar(50), idNumber || '')
+      .input('idFrontPhoto', sql.NVarChar(sql.MAX), idFrontPhoto || '')
+      .input('idBackPhoto', sql.NVarChar(sql.MAX), idBackPhoto || '')
+      .input('phoneNumber', sql.NVarChar(50), phoneNumber || '')
       .query(`
         INSERT INTO Users 
         (Email, PasswordHash, FullName, AccountCode, IsActive, Country, IdCardType, IdNumber, IdFrontPhoto, IdBackPhoto, PhoneNumber) 
@@ -274,14 +274,14 @@ export const updateKyc = async (req, res) => {
     }
 
     await pool.request()
-      .input('id', id)
-      .input('fullName', fullName ? fullName.toUpperCase() : null)
-      .input('country', country || null)
-      .input('idCardType', idCardType || null)
-      .input('idNumber', idNumber || null)
-      .input('idFrontPhoto', idFrontPhoto || null)
-      .input('idBackPhoto', idBackPhoto || null)
-      .input('phoneNumber', phoneNumber || null)
+      .input('id', sql.Int, parseInt(id))
+      .input('fullName', sql.NVarChar(500), fullName ? fullName.toUpperCase() : null)
+      .input('country', sql.NVarChar(200), country || null)
+      .input('idCardType', sql.NVarChar(100), idCardType || null)
+      .input('idNumber', sql.NVarChar(50), idNumber || null)
+      .input('idFrontPhoto', sql.NVarChar(sql.MAX), idFrontPhoto || null)
+      .input('idBackPhoto', sql.NVarChar(sql.MAX), idBackPhoto || null)
+      .input('phoneNumber', sql.NVarChar(50), phoneNumber || null)
       .query(`
         UPDATE Users 
         SET FullName = COALESCE(@fullName, FullName),

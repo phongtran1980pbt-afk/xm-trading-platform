@@ -125,105 +125,104 @@ function Register() {
 
   const handleNextStep = async (e) => {
     e.preventDefault();
-    if (isFormValid) {
-      setIsLoading(true);
-      setServerError('');
-      try {
-        const checkRes = await axios.post(`${API_BASE_URL}/api/auth/check-user`, {
-          email: email
-        });
-        
-        if (checkRes.status === 200) {
-          setServerError(regType === 'email' 
-            ? 'Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.'
-            : 'Số điện thoại này đã được đăng ký. Vui lòng sử dụng số khác hoặc đăng nhập.'
-          );
-          setIsLoading(false);
-          return;
-        }
-      } catch (err) {
-        if (err.response && err.response.status !== 404) {
-          setServerError(err.response.data?.message || 'Có lỗi xảy ra khi kiểm tra tài khoản!');
-          setIsLoading(false);
-          return;
-        }
+    if (!isFormValid) return;
+    setIsLoading(true);
+    setServerError('');
+    try {
+      const checkRes = await axios.post(`${API_BASE_URL}/api/auth/check-user`, { email });
+      if (checkRes.status === 200) {
+        setServerError(regType === 'email'
+          ? 'Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.'
+          : 'Số điện thoại này đã được đăng ký. Vui lòng dùng số khác hoặc đăng nhập.'
+        );
+        setIsLoading(false);
+        return;
       }
-
-      setIsLoading(false);
-      if (regType === 'phone') {
-        setPhoneNumber(email);
+    } catch (err) {
+      // 404 = user chưa tồn tại → tiếp tục bình thường
+      if (err.response && err.response.status !== 404) {
+        setServerError(err.response.data?.message || 'Có lỗi xảy ra khi kiểm tra tài khoản!');
+        setIsLoading(false);
+        return;
       }
-      setStep(2);
     }
+    setIsLoading(false);
+    if (regType === 'phone') setPhoneNumber(email);
+    setStep(2);
   };
 
-
-
   const handleIdNumberChange = (e) => {
-    // Only allow digits
     const val = e.target.value.replace(/\D/g, '');
-    if (val.length <= 12) {
-      setIdNumber(val);
-    }
+    if (val.length <= 12) setIdNumber(val);
   };
 
   const handleFinalRegister = async (e) => {
     e.preventDefault();
+    setServerError('');
+
     if (!fullName.trim()) {
-      alert('Vui lòng nhập họ và tên của bạn!');
+      setServerError('⚠️ Vui lòng nhập họ và tên đầy đủ của bạn!');
       return;
     }
     if (!selectedCountry.trim()) {
-      alert('Vui lòng nhập khu vực cư trú!');
+      setServerError('⚠️ Vui lòng nhập khu vực cư trú!');
       return;
     }
-    if (!phoneNumber.trim()) {
-      alert('Vui lòng nhập số điện thoại của bạn!');
+    if (!phoneNumber.trim() || phoneNumber.length < 9) {
+      setServerError('⚠️ Vui lòng nhập số điện thoại hợp lệ (tối thiểu 9 chữ số)!');
       return;
     }
     if (idNumber.length !== 12) {
-      alert('Số CCCD bắt buộc phải nhập đúng 12 chữ số!');
+      setServerError('⚠️ Số CCCD/hộ chiếu phải nhập đúng 12 chữ số!');
       return;
     }
-    if (!idFrontPhoto || !idBackPhoto) {
-      alert('Vui lòng xác thực thông tin');
+    if (!idFrontPhoto) {
+      setServerError('⚠️ Vui lòng tải lên ảnh mặt trước CCCD/hộ chiếu!');
       return;
     }
-    
+    if (!idBackPhoto) {
+      setServerError('⚠️ Vui lòng tải lên ảnh mặt sau CCCD/hộ chiếu!');
+      return;
+    }
+
     setIsLoading(true);
-    setServerError('');
     try {
       const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
-        email: email,
-        password: password,
+        email,
+        password,
         fullName: fullName.toUpperCase(),
         country: selectedCountry,
-        idCardType: idCardType,
-        idNumber: idNumber,
-        idFrontPhoto: idFrontPhoto,
-        idBackPhoto: idBackPhoto,
-        phoneNumber: phoneNumber
-      });
+        idCardType,
+        idNumber,
+        idFrontPhoto,
+        idBackPhoto,
+        phoneNumber
+      }, { timeout: 30000 });
 
       if (response.status === 201) {
-        alert('Đăng ký tài khoản và xác thực KYC thành công! Vui lòng đăng nhập.');
-        navigate('/login');
+        setStep(3); // Hiển thị màn hình thành công
+        setTimeout(() => navigate('/login'), 3000);
       }
     } catch (error) {
       console.error('Lỗi đăng ký:', error);
       const msg = error.response?.data?.message;
-      if (msg && (msg.includes('đã tồn tại') || msg.includes('đã được đăng ký'))) {
-        setServerError(regType === 'email' 
-          ? 'Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.'
-          : 'Số điện thoại này đã được đăng ký. Vui lòng sử dụng số điện thoại khác hoặc đăng nhập.');
-        setStep(1); // Quay lại step 1 để đổi email/phone
+      const code = error.response?.status;
+
+      if (error.code === 'ECONNABORTED') {
+        setServerError('❌ Hết thời gian chờ (30s). Vui lòng thử lại!');
+      } else if (!error.response) {
+        setServerError('❌ Không thể kết nối tới máy chủ. Kiểm tra lại internet!');
+      } else if (code === 400 && msg && (msg.includes('đã') || msg.includes('tồn tại') || msg.includes('đăng ký'))) {
+        setServerError('❌ ' + msg + ' Sẽ tự động quay lại bước 1...');
+        setTimeout(() => setStep(1), 3000);
       } else {
-        alert(msg || 'Không thể kết nối tới Server!');
+        setServerError('❌ ' + (msg || 'Đăng ký thất bại. Vui lòng thử lại!'));
       }
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="k-login-wrapper">
@@ -494,8 +493,42 @@ function Register() {
                    </div>
                 </form>
               </>
+            ) : step === 3 ? (
+              // Step 3: Đăng ký thành công!
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{
+                  width: '80px', height: '80px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #24DB9B, #1aaf7a)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 24px', boxShadow: '0 0 40px rgba(36,219,155,0.4)'
+                }}>
+                  <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="white" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <h2 style={{ color: '#24DB9B', marginBottom: '12px', fontSize: '22px' }}>Đăng ký thành công!</h2>
+                <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '8px' }}>Tài khoản của bạn đã được tạo và xác thực KYC.</p>
+                <p style={{ color: '#848e9c', fontSize: '13px' }}>Đang chuyển hướng đến trang đăng nhập...</p>
+                <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{
+                      width: '8px', height: '8px', borderRadius: '50%', background: '#24DB9B',
+                      animation: `pulse 1.2s ease-in-out ${i * 0.4}s infinite`
+                    }}/>
+                  ))}
+                </div>
+                <button
+                  onClick={() => navigate('/login')}
+                  style={{
+                    marginTop: '28px', padding: '12px 32px', borderRadius: '8px',
+                    background: '#24DB9B', color: '#0d1117', fontWeight: '700',
+                    border: 'none', cursor: 'pointer', fontSize: '14px'
+                  }}
+                >
+                  Đăng nhập ngay
+                </button>
+              </div>
             ) : (
-              // Step 2: KYC Account Verification Interface (Like image 2)
               <div className="k-kyc-form">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>Xác thực tài khoản</h3>
@@ -687,7 +720,15 @@ function Register() {
                     </div>
                   </div>
 
-                  {serverError && <div style={{ color: '#d32f2f', fontSize: '13px', marginBottom: '16px' }}>{serverError}</div>}
+                  {serverError && (
+                    <div style={{
+                      color: serverError.startsWith('⚠️') ? '#f6a623' : '#ff4d4d',
+                      fontSize: '13px', marginBottom: '16px',
+                      background: 'rgba(255,77,77,0.08)',
+                      border: '1px solid rgba(255,77,77,0.25)',
+                      borderRadius: '8px', padding: '10px 14px'
+                    }}>{serverError}</div>
+                  )}
 
                   {/* Submit Button */}
                   <button 
@@ -702,12 +743,6 @@ function Register() {
                     {isLoading ? 'Đang xử lý...' : 'Đăng ký xác thực'}
                   </button>
 
-                  {/* Warning Footer Text */}
-                  <div className="k-kyc-warning-text">
-                    Không thể tải lên ảnh ID, vui lòng liên hệ với dịch vụ khách hàng để lấy địa chỉ email để gửi ảnh ID hoặc tải lên lại Ví dụ chụp.&nbsp;
-                    <a href="/support" className="k-kyc-warning-link" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ hỗ trợ trực tuyến để được trợ giúp tải lên ảnh ID!'); }}>
-                      Liên hệ với dịch vụ khách hàng
-                    </a>
                   </div>
 
                 </form>
