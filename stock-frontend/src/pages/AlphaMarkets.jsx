@@ -28,7 +28,43 @@ const INITIAL_MOCK_DATA = [
   { id: 22, name: 'BURNIE', address: 'CGEDT9...pump', price: 0.007445, change: 19.43, isUp: true, vol: '6.207', volSub: '3.265/2.942', uniqueAddr: '1.497', holders: '10.576', totalVol: '$850.454,18', liquidity: '$1.3 Tỷ' },
   { id: 23, name: 'USDUC', address: 'C89dbu...pump', price: 0.005204, change: -11.06, isUp: false, vol: '2.478', volSub: '1.213/1.265', uniqueAddr: '463', holders: '15.372', totalVol: '$213.602,35', liquidity: '$724.917,44' },
   { id: 24, name: 'ASTEROID', address: '0xf380...4c26', price: 0.000313, change: 1.44, isUp: true, vol: '1.317', volSub: '742/575', uniqueAddr: '715', holders: '25.582', totalVol: '$1.41 Tr', liquidity: '$15.68 Tỷ' },
-  { id: 25, name: 'PAYAI', address: 'EXYms5...Dcfu', price: 0.008607, change: -6.17, isUp: false, vol: '1.113', volSub: '784/329', uniqueAddr: '280', holders: '5.782', totalVol: '$198.281,52', liquidity: '$572.822,58' }
+  { id: 25, name: 'PAYAI', address: 'EXYms5...Dcfu', price: 0.008607, change: -6.17, isUp: false, vol: '1.113', volSub: '784/329', uniqueAddr: '280', holders: '5.782', totalVol: '$198.281,52', liquidity: '$572.822,58' },
+  { id: 26, name: 'SAND', address: '0xSAND...pump', price: 0.05046, change: -3.40, isUp: false, vol: '7.60M', volSub: '3.6M/4.0M', uniqueAddr: '1.240', holders: '12.432', totalVol: '$560K', liquidity: '$219.000' },
+  { id: 27, name: 'ANKR', address: '0xANKR...pump', price: 0.003698, change: -3.19, isUp: false, vol: '4.04M', volSub: '1.8M/2.2M', uniqueAddr: '2.500', holders: '8.432', totalVol: '$120K', liquidity: '$89.000' },
+  { id: 28, name: 'RVN', address: '0xRVN...pump', price: 0.004134, change: -2.47, isUp: false, vol: '1.17M', volSub: '500K/670K', uniqueAddr: '1.500', holders: '3.490', totalVol: '$89K', liquidity: '$45.000' },
+  { id: 29, name: 'SFP', address: '0xSFP...pump', price: 0.2305, change: -3.15, isUp: false, vol: '759.011', volSub: '300K/459K', uniqueAddr: '3.400', holders: '15.430', totalVol: '$980K', liquidity: '$410.000' },
+  { id: 30, name: 'COTI', address: '0xCOTI...pump', price: 0.00936, change: -2.39, isUp: false, vol: '1.16M', volSub: '500K/660K', uniqueAddr: '1.100', holders: '5.200', totalVol: '$230K', liquidity: '$120.000' },
+  { id: 31, name: 'CHR', address: '0xCHR...pump', price: 0.01504, change: -3.40, isUp: false, vol: '1.09M', volSub: '450K/640K', uniqueAddr: '1.090', holders: '4.890', totalVol: '$190K', liquidity: '$98.000' },
+  { id: 32, name: 'MANA', address: '0xMANA...pump', price: 0.0661, change: -2.50, isUp: false, vol: '3.27M', volSub: '1.5M/1.77M', uniqueAddr: '2.100', holders: '19.430', totalVol: '$1.4M', liquidity: '$560.000' },
+  { id: 33, name: 'ALICE', address: '0xALICE...pump', price: 0.1010, change: -3.62, isUp: false, vol: '1.67M', volSub: '700K/970K', uniqueAddr: '1.670', holders: '9.480', totalVol: '$870K', liquidity: '$320.000' },
+  { id: 34, name: 'HBAR', address: '0xHBAR...pump', price: 0.07896, change: -1.87, isUp: false, vol: '21.67M', volSub: '10M/11.67M', uniqueAddr: '5.400', holders: '48.900', totalVol: '$9.4M', liquidity: '$3.8M' },
+  { id: 35, name: 'ONE', address: '0xONE...pump', price: 0.001404, change: -3.30, isUp: false, vol: '1.17M', volSub: '500K/670K', uniqueAddr: '1.100', holders: '8.430', totalVol: '$180K', liquidity: '$95.000' },
+  { id: 36, name: 'CELR', address: '0xCELR...pump', price: 0.002077, change: -3.30, isUp: false, vol: '574.736', volSub: '250K/324K', uniqueAddr: '890', holders: '3.210', totalVol: '$94K', liquidity: '$52.000' },
+  { id: 37, name: 'HOT', address: '0xHOT...pump', price: 0.0003009, change: -2.52, isUp: false, vol: '1.10M', volSub: '500K/600K', uniqueAddr: '1.200', holders: '12.430', totalVol: '$320K', liquidity: '$140.000' },
+  { id: 38, name: 'PYTH', address: '0xPYTH...pump', price: 0.03507, change: -7.02, isUp: false, vol: '5.92M', volSub: '2.5M/3.42M', uniqueAddr: '3.420', holders: '28.930', totalVol: '$2.8M', liquidity: '$1.2M' },
+  { id: 39, name: 'SUPER', address: '0xSUPER...pump', price: 0.0926, change: -1.69, isUp: false, vol: '1.69M', volSub: '700K/990K', uniqueAddr: '1.690', holders: '9.430', totalVol: '$850K', liquidity: '$340.000' },
+  { id: 40, name: 'USTC', address: '0xUSTC...pump', price: 0.005840, change: -3.80, isUp: false, vol: '988.869', volSub: '400K/588K', uniqueAddr: '988', holders: '15.430', totalVol: '$410K', liquidity: '$180.000' },
+  { id: 41, name: 'ONG', address: '0xONG...pump', price: 0.04577, change: -2.72, isUp: false, vol: '665.678', volSub: '300K/365K', uniqueAddr: '665', holders: '4.890', totalVol: '$210K', liquidity: '$94.000' },
+  { id: 42, name: 'ETHW', address: '0xETHW...pump', price: 0.2308, change: -2.69, isUp: false, vol: '368.772', volSub: '150K/218K', uniqueAddr: '368', holders: '3.420', totalVol: '$180K', liquidity: '$88.000' },
+  { id: 43, name: 'JTO', address: '0xJTO...pump', price: 0.7125, change: 1.38, isUp: true, vol: '71.80M', volSub: '38M/33.8M', uniqueAddr: '15.400', holders: '89.430', totalVol: '$38.4M', liquidity: '$15.8M' },
+  { id: 44, name: '1000SATS', address: '0x1000SATS...pump', price: 0.00000937, change: -2.19, isUp: false, vol: '2.44M', volSub: '1M/1.44M', uniqueAddr: '2.440', holders: '114.930', totalVol: '$1.4M', liquidity: '$620.000' },
+  { id: 45, name: 'AUCTION', address: '0xAUCTION...pump', price: 3.706, change: -1.54, isUp: false, vol: '1.33M', volSub: '600K/730K', uniqueAddr: '1.330', holders: '8.430', totalVol: '$980K', liquidity: '$430.000' },
+  { id: 46, name: '1000RATS', address: '0x1000RATS...pump', price: 0.02696, change: -6.71, isUp: false, vol: '1.09M', volSub: '400K/690K', uniqueAddr: '1.090', holders: '48.900', totalVol: '$850K', liquidity: '$390.000' },
+  { id: 47, name: 'ACE', address: '0xACE...pump', price: 0.07732, change: -5.01, isUp: false, vol: '1.55M', volSub: '600K/950K', uniqueAddr: '1.550', holders: '9.430', totalVol: '$810K', liquidity: '$360.000' },
+  { id: 48, name: 'MOVR', address: '0xMOVR...pump', price: 1.274, change: -5.13, isUp: false, vol: '1.76M', volSub: '700K/1.06M', uniqueAddr: '1.760', holders: '5.200', totalVol: '$1.1M', liquidity: '$480.000' },
+  { id: 49, name: 'NFP', address: '0xNFP...pump', price: 0.007780, change: -1.74, isUp: false, vol: '3.30M', volSub: '1.5M/1.8M', uniqueAddr: '3.300', holders: '15.430', totalVol: '$1.8M', liquidity: '$790.000' },
+  { id: 50, name: 'RENDER', address: '0xRENDER...pump', price: 1.670, change: -1.06, isUp: false, vol: '26.09M', volSub: '12M/14.09M', uniqueAddr: '15.400', holders: '124.900', totalVol: '$19.4M', liquidity: '$8.4M' },
+  { id: 51, name: 'BANANA', address: '0xBANANA...pump', price: 2.843, change: -3.16, isUp: false, vol: '1.23M', volSub: '500K/730K', uniqueAddr: '1.230', holders: '8.430', totalVol: '$1.1M', liquidity: '$490.000' },
+  { id: 52, name: 'RARE', address: '0xRARE...pump', price: 0.01251, change: -3.17, isUp: false, vol: '1.03M', volSub: '400K/630K', uniqueAddr: '1.030', holders: '9.480', totalVol: '$790K', liquidity: '$310.000' },
+  { id: 53, name: 'G', address: '0xG...pump', price: 0.002611, change: -2.35, isUp: false, vol: '1.10M', volSub: '500K/600K', uniqueAddr: '1.100', holders: '3.420', totalVol: '$98K', liquidity: '$42.000' },
+  { id: 54, name: 'SYN', address: '0xSYN...pump', price: 0.14893, change: 30.22, isUp: true, vol: '453.27M', volSub: '250M/203.27M', uniqueAddr: '89.400', holders: '114.930', totalVol: '$124.9M', liquidity: '$56.8M' },
+  { id: 55, name: 'BRETT', address: '0xBRETT...pump', price: 0.006111, change: -9.98, isUp: false, vol: '2.93M', volSub: '1M/1.93M', uniqueAddr: '2.930', holders: '28.930', totalVol: '$1.8M', liquidity: '$790.000' },
+  { id: 56, name: 'POPCAT', address: '0xPOPCAT...pump', price: 0.04146, change: -2.05, isUp: false, vol: '3.22M', volSub: '1.4M/1.82M', uniqueAddr: '3.220', holders: '19.430', totalVol: '$1.4M', liquidity: '$620.000' },
+  { id: 57, name: 'SUN', address: '0xSUN...pump', price: 0.017076, change: -0.72, isUp: false, vol: '1.63M', volSub: '700K/930K', uniqueAddr: '1.630', holders: '9.430', totalVol: '$810K', liquidity: '$320.000' },
+  { id: 58, name: 'DOGS', address: '0xDOGS...pump', price: 0.00003902, change: -5.22, isUp: false, vol: '2.63M', volSub: '1.1M/1.53M', uniqueAddr: '2.630', holders: '89.430', totalVol: '$1.4M', liquidity: '$590.000' },
+  { id: 59, name: 'FLUX', address: '0xFLUX...pump', price: 0.04930, change: -3.42, isUp: false, vol: '562.429', volSub: '250K/312.429', uniqueAddr: '562', holders: '4.890', totalVol: '$230K', liquidity: '$98.000' },
+  { id: 60, name: 'RPL', address: '0xRPL...pump', price: 1.332, change: -3.19, isUp: false, vol: '599.170', volSub: '250K/349.170', uniqueAddr: '599', holders: '5.200', totalVol: '$720K', liquidity: '$310.000' },
+  { id: 61, name: 'POL', address: '0xPOL...pump', price: 0.07757, change: 1.54, isUp: true, vol: '15.16M', volSub: '8M/7.16M', uniqueAddr: '5.420', holders: '28.930', totalVol: '$9.4M', liquidity: '$3.9M' }
 ];
 
 const SPOT_MOCK_DATA = [
@@ -80,12 +116,7 @@ function AlphaMarkets() {
 
   let baseData = [];
   if (mainTab === 'alpha') {
-    const raw = [...INITIAL_MOCK_DATA];
-    let expanded = [];
-    for(let i=0; i<4; i++) {
-      expanded = expanded.concat(raw.map(c => ({...c, id: c.id + i*100})));
-    }
-    baseData = expanded;
+    baseData = [...INITIAL_MOCK_DATA];
   } else if (mainTab === 'spot') {
     baseData = [...SPOT_MOCK_DATA];
   } else if (mainTab === 'futures') {
