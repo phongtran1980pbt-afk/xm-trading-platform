@@ -258,14 +258,19 @@ export default function TradePage() {
   
   // Chuẩn hóa tên coin: nếu có đuôi 'USDT-M' hoặc '-M' (futures) hoặc 'USDT', chuyển thành symbol cơ bản để khớp với PriceContext (ví dụ: BTCUSDT-M -> BTC, BTC-USDT -> BTC)
   const coin = useMemo(() => {
-    let sym = symbol || 'BULL';
+    let sym = (symbol || 'BULL').toUpperCase();
     // Xóa đuôi USDT-M hoặc -M (chấp nhận cả có gạch ngang và không)
-    sym = sym.replace(/[-_]?usdt[-_]?m$/i, '').replace(/[-_]?m$/i, '');
+    sym = sym.replace(/[-_]?USDT[-_]?M$/i, '').replace(/[-_]?M$/i, '');
     // Xóa đuôi USDT nếu có (ví dụ BTC-USDT -> BTC) trừ phi coin đó chính là USDT
-    if (sym.toLowerCase() !== 'usdt') {
-      sym = sym.replace(/[-_]?usdt$/i, '');
+    if (sym !== 'USDT') {
+      sym = sym.replace(/[-_]?USDT$/i, '');
     }
-    return sym;
+    
+    // Tìm symbol khớp viết hoa/thường chuẩn trong danh sách coin
+    const matchedKey = Object.keys(INITIAL_COIN_PRICES).find(
+      k => k.toUpperCase() === sym
+    );
+    return matchedKey || sym;
   }, [symbol]);
 
   const navigate = useNavigate();
@@ -1038,6 +1043,43 @@ export default function TradePage() {
                 <path d="M12 10L14 12L12 14L10 12L12 10Z" fill="#24DB9B"/>
               </svg>
               <span className="th-logo-text">KUCOIN</span>
+            </Link>
+
+            <Link
+              to="/"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                color: '#eaecef',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                padding: '4px 12px',
+                fontSize: '12px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginLeft: '12px',
+                marginRight: '8px',
+                transition: 'all 0.2s',
+                height: '28px'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgba(36, 219, 155, 0.15)';
+                e.currentTarget.style.color = '#24DB9B';
+                e.currentTarget.style.borderColor = 'rgba(36, 219, 155, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                e.currentTarget.style.color = '#eaecef';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              Trang chủ
             </Link>
             
             <div className="th-nav-switch">
