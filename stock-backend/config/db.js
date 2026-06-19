@@ -14,7 +14,8 @@ const dbConfig = {
     database: process.env.DB_DATABASE || 'StockTradingDB',
     options: {
         encrypt: process.env.DB_ENCRYPT === 'true', 
-        trustServerCertificate: process.env.DB_TRUST_CERT === 'true'
+        trustServerCertificate: process.env.DB_TRUST_CERT === 'true',
+        useUTC: false
     },
     connectionTimeout: 10000 
 };

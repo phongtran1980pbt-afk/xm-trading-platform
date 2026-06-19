@@ -97,7 +97,8 @@ export const placeOrder = async (req, res) => {
                     startTime: formatLocalDate(newOrder.StartTime),
                     endTime: formatLocalDate(newOrder.EndTime),
                     status: 'PENDING'
-                }
+                },
+                serverTime: new Date().toISOString()
             });
 
         } catch (err) {
@@ -132,7 +133,7 @@ export const getHistory = async (req, res) => {
             EndTime: formatLocalDate(order.EndTime)
         }));
 
-        res.status(200).json({ success: true, orders: formattedOrders });
+        res.status(200).json({ success: true, orders: formattedOrders, serverTime: new Date().toISOString() });
     } catch (err) {
         console.error('Error in getHistory:', err);
         res.status(500).json({ success: false, message: 'Lỗi server khi lấy lịch sử.' });

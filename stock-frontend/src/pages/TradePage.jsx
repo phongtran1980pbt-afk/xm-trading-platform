@@ -354,6 +354,7 @@ export default function TradePage() {
   const countdownIntervalRef = useRef(null);
   const [countdownBetType, setCountdownBetType] = useState('UP');
   const [tick, setTick] = useState(0);
+  const [serverTimeOffset, setServerTimeOffset] = useState(0);
 
   // Fast Deposit state
   const [showFastDepositModal, setShowFastDepositModal] = useState(false);
@@ -394,6 +395,10 @@ export default function TradePage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
+        if (res.data.serverTime) {
+          const offset = new Date(res.data.serverTime).getTime() - Date.now();
+          setServerTimeOffset(offset);
+        }
         const newOrders = res.data.orders;
         
         // Show notification toast if any pending order transitioned to WIN / LOSE / TIE
@@ -616,6 +621,10 @@ export default function TradePage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
+        if (res.data.serverTime) {
+          const offset = new Date(res.data.serverTime).getTime() - Date.now();
+          setServerTimeOffset(offset);
+        }
         kuToast('success', `Đã đặt lệnh ${type === 'UP' ? 'Mua lên' : 'Bán xuống'} ${Number(binaryAmount).toFixed(2)} USDT`);
         setBinaryAmount('');
         fetchBinaryHistory();
@@ -2205,7 +2214,7 @@ export default function TradePage() {
                       // Calculate remaining seconds for PENDING bets
                       const cleanEndStr = bet.EndTime ? (bet.EndTime.endsWith('Z') ? bet.EndTime : `${bet.EndTime}Z`) : '';
                       const endMs = cleanEndStr ? new Date(cleanEndStr).getTime() : 0;
-                      const nowMs = Date.now();
+                      const nowMs = Date.now() + (serverTimeOffset || 0);
                       const remainSec = Math.max(0, Math.round((endMs - nowMs) / 1000));
                       const totalSec = bet.Duration || countdownTotal || 60;
                       const progress = totalSec > 0 ? Math.max(0, Math.min(1, remainSec / totalSec)) : 0;

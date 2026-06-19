@@ -743,8 +743,6 @@ function Register() {
                     {isLoading ? 'Đang xử lý...' : 'Đăng ký xác thực'}
                   </button>
 
-                  </div>
-
                 </form>
               </div>
             )}

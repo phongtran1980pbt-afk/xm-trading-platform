@@ -218,6 +218,7 @@ export const getTradeStats = async (req, res) => {
     const betsResult = await betsRequest.query(betsQuery);
 
     stats.activeBets = betsResult.recordset;
+    stats.serverTime = new Date().toISOString();
 
     res.json(stats);
   } catch (error) {

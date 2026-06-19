@@ -78,7 +78,8 @@ export default function AdminDashboard() {
   const [amountInput, setAmountInput] = useState('');
   const [tradeStats, setTradeStats] = useState({ upUsers: 0, upAmount: 0, downUsers: 0, downAmount: 0 });
   const [trend, setTrend] = useState('neutral');
-  const [selectedCoin, setSelectedCoin] = useState('quq');
+  const [selectedCoin, setSelectedCoin] = useState('BTC');
+  const [serverTimeOffset, setServerTimeOffset] = useState(0);
   const [selectedUserForView, setSelectedUserForView] = useState(null);
   const [adminWithdrawRequests, setAdminWithdrawRequests] = useState([]);
   const [selectedWithdrawForDetail, setSelectedWithdrawForDetail] = useState(null);
@@ -179,6 +180,10 @@ export default function AdminDashboard() {
           const statsRes = await fetch(`${API_BASE_URL}/api/admin/trade-stats`);
           if (statsRes.ok) {
             const stats = await statsRes.json();
+            if (stats.serverTime) {
+              const offset = new Date(stats.serverTime).getTime() - Date.now();
+              setServerTimeOffset(offset);
+            }
             setTradeStats(stats);
           }
           const trendRes = await fetch(`${API_BASE_URL}/api/prices/trend?symbol=${selectedCoin}`);
@@ -1030,7 +1035,7 @@ export default function AdminDashboard() {
                   onFocus={(e) => e.target.style.borderColor = '#00FFA3'}
                   onBlur={(e) => e.target.style.borderColor = '#475262'}
                 >
-                  {['quq', 'BTC', 'ETH', 'SHIB', 'PEPE', 'DEGEN', 'BULL', 'ASTEROID'].map((sym) => (
+                  {['BTC', 'ETH', 'SHIB', 'PEPE', 'DEGEN', 'BULL', 'ASTEROID'].map((sym) => (
                     <option key={sym} value={sym} style={{ background: '#1e2329', color: '#eaecef' }}>
                       {sym.toUpperCase()}/USDT
                     </option>
@@ -1134,7 +1139,7 @@ export default function AdminDashboard() {
                       ) : (
                         tradeStats.activeBets.map((bet) => {
                           const isUp = bet.BetType === 'UP';
-                          const timeRemaining = Math.max(0, Math.round((new Date(bet.EndTime) - new Date()) / 1000));
+                          const timeRemaining = Math.max(0, Math.round((new Date(bet.EndTime) - new Date(Date.now() + (serverTimeOffset || 0))) / 1000));
                           return (
                             <tr key={bet.Id} style={{ borderBottom: '1px solid #1a1e27' }}>
                               <td style={{ padding: '7px 10px', color: '#00FFA3', fontWeight: 600 }}>{bet.AccountCode || 'N/A'}</td>

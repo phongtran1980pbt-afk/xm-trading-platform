@@ -359,15 +359,15 @@ setInterval(() => {
     let change = 0;
 
     if (trend === 'up') {
-      // 62% chance to go up, 38% chance to go down for smoother, segmented fluctuation
-      const isUpTick = Math.random() < 0.62;
-      change = isUpTick ? (Math.random() * 0.0004) : -(Math.random() * 0.00035);
+      // 85% chance to go up, 15% chance to go down for steady, clear rise
+      const isUpTick = Math.random() < 0.85;
+      change = isUpTick ? (Math.random() * 0.0008) : -(Math.random() * 0.0003);
       newP = Math.max(p * (1 + change), p * 0.0001);
       coinOffsets[key] = (coinOffsets[key] || 0) + change;
     } else if (trend === 'down') {
-      // 62% chance to go down, 38% chance to go up
-      const isDownTick = Math.random() < 0.62;
-      change = isDownTick ? -(Math.random() * 0.0004) : (Math.random() * 0.00035);
+      // 85% chance to go down, 15% chance to go up
+      const isDownTick = Math.random() < 0.85;
+      change = isDownTick ? -(Math.random() * 0.0008) : (Math.random() * 0.0003);
       newP = Math.max(p * (1 + change), p * 0.0001);
       coinOffsets[key] = (coinOffsets[key] || 0) + change;
     } else {
@@ -388,13 +388,14 @@ setInterval(() => {
     
     // Cap maximum change from candle open to prevent extremely tall (monster) candles
     // But if we are syncing to Binance and the gap is large, bypass the cap to jump to the correct price quickly
+    // Also bypass this cap if there is an active admin trend (up/down) to let the price rise/fall continuously.
     const openP = currentCandles[key]?.open || p;
     const diffPct = (newP - openP) / openP;
     
     const isBinanceSynced = !!LATEST_BINANCE_PRICES[key];
     const isFarFromBinance = isBinanceSynced && (Math.abs(LATEST_BINANCE_PRICES[key] - p) / p > 0.015);
 
-    if (!isFarFromBinance) {
+    if (!isFarFromBinance && trend === 'neutral') {
       const MAX_CANDLE_DIFF = 0.0025; // max 0.25% body change per candle
       if (diffPct > MAX_CANDLE_DIFF) {
         newP = openP * (1 + MAX_CANDLE_DIFF);
