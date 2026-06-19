@@ -61,6 +61,33 @@ async function connectBinanceFutures() {
             k => BINANCE_FUTURES_MAPPING[k] === pair
           );
           if (coinKey) {
+            // Shift history to match the actual Binance price level on first update
+            if (!LATEST_BINANCE_PRICES[coinKey] && prices && prices[coinKey]) {
+              const currentSimPrice = prices[coinKey].price;
+              if (currentSimPrice) {
+                const diff = price - currentSimPrice;
+                // Offset all candles in history
+                if (candleHistory && candleHistory[coinKey]) {
+                  candleHistory[coinKey] = candleHistory[coinKey].map(c => ({
+                    ...c,
+                    open: c.open + diff,
+                    high: c.high + diff,
+                    low: c.low + diff,
+                    close: c.close + diff
+                  }));
+                }
+                // Offset current candle
+                if (currentCandles && currentCandles[coinKey]) {
+                  currentCandles[coinKey].open += diff;
+                  currentCandles[coinKey].high += diff;
+                  currentCandles[coinKey].low += diff;
+                  currentCandles[coinKey].close += diff;
+                }
+                // Directly set the current price to Binance price
+                prices[coinKey].price = price;
+                prices[coinKey].prev = price;
+              }
+            }
             LATEST_BINANCE_PRICES[coinKey] = price;
             // Ghi nhận log giá nhận được để chẩn đoán
             console.log(`[Binance Sync] ${coinKey} price updated: ${price}`);
@@ -91,13 +118,11 @@ async function connectBinanceFutures() {
   }
 }
 
-connectBinanceFutures();
-
 const INITIAL_COINS = {
   // All markets
-  BTC:   { price: 77390.98, name: 'BTC'   },
-  XAU:   { price: 2350.00,  name: 'XAU'   },
-  ETH:   { price: 2127.08,  name: 'ETH'   },
+  BTC:   { price: 62630.00, name: 'BTC'   },
+  XAU:   { price: 4150.00,  name: 'XAU'   },
+  ETH:   { price: 1690.00,  name: 'ETH'   },
   // Alpha
   BULL:      { price: 0.00479,   name: 'BULL'      },
   DEGEN:     { price: 0.001735,  name: 'DEGEN'     },
@@ -411,3 +436,5 @@ export const resetTrendToNeutral = (symbol) => {
   const targetSymbol = getNormalizedSymbol(symbol || 'BTC');
   coinTrends[targetSymbol] = 'neutral';
 };
+
+connectBinanceFutures();

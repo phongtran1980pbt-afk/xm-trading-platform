@@ -4,9 +4,9 @@ import { API_BASE_URL } from '../config';
 /* ── Danh sách tất cả coin với giá khởi đầu ── */
 const INITIAL_COINS = {
   // All markets
-  BTC:   { price: 77390.98 },
-  XAU:   { price: 2350.00  },
-  ETH:   { price: 2127.08  },
+  BTC:   { price: 62630.00 },
+  XAU:   { price: 4150.00  },
+  ETH:   { price: 1690.00  },
   // Alpha
   BULL:      { price: 0.00479   },
   DEGEN:     { price: 0.001735  },
