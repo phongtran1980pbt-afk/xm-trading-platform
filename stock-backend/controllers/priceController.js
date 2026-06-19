@@ -56,10 +56,12 @@ async function connectBinanceFutures() {
           );
           if (coinKey) {
             LATEST_BINANCE_PRICES[coinKey] = price;
+            // Ghi nhận log giá nhận được để chẩn đoán
+            console.log(`[Binance Sync] ${coinKey} price updated: ${price}`);
           }
         }
       } catch (err) {
-        // Silent error
+        console.error('Error parsing Binance message:', err.message);
       }
     });
 
