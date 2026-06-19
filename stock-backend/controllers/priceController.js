@@ -3,6 +3,7 @@ const INITIAL_COINS = {
   // All markets
   BTC:   { price: 77390.98, name: 'BTC'   },
   ETH:   { price: 2127.08,  name: 'ETH'   },
+  XAU:   { price: 2350.00,  name: 'XAU'   },
   // Alpha
   BULL:      { price: 0.00479,   name: 'BULL'      },
   DEGEN:     { price: 0.001735,  name: 'DEGEN'     },
