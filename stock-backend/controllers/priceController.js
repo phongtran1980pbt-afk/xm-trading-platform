@@ -253,7 +253,7 @@ function initializePriceState() {
   const nowMin = Math.floor(Date.now() / 1000 / 60);
 
   Object.keys(INITIAL_COINS).forEach(key => {
-    const { candles, lastPrice } = generateInitialCandles(key, 1000);
+    const { candles, lastPrice } = generateInitialCandles(key, 20000);
     history[key] = candles;
     state[key] = {
       price: lastPrice,
@@ -357,7 +357,7 @@ setInterval(() => {
           low: currentCandles[key].low,
           close: currentCandles[key].close
         });
-        if (candleHistory[key].length > 1000) {
+        if (candleHistory[key].length > 20000) {
           candleHistory[key].shift();
         }
       }
