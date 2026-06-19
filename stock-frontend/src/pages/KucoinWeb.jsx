@@ -683,7 +683,7 @@ function KucoinWeb() {
                         </svg>
                       </td>
                       <td>
-                        <Link to="/register" className="trade-btn">Giao dịch</Link>
+                        <Link to={user ? `/trade/${symbol}` : "/login"} className="trade-btn">Giao dịch</Link>
                       </td>
                     </tr>
                   );
