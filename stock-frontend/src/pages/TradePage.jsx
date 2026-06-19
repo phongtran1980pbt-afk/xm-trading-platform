@@ -791,6 +791,62 @@ export default function TradePage() {
 
     loadInitialCandles();
 
+    // Infinite backward scrolling by prepending historical candles dynamically on the fly
+    let loadingMore = false;
+    chart.timeScale().subscribeVisibleLogicalRangeChange((logicalRange) => {
+      if (!logicalRange || loadingMore) return;
+      
+      // If user scrolls close to the left boundary (from index < 15)
+      if (logicalRange.from < 15) {
+        loadingMore = true;
+        
+        setHistoricalCandles(prev => {
+          if (!prev || prev.length === 0) return prev;
+          
+          const firstCandle = prev[0];
+          const t0 = firstCandle.time;
+          let currentPrice = firstCandle.open;
+          const prepended = [];
+          const coinHash = hashStr(coin);
+          
+          // Prepend 1000 older candles
+          for (let i = 1; i <= 1000; i++) {
+            const time = t0 - i * 60;
+            const seed = coinHash + Math.floor(time / 60) * 3;
+            const r = seededRand(seed);
+            const change = (r * 0.003 - 0.0015);
+            
+            const prevPrice = currentPrice / (1 + change);
+            const open = prevPrice;
+            const close = currentPrice;
+            
+            const r2 = seededRand(seed + 1);
+            const r3 = seededRand(seed + 2);
+            const high = Math.max(open, close) + Math.abs(open * r2 * 0.001);
+            const low = Math.max(Math.min(open, close) - Math.abs(open * r3 * 0.001), 0.001);
+            
+            prepended.unshift({
+              time,
+              open,
+              high,
+              low,
+              close
+            });
+            
+            currentPrice = prevPrice;
+          }
+          
+          const merged = [...prepended, ...prev];
+          candleSeries.setData(merged);
+          return merged;
+        });
+        
+        setTimeout(() => {
+          loadingMore = false;
+        }, 300);
+      }
+    });
+
     // Save active state to chartInitRef
     chartInitRef.current = { symbol: coin, isReal: !!globalCoin?.isReal, backendSynced: !!globalCoin?.backendSynced };
 
