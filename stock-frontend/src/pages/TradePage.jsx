@@ -910,29 +910,6 @@ export default function TradePage() {
 
       {/* Mobile Top Navigation Bar */}
       <div className="tp-m-topbar">
-        {/* Nút quay về trang chủ */}
-        <Link 
-          to="/" 
-          style={{ 
-            color: '#848e9c', 
-            marginRight: '12px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            textDecoration: 'none',
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            cursor: 'pointer'
-          }}
-          title="Trang chủ"
-        >
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-        </Link>
-
         <button className="tp-m-nav-btn">
           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><line x1="3" y1="5" x2="21" y2="5"/><polyline points="7 23 3 19 7 15"/><line x1="21" y1="19" x2="3" y2="19"/></svg>
         </button>
@@ -1499,6 +1476,13 @@ export default function TradePage() {
           </div>
           
           <div className="th-ci-right">
+            <div 
+              className="th-ci-action" 
+              onClick={() => navigate('/')} 
+              style={{ color: '#24DB9B', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              <span>🏠 Trang chủ</span>
+            </div>
             <div className="th-ci-action">
               <span>📄 Thông tin giao dịch</span>
             </div>
