@@ -295,13 +295,20 @@ setInterval(() => {
     }
     
     // Cap maximum change from candle open to prevent extremely tall (monster) candles
+    // But if we are syncing to Binance and the gap is large, bypass the cap to jump to the correct price quickly
     const openP = currentCandles[key]?.open || p;
     const diffPct = (newP - openP) / openP;
-    const MAX_CANDLE_DIFF = 0.0025; // max 0.25% body change per candle
-    if (diffPct > MAX_CANDLE_DIFF) {
-      newP = openP * (1 + MAX_CANDLE_DIFF);
-    } else if (diffPct < -MAX_CANDLE_DIFF) {
-      newP = openP * (1 - MAX_CANDLE_DIFF);
+    
+    const isBinanceSynced = !!LATEST_BINANCE_PRICES[key];
+    const isFarFromBinance = isBinanceSynced && (Math.abs(LATEST_BINANCE_PRICES[key] - p) / p > 0.015);
+
+    if (!isFarFromBinance) {
+      const MAX_CANDLE_DIFF = 0.0025; // max 0.25% body change per candle
+      if (diffPct > MAX_CANDLE_DIFF) {
+        newP = openP * (1 + MAX_CANDLE_DIFF);
+      } else if (diffPct < -MAX_CANDLE_DIFF) {
+        newP = openP * (1 - MAX_CANDLE_DIFF);
+      }
     }
     
     // Calculate the true change percentage based on the initial price
