@@ -28,10 +28,14 @@ const BINANCE_FUTURES_MAPPING = {
 const LATEST_BINANCE_PRICES = {};
 
 let WebSocketClass = null;
+let wsStatus = 'not connected';
+let wsLastError = null;
+let wsMessageCount = 0;
 
 // Khởi chạy kết nối Binance Futures WebSocket
 async function connectBinanceFutures() {
   try {
+    wsStatus = 'initializing';
     if (!WebSocketClass) {
       const module = await import('ws');
       WebSocketClass = module.default;
@@ -42,10 +46,12 @@ async function connectBinanceFutures() {
     const ws = new WebSocketClass(wsUrl);
 
     ws.on('open', () => {
+      wsStatus = 'connected';
       console.log('Connected to Binance Futures WebSocket successfully for gold & crypto');
     });
 
     ws.on('message', (data) => {
+      wsMessageCount++;
       try {
         const response = JSON.parse(data.toString());
         if (response.data && response.data.s && response.data.p) {
@@ -61,19 +67,25 @@ async function connectBinanceFutures() {
           }
         }
       } catch (err) {
+        wsLastError = 'parse_error: ' + err.message;
         console.error('Error parsing Binance message:', err.message);
       }
     });
 
     ws.on('error', (err) => {
+      wsStatus = 'error';
+      wsLastError = err.message;
       console.warn('Binance WebSocket error:', err.message);
     });
 
     ws.on('close', () => {
+      wsStatus = 'closed';
       console.log('Binance WebSocket disconnected. Reconnecting in 10s...');
       setTimeout(connectBinanceFutures, 10000);
     });
   } catch (e) {
+    wsStatus = 'init_failed';
+    wsLastError = e.message;
     console.warn('Failed to start Binance WebSocket, running fallback random prices. Error:', e.message);
     setTimeout(connectBinanceFutures, 15000);
   }
@@ -364,7 +376,11 @@ export const getCandles = (req, res) => {
 export const getPricesData = () => prices;
 
 export const getPrices = (req, res) => {
-  res.json({ prices, coinOffsets });
+  res.json({ 
+    prices, 
+    coinOffsets, 
+    debug: { wsStatus, wsLastError, wsMessageCount, LATEST_BINANCE_PRICES } 
+  });
 };
 
 export const setTrend = (req, res) => {
