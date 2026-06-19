@@ -71,6 +71,7 @@ const COIN_KEYS = Object.keys(INITIAL_COINS);
 // Mapping from local symbols to Binance USDT pairs
 const BINANCE_MAPPING = {
   BTC: 'BTCUSDT',
+  XAU: 'XAUUSDT',
   ETH: 'ETHUSDT',
   ZEC: 'ZECUSDT',
   XMR: 'XMRUSDT',

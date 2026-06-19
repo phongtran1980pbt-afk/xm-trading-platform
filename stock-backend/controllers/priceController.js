@@ -1,4 +1,59 @@
 // Global in-memory price state
+import WebSocket from 'ws';
+
+// Mapping from local coin symbols to Binance Futures pairs
+const BINANCE_FUTURES_MAPPING = {
+  BTC: 'btcusdt',
+  XAU: 'xauusdt',
+  ETH: 'ethusdt'
+};
+
+const LATEST_BINANCE_PRICES = {};
+
+// Khởi chạy kết nối Binance Futures WebSocket
+function connectBinanceFutures() {
+  try {
+    const streams = Object.values(BINANCE_FUTURES_MAPPING).map(s => `${s}@markPrice`);
+    const wsUrl = `wss://fstream.binance.com/stream?streams=${streams.join('/')}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.on('open', () => {
+      console.log('Connected to Binance Futures WebSocket successfully for gold & crypto');
+    });
+
+    ws.on('message', (data) => {
+      try {
+        const response = JSON.parse(data.toString());
+        if (response.data && response.data.s && response.data.p) {
+          const pair = response.data.s.toLowerCase();
+          const price = parseFloat(response.data.p);
+          const coinKey = Object.keys(BINANCE_FUTURES_MAPPING).find(
+            k => BINANCE_FUTURES_MAPPING[k] === pair
+          );
+          if (coinKey) {
+            LATEST_BINANCE_PRICES[coinKey] = price;
+          }
+        }
+      } catch (err) {
+        // Silent error
+      }
+    });
+
+    ws.on('error', (err) => {
+      console.warn('Binance WebSocket error:', err.message);
+    });
+
+    ws.on('close', () => {
+      console.log('Binance WebSocket disconnected. Reconnecting in 5s...');
+      setTimeout(connectBinanceFutures, 5000);
+    });
+  } catch (e) {
+    setTimeout(connectBinanceFutures, 5000);
+  }
+}
+
+connectBinanceFutures();
+
 const INITIAL_COINS = {
   // All markets
   BTC:   { price: 77390.98, name: 'BTC'   },
@@ -185,9 +240,17 @@ setInterval(() => {
       newP = Math.max(p * (1 + change), p * 0.0001);
       coinOffsets[key] = (coinOffsets[key] || 0) + change;
     } else {
-      // Neutral trend: 50/50 fluctuation
-      change = Math.random() * 0.0004 - 0.0002;
-      newP = Math.max(p * (1 + change), p * 0.0001);
+      // Neutral trend: 50/50 fluctuation or follow Binance Live price
+      if (LATEST_BINANCE_PRICES[key]) {
+        // Smooth transition towards actual Binance price
+        const targetRealPrice = LATEST_BINANCE_PRICES[key];
+        const gap = targetRealPrice - p;
+        // Move 20% of the gap every 2 seconds for a smooth chart line without big jumps
+        newP = p + (gap * 0.2) + (Math.random() * p * 0.0002 - p * 0.0001);
+      } else {
+        change = Math.random() * 0.0004 - 0.0002;
+        newP = Math.max(p * (1 + change), p * 0.0001);
+      }
       // Decaying offset to return to base Binance price slowly when neutral
       coinOffsets[key] = ((coinOffsets[key] || 0) * 0.99) + (Math.random() * 0.0001 - 0.00005);
     }
