@@ -956,10 +956,10 @@ export default function TradePage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <div className="tp-m-big-price" style={{ color: priceUp ? '#00FFA3' : '#F6465D', lineHeight: 1.1 }}>
-              {livePrice >= 100 ? Math.round(livePrice).toLocaleString() : fmt(livePrice, 4)}
+              {fmt(livePrice)}
             </div>
             <div className="tp-m-price-change" style={{ color: priceUp ? '#00FFA3' : '#F6465D', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-              <span>≈ ${fmt(livePrice, 2)}</span>
+              <span>≈ ${fmt(livePrice)}</span>
               <span>{changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%</span>
             </div>
             <div className="tp-m-ref-price" style={{ marginBottom: 0, fontSize: '10.5px' }}>Giá tham chiếu {fmt(livePrice * 0.9996, 2)}</div>
