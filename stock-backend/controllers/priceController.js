@@ -20,7 +20,7 @@ async function connectBinanceFutures() {
     }
     
     const streams = Object.values(BINANCE_FUTURES_MAPPING).map(s => `${s}@markPrice`);
-    const wsUrl = `wss://fstream.binance.com/stream?streams=${streams.join('/')}`;
+    const wsUrl = `wss://fstream.binance.com/market/stream?streams=${streams.join('/')}`;
     const ws = new WebSocketClass(wsUrl);
 
     ws.on('open', () => {
