@@ -3,6 +3,85 @@ import { Link, useNavigate } from 'react-router-dom';
 import { usePrices } from '../contexts/PriceContext';
 import './AlphaMarkets.css';
 
+function hashStr(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+const CoinLogo = ({ name }) => {
+  const [srcIndex, setSrcIndex] = useState(0);
+  const symbol = name.toUpperCase();
+  
+  const sources = [
+    `https://assets.coincap.io/assets/icons/${symbol.toLowerCase()}@2x.png`,
+    `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.toLowerCase()}.png`
+  ];
+
+  const handleErr = (e) => {
+    if (srcIndex < sources.length - 1) {
+      setSrcIndex(srcIndex + 1);
+    } else {
+      e.currentTarget.style.display = 'none';
+      const fallback = e.currentTarget.nextSibling;
+      if (fallback) fallback.style.display = 'flex';
+    }
+  };
+
+  const hash = hashStr(symbol);
+  const h1 = hash % 360;
+  const h2 = (h1 + 40) % 360;
+  const bgGradient = `linear-gradient(135deg, hsl(${h1}, 80%, 45%), hsl(${h2}, 85%, 25%))`;
+  const shadowColor = `hsla(${h1}, 80%, 50%, 0.35)`;
+
+  return (
+    <div style={{ position: 'relative', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
+      <img 
+        src={sources[srcIndex]}
+        onError={handleErr}
+        onLoad={(e) => {
+          e.currentTarget.style.display = 'block';
+          const fallback = e.currentTarget.nextSibling;
+          if (fallback) fallback.style.display = 'none';
+        }}
+        alt={symbol}
+        style={{ 
+          width: '28px', 
+          height: '28px', 
+          borderRadius: '50%', 
+          display: 'none', 
+          objectFit: 'cover',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+        }}
+      />
+      <div 
+        className="alpha-coin-icon" 
+        style={{
+          background: bgGradient,
+          color: '#fff',
+          display: 'flex',
+          width: '28px',
+          height: '28px',
+          borderRadius: '50%',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: '700',
+          fontSize: '12px',
+          boxShadow: `0 3px 8px ${shadowColor}, inset 0 1px 2px rgba(255,255,255,0.45), inset 0 -1.5px 2px rgba(0,0,0,0.45)`,
+          textShadow: '0 1px 1px rgba(0,0,0,0.5)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          textTransform: 'uppercase',
+          margin: 0
+        }}
+      >
+        {symbol.slice(0, 2)}
+      </div>
+    </div>
+  );
+};
+
 const INITIAL_MOCK_DATA = [
   { id: 1, name: 'BTC', address: '0xBTC...USDT', price: 62630.00, change: 0.56, isUp: true, vol: '156.85K', volSub: '80K/76K', uniqueAddr: '98K', holders: '15.2M', totalVol: '$12.14 B', liquidity: '$2.4 B' },
   { id: 2, name: 'XAU', address: '0xXAU...USDT', price: 4150.00, change: -1.09, isUp: false, vol: '825K', volSub: '425K/400K', uniqueAddr: '12K', holders: '1.2M', totalVol: '$3.4 B', liquidity: '$850M' },
@@ -317,26 +396,7 @@ function AlphaMarkets() {
                   </td>
                   <td>
                     <div className="alpha-coin-cell">
-                      <div style={{ position: 'relative', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
-                        <img 
-                          src={`https://assets.coincap.io/assets/icons/${coin.name.toLowerCase()}@2x.png`}
-                          onLoad={(e) => {
-                            e.currentTarget.style.display = 'block';
-                            const sibling = e.currentTarget.nextSibling;
-                            if (sibling) sibling.style.display = 'none';
-                          }}
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const sibling = e.currentTarget.nextSibling;
-                            if (sibling) sibling.style.display = 'flex';
-                          }}
-                          alt={coin.name}
-                          style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'none', objectFit: 'cover' }}
-                        />
-                        <div className="alpha-coin-icon" style={{background: index % 2 === 0 ? '#F7931A' : '#627EEA', color: '#fff', display: 'flex', width: '28px', height: '28px', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', margin: 0 }}>
-                          {coin.name[0]}
-                        </div>
-                      </div>
+                      <CoinLogo name={coin.name} />
                       <div>
                         <div className="alpha-coin-symbol-large">{coin.name}</div>
                         <div className="alpha-coin-address">
