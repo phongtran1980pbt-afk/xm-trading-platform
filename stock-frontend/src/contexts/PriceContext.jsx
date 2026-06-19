@@ -5,8 +5,8 @@ import { API_BASE_URL } from '../config';
 const INITIAL_COINS = {
   // All markets
   BTC:   { price: 77390.98 },
-  ETH:   { price: 2127.08  },
   XAU:   { price: 2350.00  },
+  ETH:   { price: 2127.08  },
   // Alpha
   BULL:      { price: 0.00479   },
   DEGEN:     { price: 0.001735  },
