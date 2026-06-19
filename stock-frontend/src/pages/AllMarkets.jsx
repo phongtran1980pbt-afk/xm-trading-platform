@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePrices } from '../contexts/PriceContext';
+import CoinLogo from '../components/CoinLogo';
 import './AlphaMarkets.css';
 
 const ALL_MARKETS_DATA = {
@@ -240,7 +241,7 @@ function AllMarkets() {
                   </td>
                   <td style={{textAlign: 'left'}}>
                     <div className="alpha-coin-cell">
-                      <div className="alpha-coin-icon" style={{background: index % 2 === 0 ? '#F7931A' : '#4169e1', color: '#fff'}}>{coin.name[0]}</div>
+                      <CoinLogo name={coin.name} />
                       <div>
                         <div className="alpha-coin-symbol-large">{coin.name}</div>
                         <div className="alpha-coin-address">{coin.sub}</div>

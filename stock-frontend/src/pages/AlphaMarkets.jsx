@@ -1,86 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePrices } from '../contexts/PriceContext';
+import CoinLogo from '../components/CoinLogo';
 import './AlphaMarkets.css';
 
-function hashStr(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h);
-}
-
-const CoinLogo = ({ name }) => {
-  const [srcIndex, setSrcIndex] = useState(0);
-  const symbol = name.toUpperCase();
-  
-  const sources = [
-    `https://assets.coincap.io/assets/icons/${symbol.toLowerCase()}@2x.png`,
-    `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.toLowerCase()}.png`
-  ];
-
-  const handleErr = (e) => {
-    if (srcIndex < sources.length - 1) {
-      setSrcIndex(srcIndex + 1);
-    } else {
-      e.currentTarget.style.display = 'none';
-      const fallback = e.currentTarget.nextSibling;
-      if (fallback) fallback.style.display = 'flex';
-    }
-  };
-
-  const hash = hashStr(symbol);
-  const h1 = hash % 360;
-  const h2 = (h1 + 40) % 360;
-  const bgGradient = `linear-gradient(135deg, hsl(${h1}, 80%, 45%), hsl(${h2}, 85%, 25%))`;
-  const shadowColor = `hsla(${h1}, 80%, 50%, 0.35)`;
-
-  return (
-    <div style={{ position: 'relative', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
-      <img 
-        src={sources[srcIndex]}
-        onError={handleErr}
-        onLoad={(e) => {
-          e.currentTarget.style.display = 'block';
-          const fallback = e.currentTarget.nextSibling;
-          if (fallback) fallback.style.display = 'none';
-        }}
-        alt={symbol}
-        style={{ 
-          width: '28px', 
-          height: '28px', 
-          borderRadius: '50%', 
-          display: 'none', 
-          objectFit: 'cover',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
-        }}
-      />
-      <div 
-        className="alpha-coin-icon" 
-        style={{
-          background: bgGradient,
-          color: '#fff',
-          display: 'flex',
-          width: '28px',
-          height: '28px',
-          borderRadius: '50%',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: '700',
-          fontSize: '12px',
-          boxShadow: `0 3px 8px ${shadowColor}, inset 0 1px 2px rgba(255,255,255,0.45), inset 0 -1.5px 2px rgba(0,0,0,0.45)`,
-          textShadow: '0 1px 1px rgba(0,0,0,0.5)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          textTransform: 'uppercase',
-          margin: 0
-        }}
-      >
-        {symbol.slice(0, 2)}
-      </div>
-    </div>
-  );
-};
 
 const INITIAL_MOCK_DATA = [
   { id: 1, name: 'BTC', address: '0xBTC...USDT', price: 62630.00, change: 0.56, isUp: true, vol: '156.85K', volSub: '80K/76K', uniqueAddr: '98K', holders: '15.2M', totalVol: '$12.14 B', liquidity: '$2.4 B' },
@@ -244,7 +167,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/BTC')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#F7931A', color: '#fff'}}>B</div>
+                <CoinLogo name="BTC" />
                 <span className="alpha-coin-symbol">BTC</span>
               </div>
               <div className="alpha-price-info">
@@ -254,7 +177,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/XAU')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#FFD700', color: '#000'}}>X</div>
+                <CoinLogo name="XAU" />
                 <span className="alpha-coin-symbol">XAU</span>
               </div>
               <div className="alpha-price-info">
@@ -264,7 +187,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/KCS')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#24DB9B', color: '#fff'}}>K</div>
+                <CoinLogo name="KCS" />
                 <span className="alpha-coin-symbol">KCS</span>
               </div>
               <div className="alpha-price-info">
@@ -281,13 +204,13 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/NEX')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#2b2b2b', color: '#fff'}}>N</div>
+                <CoinLogo name="NEX" />
                 <span className="alpha-coin-symbol">NEX</span>
               </div>
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/ZEST')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#FF4500', color: '#fff'}}>Z</div>
+                <CoinLogo name="ZEST" />
                 <span className="alpha-coin-symbol">ZEST</span>
               </div>
               <div className="alpha-price-info">
@@ -297,7 +220,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/ATWO')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#FF8C00', color: '#fff'}}>A</div>
+                <CoinLogo name="ATWO" />
                 <span className="alpha-coin-symbol">ATWO</span>
               </div>
               <div className="alpha-price-info">
@@ -313,7 +236,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/ZEST')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#FF4500', color: '#fff'}}>Z</div>
+                <CoinLogo name="ZEST" />
                 <span className="alpha-coin-symbol">ZEST</span>
               </div>
               <div className="alpha-price-info">
@@ -323,7 +246,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/LYX')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#FF1493', color: '#fff'}}>L</div>
+                <CoinLogo name="LYX" />
                 <span className="alpha-coin-symbol">LYX</span>
               </div>
               <div className="alpha-price-info">
@@ -333,7 +256,7 @@ function AlphaMarkets() {
             </div>
             <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/NUMI')}>
               <div className="alpha-coin-info">
-                <div className="alpha-coin-icon" style={{background: '#4B0082', color: '#fff'}}>N</div>
+                <CoinLogo name="NUMI" />
                 <span className="alpha-coin-symbol">NUMI</span>
               </div>
               <div className="alpha-price-info">

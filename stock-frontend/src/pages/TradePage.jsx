@@ -8,6 +8,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './TradePage.css';
 import { BuyCryptoMenu, TradeMenu, DerivativesMenu, EarnMenu, MoreMenu, LaunchpadMenu, InstitutionalMenu } from './MegaMenus';
+import CoinLogo from '../components/CoinLogo';
+
 
 /* ─── Seeded PRNG (mulberry32) — same seed → same number always ─── */
 function seededRand(seed) {
@@ -1481,9 +1483,10 @@ export default function TradePage() {
                 <div 
                   className="th-coin-main-name"
                   onClick={() => setShowCoinSelector(!showCoinSelector)}
-                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  {coin}
+                  <CoinLogo name={coin} size={24} />
+                  <span>{coin}</span>
                 </div>
                 <div className="th-coin-contract">
                   Fmj...pump <span>📋</span>
@@ -1534,7 +1537,10 @@ export default function TradePage() {
                           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = coin === symbolKey ? 'rgba(36, 219, 155, 0.05)' : 'transparent'}
                         >
-                          <span>{symbolKey}-USDT</span>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <CoinLogo name={symbolKey} size={18} />
+                            <span>{symbolKey}-USDT</span>
+                          </div>
                           <span style={{ fontSize: '11px', color: '#848e9c' }}>
                             ${(liveCoinPrice < 1 
                               ? liveCoinPrice.toFixed(6) 

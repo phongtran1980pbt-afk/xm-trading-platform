@@ -50,10 +50,68 @@ function Register() {
   const frontInputRef = React.useRef(null);
   const backInputRef = React.useRef(null);
 
+  // ── Nén ảnh trước khi gửi lên server (tránh vượt quá giới hạn 4.5MB của Vercel proxy) ──
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const MAX_SIZE = 800; // max 800px width/height
+      const QUALITY = 0.65; // JPEG quality 65%
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > MAX_SIZE || height > MAX_SIZE) {
+            if (width > height) {
+              height = Math.round((height / width) * MAX_SIZE);
+              width = MAX_SIZE;
+            } else {
+              width = Math.round((width / height) * MAX_SIZE);
+              height = MAX_SIZE;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', QUALITY));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoUpload = async (e, side) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const compressed = await compressImage(file);
+        if (side === 'front') {
+          setIdFrontPhoto(compressed);
+        } else {
+          setIdBackPhoto(compressed);
+        }
+      } catch {
+        // Fallback: đọc file gốc nếu nén thất bại
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (side === 'front') {
+            setIdFrontPhoto(reader.result);
+          } else {
+            setIdBackPhoto(reader.result);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
   const isEmailValid = regType === 'email'
     ? (email.length > 10 && email.toLowerCase().endsWith('@gmail.com'))
     : (email.length >= 10 && email.length <= 11 && /^0\d+$/.test(email));
   const isEmailError = email.length > 0 && !isEmailValid;
+
   
   const pwReq1 = password.length >= 10 && password.length <= 15;
   const pwReq2 = /\d/.test(password);
@@ -99,20 +157,7 @@ function Register() {
     }
   };
 
-  const handlePhotoUpload = (e, side) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (side === 'front') {
-          setIdFrontPhoto(reader.result);
-        } else {
-          setIdBackPhoto(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+
 
   const handleIdNumberChange = (e) => {
     // Only allow digits
