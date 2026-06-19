@@ -4,7 +4,25 @@
 const BINANCE_FUTURES_MAPPING = {
   BTC: 'btcusdt',
   XAU: 'xauusdt',
-  ETH: 'ethusdt'
+  ETH: 'ethusdt',
+  ZEC: 'zecusdt',
+  XMR: 'xmrusdt',
+  AAVE: 'aaveusdt',
+  NEAR: 'nearusdt',
+  TAO: 'taousdt',
+  UNI: 'uniusdt',
+  SHIB: 'shibusdt',
+  DOGE: 'dogeusdt',
+  PEPE: 'pepeusdt',
+  WIF: 'wifusdt',
+  BONK: 'bonkusdt',
+  FLOKI: 'flokiusdt',
+  FIL: 'filusdt',
+  STORJ: 'storjusdt',
+  AR: 'arusdt',
+  SKL: 'sklusdt',
+  VET: 'vetusdt',
+  THETA: 'thetausdt'
 };
 
 const LATEST_BINANCE_PRICES = {};
