@@ -248,10 +248,6 @@ function AlphaMarkets() {
             <button className="alpha-pill">Đã chọn</button>
             <button className="alpha-pill">Trên chuỗi</button>
             <button className="alpha-pill active">Tất cả</button>
-            <button className="alpha-pill bordered">Mới <span style={{color:'#24DB9B'}}>2</span></button>
-            <button className="alpha-pill bordered">Solana</button>
-            <button className="alpha-pill bordered">BSC</button>
-            <button className="alpha-pill bordered">Ethereum</button>
           </div>
           <div className="alpha-tools">
             <div className="alpha-search-box">
