@@ -133,7 +133,7 @@ function AlphaMarkets() {
             <div className="alpha-card-header">
               <span>Xu hướng &gt;</span>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/BTC')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#F7931A', color: '#fff'}}>B</div>
                 <span className="alpha-coin-symbol">BTC</span>
@@ -143,17 +143,17 @@ function AlphaMarkets() {
                 <span className="alpha-price-change text-green">+0,56% ▲</span>
               </div>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/XAU')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#FFD700', color: '#000'}}>X</div>
-                <span className="alpha-coin-symbol">XAUT</span>
+                <span className="alpha-coin-symbol">XAU</span>
               </div>
               <div className="alpha-price-info">
-                <span className="alpha-price-val">$4.481,18</span>
+                <span className="alpha-price-val">$2.350,00</span>
                 <span className="alpha-price-change text-red">-1,09% ▼</span>
               </div>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/KCS')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#24DB9B', color: '#fff'}}>K</div>
                 <span className="alpha-coin-symbol">KCS</span>
@@ -170,13 +170,13 @@ function AlphaMarkets() {
               <span>Coin mới &gt;</span>
               <span className="text-gray">00d 34h 01m 00s<br/>Đếm ngược đến khi ra mắt</span>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/NEX')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#2b2b2b', color: '#fff'}}>N</div>
                 <span className="alpha-coin-symbol">NEX</span>
               </div>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/ZEST')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#FF4500', color: '#fff'}}>Z</div>
                 <span className="alpha-coin-symbol">ZEST</span>
@@ -186,7 +186,7 @@ function AlphaMarkets() {
                 <span className="alpha-price-change text-green">+893,33% ▲</span>
               </div>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/ATWO')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#FF8C00', color: '#fff'}}>A</div>
                 <span className="alpha-coin-symbol">ATWO</span>
@@ -202,7 +202,7 @@ function AlphaMarkets() {
             <div className="alpha-card-header">
               <span>Top tăng giá &gt;</span>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/ZEST')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#FF4500', color: '#fff'}}>Z</div>
                 <span className="alpha-coin-symbol">ZEST</span>
@@ -212,7 +212,7 @@ function AlphaMarkets() {
                 <span className="alpha-price-change text-green">+893,33% ▲</span>
               </div>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/LYX')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#FF1493', color: '#fff'}}>L</div>
                 <span className="alpha-coin-symbol">LYX</span>
@@ -222,7 +222,7 @@ function AlphaMarkets() {
                 <span className="alpha-price-change text-green">+72,27% ▲</span>
               </div>
             </div>
-            <div className="alpha-card-item">
+            <div className="alpha-card-item" style={{cursor: 'pointer'}} onClick={() => navigate('/trade/NUMI')}>
               <div className="alpha-coin-info">
                 <div className="alpha-coin-icon" style={{background: '#4B0082', color: '#fff'}}>N</div>
                 <span className="alpha-coin-symbol">NUMI</span>
