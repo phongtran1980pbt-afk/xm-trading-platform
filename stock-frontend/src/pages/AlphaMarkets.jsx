@@ -317,7 +317,26 @@ function AlphaMarkets() {
                   </td>
                   <td>
                     <div className="alpha-coin-cell">
-                      <div className="alpha-coin-icon" style={{background: index % 2 === 0 ? '#F7931A' : '#627EEA', color: '#fff'}}>{coin.name[0]}</div>
+                      <div style={{ position: 'relative', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '8px' }}>
+                        <img 
+                          src={`https://assets.coincap.io/assets/icons/${coin.name.toLowerCase()}@2x.png`}
+                          onLoad={(e) => {
+                            e.currentTarget.style.display = 'block';
+                            const sibling = e.currentTarget.nextSibling;
+                            if (sibling) sibling.style.display = 'none';
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const sibling = e.currentTarget.nextSibling;
+                            if (sibling) sibling.style.display = 'flex';
+                          }}
+                          alt={coin.name}
+                          style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'none', objectFit: 'cover' }}
+                        />
+                        <div className="alpha-coin-icon" style={{background: index % 2 === 0 ? '#F7931A' : '#627EEA', color: '#fff', display: 'flex', width: '28px', height: '28px', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', margin: 0 }}>
+                          {coin.name[0]}
+                        </div>
+                      </div>
                       <div>
                         <div className="alpha-coin-symbol-large">{coin.name}</div>
                         <div className="alpha-coin-address">
