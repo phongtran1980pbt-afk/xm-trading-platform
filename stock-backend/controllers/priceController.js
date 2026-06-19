@@ -1,5 +1,4 @@
 // Global in-memory price state
-import WebSocket from 'ws';
 
 // Mapping from local coin symbols to Binance Futures pairs
 const BINANCE_FUTURES_MAPPING = {
@@ -10,12 +9,19 @@ const BINANCE_FUTURES_MAPPING = {
 
 const LATEST_BINANCE_PRICES = {};
 
+let WebSocketClass = null;
+
 // Khởi chạy kết nối Binance Futures WebSocket
-function connectBinanceFutures() {
+async function connectBinanceFutures() {
   try {
+    if (!WebSocketClass) {
+      const module = await import('ws');
+      WebSocketClass = module.default;
+    }
+    
     const streams = Object.values(BINANCE_FUTURES_MAPPING).map(s => `${s}@markPrice`);
     const wsUrl = `wss://fstream.binance.com/stream?streams=${streams.join('/')}`;
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocketClass(wsUrl);
 
     ws.on('open', () => {
       console.log('Connected to Binance Futures WebSocket successfully for gold & crypto');
@@ -44,11 +50,12 @@ function connectBinanceFutures() {
     });
 
     ws.on('close', () => {
-      console.log('Binance WebSocket disconnected. Reconnecting in 5s...');
-      setTimeout(connectBinanceFutures, 5000);
+      console.log('Binance WebSocket disconnected. Reconnecting in 10s...');
+      setTimeout(connectBinanceFutures, 10000);
     });
   } catch (e) {
-    setTimeout(connectBinanceFutures, 5000);
+    console.warn('Failed to start Binance WebSocket, running fallback random prices. Error:', e.message);
+    setTimeout(connectBinanceFutures, 15000);
   }
 }
 
